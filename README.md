@@ -1,11 +1,11 @@
-# Media Monitor
+# Marin Mentions
 
 A live, stateless media-monitoring console for the San Francisco Bay Area, prioritizing Marin County. It combines direct publisher RSS, Google News RSS, YouTube, and Bluesky into one feed, matched against configurable keyword/phrase monitors — no database, no email/alerting infrastructure, no persistent archive.
 
 - **Purpose:** Track Bay Area news/video/social mentions of configured monitors (e.g. "Marin County," "Marin Civic Center") as a live console, not an archive.
 - **Audience:** Marin County staff.
 - **Owner:** TBD
-- **Repo:** marin-media-monitor
+- **Repo:** marin-mentions
 - **Status:** Prototype (Phase 1+2 of the implementation plan — see "Roadmap" below)
 
 ## What this app does

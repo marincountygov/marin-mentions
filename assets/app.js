@@ -782,7 +782,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function buildDigest(items) {
     const now = new Date();
     const generatedDate = now.toLocaleString([], { month: "short", day: "numeric", year: "numeric" });
-    const headerLine1 = `${DIGEST_EMOJI} Marin Media Monitor — ${generatedDate}`;
+    const headerLine1 = `${DIGEST_EMOJI} Marin Mentions — ${generatedDate}`;
     const headerLine2 = `${COUNT_EMOJI} ${items.length} mention${items.length === 1 ? "" : "s"} ${digestRangeLabel(items)}`;
     const monitorsLine = digestMonitorsLine();
 
@@ -828,7 +828,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (monitors.length) fieldLines.push(`${TAG_EMOJI} ${escapeHtml(monitors.join(", "))}`);
       return fieldLines.join("<br>");
     });
-    const htmlHeaderLine1 = `${DIGEST_EMOJI} Marin Media Monitor — <i>${escapeHtml(generatedDate)}</i>`;
+    const htmlHeaderLine1 = `${DIGEST_EMOJI} Marin Mentions — <i>${escapeHtml(generatedDate)}</i>`;
     const html =
       `<div><b>${htmlHeaderLine1}</b><br>${escapeHtml(headerLine2)}` +
       `${monitorsLine ? `<br>${escapeHtml(monitorsLine)}` : ""}<br><br>` +

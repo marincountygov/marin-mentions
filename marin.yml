@@ -1,8 +1,8 @@
 schema: 1
 
 project:
-  name: Media Monitor
-  repo: marin-media-monitor
+  name: Marin Mentions
+  repo: marin-mentions
   type: app
   owner: TBD
   audience: staff
@@ -14,7 +14,7 @@ platform:
 
 deployment:
   target: github-pages
-  url: https://marincountygov.github.io/marin-media-monitor/
+  url: https://marincountygov.github.io/marin-mentions/
   note: >-
     Deploys via a scheduled GitHub Actions build (.github/workflows/build-and-deploy.yml),
     not a plain static push — see AGENTS.md and README.md for why this app departs from

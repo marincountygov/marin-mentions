@@ -1,4 +1,4 @@
-# Source configuration for marin-media-monitor.
+# Source configuration for marin-mentions.
 #
 # type: "rss" | "google-news" | "youtube" | "youtube-rss" | "bluesky" | "reddit" | "nextdoor"
 #

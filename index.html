@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Media Monitor | County of Marin</title><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='10' fill='%23000'/%3E%3Cg fill='none' stroke='%23e5b53b' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round' transform='translate(9,9) scale(1.25)'%3E%3Cpath d='M19.07 4.93A10 10 0 0 0 6.99 3.34'/%3E%3Cpath d='M4 6h.01'/%3E%3Cpath d='M2.29 9.62A10 10 0 1 0 21.31 8.35'/%3E%3Cpath d='M16.24 7.76A6 6 0 1 0 8.23 16.67'/%3E%3Cpath d='M12 18h.01'/%3E%3Cpath d='M17.99 11.66A6 6 0 0 1 15.77 16.67'/%3E%3Ccircle cx='12' cy='12' r='2'/%3E%3Cpath d='m13.41 10.59 5.66-5.66'/%3E%3C/g%3E%3C/svg%3E">
+    <title>Marin Mentions | County of Marin</title><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='10' fill='%23000'/%3E%3Cg fill='none' stroke='%23e5b53b' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round' transform='translate(9,9) scale(1.25)'%3E%3Cpath d='M2 12 7 2'/%3E%3Cpath d='m7 12 5-10'/%3E%3Cpath d='m12 12 5-10'/%3E%3Cpath d='m17 12 5-10'/%3E%3Cpath d='M4.5 7h15'/%3E%3Cpath d='M12 16v6'/%3E%3C/g%3E%3C/svg%3E">
     <meta name="description" content="A live media-monitoring console tracking Bay Area news, video, and social mentions of configured keywords and phrases.">
     <link rel="stylesheet" href="vendor/pico.min.css">
     <link rel="stylesheet" href="shared/app-brand.css">
@@ -19,9 +19,9 @@
         <div class="app-identity">
           <div class="app-title-row">
             <span class="app-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M19.07 4.93A10 10 0 0 0 6.99 3.34"/><path d="M4 6h.01"/><path d="M2.29 9.62A10 10 0 1 0 21.31 8.35"/><path d="M16.24 7.76A6 6 0 1 0 8.23 16.67"/><path d="M12 18h.01"/><path d="M17.99 11.66A6 6 0 0 1 15.77 16.67"/><circle cx="12" cy="12" r="2"/><path d="m13.41 10.59 5.66-5.66"/></svg>
+              <svg viewBox="0 0 24 24"><path d="M2 12 7 2"/><path d="m7 12 5-10"/><path d="m12 12 5-10"/><path d="m17 12 5-10"/><path d="M4.5 7h15"/><path d="M12 16v6"/></svg>
             </span>
-            <div class="app-title-copy"><h1 class="app-title">Media Monitor</h1><p class="app-subtitle">Marin County news, video, and social mentions</p></div>
+            <div class="app-title-copy"><h1 class="app-title">Marin Mentions</h1><p class="app-subtitle">Marin County news, video, and social mentions</p></div>
           </div>
         </div>
         <div class="app-header__actions">
@@ -128,7 +128,7 @@
 
       <section id="about" class="app-card" data-tab-section="about" hidden>
         <h2>About</h2>
-        <p>Media Monitor is a stateless media-monitoring console for the San Francisco Bay Area, prioritizing Marin County. It combines direct publisher RSS, Google News RSS, YouTube, and Bluesky into one feed, matched against keyword/phrase monitors defined in <code>config/monitors.yaml</code>.</p>
+        <p>Marin Mentions is a stateless media-monitoring console for the San Francisco Bay Area, prioritizing Marin County. It combines direct publisher RSS, Google News RSS, YouTube, and Bluesky into one feed, matched against keyword/phrase monitors defined in <code>config/monitors.yaml</code>.</p>
 
         <h3>How refresh works</h3>
         <p>There is no database and no live per-request fetching. A scheduled GitHub Actions build runs roughly every 10&ndash;15 minutes: it fetches every enabled source, matches monitors, deduplicates, merges the result with the previously published snapshot (keeping items from the last 7 days), and republishes <code>data.json</code>. The <strong>Refresh</strong> button reloads that snapshot in your browser &mdash; it does not trigger a new fetch.</p>
@@ -142,7 +142,7 @@
         </ul>
       </section>
 
-      <section id="updates" class="app-card" data-tab-section="updates" data-updates-repo="marin-media-monitor" data-app-name="Media Monitor" hidden>
+      <section id="updates" class="app-card" data-tab-section="updates" data-updates-repo="marin-mentions" data-app-name="Marin Mentions" hidden>
         <h2>Updates</h2>
         <p data-updates-status class="app-help-text" role="status" aria-live="polite" aria-atomic="true">Loading recent commits&hellip;</p>
         <div data-updates-list></div>

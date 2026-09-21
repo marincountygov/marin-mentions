@@ -1,4 +1,4 @@
-# Monitor configuration for marin-media-monitor.
+# Monitor configuration for marin-mentions.
 #
 # Each monitor is a named set of include/exclude phrases. Matching is
 # case-insensitive and normalizes whitespace/punctuation (see
