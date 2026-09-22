@@ -93,7 +93,15 @@ This is still read-only and still not OAuth — an App Password only grants the 
 
 ### Reddit
 
-Enabled in `config/sources.yaml`, scoped to `r/bayarea`, `r/sanfrancisco`, `r/Marin`, `r/oakland`, `r/berkeley`, `r/SanJose` (see `build/connectors/reddit.js`). Reddit's Data API requires an OAuth app (`REDDIT_CLIENT_ID`/`REDDIT_CLIENT_SECRET`, client-credentials grant) and caps free-tier use at 100 queries/minute per OAuth client — workable for one low-frequency poll every 10–15 minutes, but Reddit's terms require a paid contract for higher-volume or commercial use. Without those two secrets set, it shows `error` on `/sources` and contributes no items, the same as YouTube without `YOUTUBE_API_KEY`.
+Enabled in `config/sources.yaml`, scoped to `r/bayarea`, `r/sanfrancisco`, `r/Marin`, `r/oakland`, `r/berkeley`, `r/SanJose` (see `build/connectors/reddit.js`). Reddit's Data API requires an OAuth app (`REDDIT_CLIENT_ID`/`REDDIT_CLIENT_SECRET`, client-credentials grant) and caps free-tier use at 100 queries/minute per OAuth client — workable for one low-frequency poll every 10–15 minutes, but Reddit's terms require a paid contract for higher-volume or commercial use. Without those two secrets set, it shows `error` on `/sources` and contributes no items, the same as YouTube without `YOUTUBE_API_KEY`. **As of 2026-09-22 these secrets have never been set** — Reddit has contributed zero items in every production build so far; this is the main reason Social results have looked thin.
+
+To activate it:
+
+1. Log into the Reddit account this app should run as, go to [reddit.com/prefs/apps](https://www.reddit.com/prefs/apps), click **create another app...**.
+2. Choose type **script**, fill in any name/description, set the redirect URI to `https://localhost` (unused for this grant type, but required by the form).
+3. After creating it, the app's client ID is the string shown directly under the app name (not labeled); the client secret is the field explicitly labeled **secret**.
+4. In this repo's GitHub settings: **Settings → Secrets and variables → Actions → New repository secret**, add `REDDIT_CLIENT_ID` and `REDDIT_CLIENT_SECRET` with those two values.
+5. No workflow change needed — `build/index.js` already reads both from the environment (see `.github/workflows/build-and-deploy.yml`); they just need to exist as repo secrets. The next scheduled build (or a manual re-run) picks them up automatically.
 
 ### Nextdoor
 
@@ -121,7 +129,7 @@ config/
 
 ### Add an RSS source
 
-1. Verify it first: `curl -A "Mozilla/5.0 (compatible; MarinMediaMonitor/1.0)" <candidate-url>` — confirm HTTP 200 and recent `pubDate`s.
+1. Verify it first: `curl -A "Mozilla/5.0 (compatible; MarinMentions/1.0)" <candidate-url>` — confirm HTTP 200 and recent `pubDate`s.
 2. Add an entry to `config/sources.yaml` with `type: rss` and the verified `url`.
 3. If it fails verification, add `type: google-news` with a `query: site:<domain>` instead — don't scrape.
 

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Marin Mentions | County of Marin</title><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='10' fill='%23000'/%3E%3Cg fill='none' stroke='%23e5b53b' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round' transform='translate(9,9) scale(1.25)'%3E%3Cpath d='M2 12 7 2'/%3E%3Cpath d='m7 12 5-10'/%3E%3Cpath d='m12 12 5-10'/%3E%3Cpath d='m17 12 5-10'/%3E%3Cpath d='M4.5 7h15'/%3E%3Cpath d='M12 16v6'/%3E%3C/g%3E%3C/svg%3E">
+    <title>Marin Mentions | County of Marin</title><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='10' fill='%23000'/%3E%3Cg fill='none' stroke='%23e5b53b' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round' transform='translate(9,9) scale(1.25)'%3E%3Cpath d='M20.341 6.484A10 10 0 0 1 10.266 21.85'/%3E%3Cpath d='M3.659 17.516A10 10 0 0 1 13.74 2.152'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Ccircle cx='19' cy='5' r='2'/%3E%3Ccircle cx='5' cy='19' r='2'/%3E%3C/g%3E%3C/svg%3E">
     <meta name="description" content="A live media-monitoring console tracking Bay Area news, video, and social mentions of configured keywords and phrases.">
     <link rel="stylesheet" href="vendor/pico.min.css">
     <link rel="stylesheet" href="shared/app-brand.css">
@@ -19,14 +19,14 @@
         <div class="app-identity">
           <div class="app-title-row">
             <span class="app-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M2 12 7 2"/><path d="m7 12 5-10"/><path d="m12 12 5-10"/><path d="m17 12 5-10"/><path d="M4.5 7h15"/><path d="M12 16v6"/></svg>
+              <svg viewBox="0 0 24 24"><path d="M20.341 6.484A10 10 0 0 1 10.266 21.85"/><path d="M3.659 17.516A10 10 0 0 1 13.74 2.152"/><circle cx="12" cy="12" r="3"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/></svg>
             </span>
             <div class="app-title-copy"><h1 class="app-title">Marin Mentions</h1><p class="app-subtitle">Marin County news, video, and social mentions</p></div>
           </div>
         </div>
         <div class="app-header__actions">
           <button type="button" class="app-menu-toggle secondary" id="menu-toggle" aria-expanded="false" aria-controls="app-nav">Menu</button>
-          <nav class="app-nav" id="app-nav" aria-label="Application navigation"><a href="#latest">Home</a><a href="#about">About</a><a href="#updates">Updates</a></nav>
+          <nav class="app-nav" id="app-nav" aria-label="Application navigation"><a href="./">Home</a><a href="#about">About</a><a href="#updates">Updates</a></nav>
         </div>
       </div>
     </header>
@@ -75,22 +75,27 @@
               <button type="button" role="tab" aria-selected="false" data-content-type="news" class="mm-tab">News</button>
               <button type="button" role="tab" aria-selected="false" data-content-type="video" class="mm-tab">Video</button>
               <button type="button" role="tab" aria-selected="false" data-content-type="social" class="mm-tab">Social</button>
+              <button type="button" id="stats-toggle" class="mm-tab" aria-pressed="false">Stats</button>
             </div>
 
-            <div class="mm-status-row">
+            <div class="mm-results-summary">
               <p class="app-help-text" id="last-updated">Loading&hellip;</p>
-              <button type="submit" class="mm-refresh" id="refresh-button" hidden>Refresh</button>
+              <p class="app-help-text" id="active-filters" aria-live="polite"></p>
             </div>
 
-            <div class="mm-results-actions">
-              <div class="mm-results-summary">
-                <p class="app-help-text" id="active-filters"></p>
-                <p class="search-results-count app-help-text" id="mention-counts" aria-live="polite"></p>
-              </div>
-              <div class="mm-results-buttons">
-                <button type="button" class="secondary mm-copy-button" id="copy-link-button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Copy link</button>
-                <button type="button" class="secondary mm-copy-button" id="copy-email-button"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>Copy</button>
-              </div>
+            <div class="mm-results-buttons">
+              <button type="button" class="secondary mm-copy-button" id="copy-link-button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Copy link</button>
+              <button type="button" class="secondary mm-copy-button" id="copy-stats-button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>Copy</button>
+              <button type="button" class="secondary mm-copy-button" id="download-all-png-button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>All PNG</button>
+              <span id="copy-format-field">
+                <label class="visually-hidden" for="copy-format-select">Copy format</label>
+                <select id="copy-format-select" class="mm-copy-format">
+                  <option value="news-releases">News + releases</option>
+                  <option value="releases-news">Releases + news</option>
+                </select>
+              </span>
+              <button type="button" class="secondary mm-copy-button" id="copy-email-button"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>Copy</button>
+              <button type="button" class="secondary mm-copy-button" id="download-data-button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>CSV</button>
             </div>
 
             <div class="mm-copy-fallback" id="copy-fallback" hidden>
@@ -98,7 +103,32 @@
               <textarea id="copy-fallback-text" readonly rows="8"></textarea>
             </div>
 
+            <div class="mm-select-all" id="select-all-field">
+              <label>
+                <input type="checkbox" id="select-all-checkbox">
+                Select all
+              </label>
+            </div>
+
             <ul id="media-feed" class="search-results-list" aria-label="Matching mentions"></ul>
+
+            <div class="mm-stats-grid" id="stats-grid" hidden>
+              <div class="app-card">
+                <h3>Mentions over time</h3>
+                <canvas id="stats-timeline-chart" role="img" data-chart-title="Mentions over time" aria-label="Mentions over time"></canvas>
+                <button type="button" class="secondary mm-copy-button mm-chart-download" data-chart-download="timeline"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>PNG</button>
+              </div>
+              <div class="app-card">
+                <h3>Top sources</h3>
+                <canvas id="stats-sources-chart" role="img" data-chart-title="Top sources" aria-label="Top sources"></canvas>
+                <button type="button" class="secondary mm-copy-button mm-chart-download" data-chart-download="sources"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>PNG</button>
+              </div>
+              <div class="app-card">
+                <h3>Top monitors</h3>
+                <canvas id="stats-monitors-chart" role="img" data-chart-title="Top monitors" aria-label="Top monitors"></canvas>
+                <button type="button" class="secondary mm-copy-button mm-chart-download" data-chart-download="monitors"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>PNG</button>
+              </div>
+            </div>
           </div>
         </form>
       </section>
@@ -128,17 +158,34 @@
 
       <section id="about" class="app-card" data-tab-section="about" hidden>
         <h2>About</h2>
-        <p>Marin Mentions is a stateless media-monitoring console for the San Francisco Bay Area, prioritizing Marin County. It combines direct publisher RSS, Google News RSS, YouTube, and Bluesky into one feed, matched against keyword/phrase monitors defined in <code>config/monitors.yaml</code>.</p>
+        <p>Marin Mentions collects news stories, videos, and social media posts that mention Marin County, and shows them all in one place.</p>
 
-        <h3>How refresh works</h3>
-        <p>There is no database and no live per-request fetching. A scheduled GitHub Actions build runs roughly every 10&ndash;15 minutes: it fetches every enabled source, matches monitors, deduplicates, merges the result with the previously published snapshot (keeping items from the last 7 days), and republishes <code>data.json</code>. The <strong>Refresh</strong> button reloads that snapshot in your browser &mdash; it does not trigger a new fetch.</p>
+        <h3>How the list updates</h3>
+        <p>The list updates on its own about every 15 minutes. Reload the page any time to see the newest list.</p>
 
-        <h3>Known limitations</h3>
+        <h3>Saving mentions</h3>
+        <p>Check the box next to any mention to save it, or use <strong>Select all</strong> to save everything currently in the list. Once you check a box, a dropdown appears so you can pick which official County announcement that mention is about. If you've saved one or more mentions, the <strong>Copy</strong> button copies only those &mdash; otherwise it copies everything you're currently viewing. The dropdown next to Copy lets you choose how the copied text is organized: by news story, or grouped under each County announcement. The <strong>CSV</strong> button downloads the same list as a spreadsheet file. Saved mentions aren't kept after you close or reload the page.</p>
+
+        <h3>Charts</h3>
+        <p>Click the <strong>Stats</strong> button to see charts instead of the list &mdash; how many mentions came in over time, which outlets covered Marin County the most, and which topics came up most often. The charts match whatever you're currently filtering by. Each chart has its own <strong>PNG</strong> button to save it as an image; <strong>All PNG</strong> saves all three at once; <strong>Copy</strong> puts all three charts on your clipboard so you can paste them into an email or chat message.</p>
+
+        <h3>Things to know</h3>
+        <ul>
+          <li>The list only shows what was available the last time it updated. A story that was already gone from a site before we checked won't show up, even if it's from the right time period.</li>
+          <li>Some news links open through Google first instead of going straight to the article. That's normal, and the link still works.</li>
+          <li>YouTube and Reddit need special access set up to work, so they may not always be available. Bluesky doesn't need that, but can occasionally be slow or temporarily unavailable.</li>
+        </ul>
+
+        <h3>Technical</h3>
+        <p>Marin Mentions is a stateless media-monitoring console for the San Francisco Bay Area, prioritizing Marin County. It combines direct publisher RSS, Google News RSS, YouTube, Bluesky, and Reddit into one feed, matched against keyword/phrase monitors defined in <code>config/monitors.yaml</code>.</p>
+        <p>There is no database and no live per-request fetching. A scheduled GitHub Actions build runs roughly every ~15 minutes: it fetches every enabled source, matches monitors, deduplicates, merges the result with the previously published snapshot (keeping items from the last 7 days), and republishes <code>data.json</code>. Reloading the page re-fetches that same <code>data.json</code> &mdash; there's no separate manual-refresh action, and nothing on this page triggers a new build.</p>
+        <p>Saved (clipped) mentions can be attributed to the County's own official releases &mdash; marincounty.gov news releases and the County's own YouTube channels &mdash; from the past 60 days, listed by title, newest first. Clips are session-only, held in memory, and reset on reload.</p>
+        <p>Stats' Top Sources chart excludes the County's own official sources, so it reflects third-party coverage volume, not the County's own release/channel activity.</p>
         <ul>
           <li>Time filters only apply to what the current snapshot holds. An item that scrolled off a source's own feed before it was ever fetched will never appear, even if it's within the selected time range.</li>
-          <li>Google News RSS links point to a Google redirect page, not the publisher's article directly &mdash; this is a Google limitation, not a broken link. The link still works when clicked in a browser.</li>
+          <li>Google News RSS links point to a Google redirect page, not the publisher's article directly &mdash; this is a Google limitation, not a broken link.</li>
           <li>Deduplication prefers a direct publisher result over a Google News result for the same story, matched by outlet + headline since Google's redirect links can't be resolved to a canonical URL server-side.</li>
-          <li>YouTube and Bluesky require API access; see the README for activation status and quota/rate-limit notes.</li>
+          <li>YouTube requires an API key and Reddit requires OAuth credentials; see the README for activation status and quota/rate-limit notes. Bluesky's public search endpoint needs no key, but its reliability is outside this app's control.</li>
         </ul>
       </section>
 
@@ -151,6 +198,7 @@
     <footer class="app-footer" role="contentinfo"><div class="app-footer__inner"><a href="https://marincountygov.github.io/marin-os/">MarinOS</a></div></footer>
     <a class="app-feedback" href="https://form.asana.com/?k=qVUT83d5DBmlDiIyi-WAyQ&amp;d=23133298259496" target="_blank" rel="noreferrer">Feedback</a>
     <script src="shared/app-shell.js"></script>
+    <script src="vendor/chart.min.js"></script>
     <script src="assets/app.js"></script>
   </body>
 </html>
