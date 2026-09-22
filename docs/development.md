@@ -42,7 +42,7 @@ Prefer existing marin-ui components and tokens (`.app-card`, `.app-badge`, `.app
 From a local checkout of `marin-ui`:
 
 ```sh
-./scripts/sync-consumer.sh /path/to/marin-media-monitor
+./scripts/sync-consumer.sh /path/to/marin-mentions
 ```
 
 This copies `BRAND_VERSION`, `shared/app-brand.css`, `shared/app-shell.js`, `vendor/pico.min.css`, and `vendor/fonts/Jost-wght.ttf`. Don't edit the vendored `shared/`/`vendor/` files directly — fixes belong in `marin-ui`, then re-sync.

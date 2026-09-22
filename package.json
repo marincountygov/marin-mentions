@@ -1,5 +1,5 @@
 {
-  "name": "marin-media-monitor",
+  "name": "marin-mentions",
   "version": "0.1.0",
   "description": "A stateless media-monitoring console for Bay Area news, video, and social mentions of configurable keywords/phrases. No database — a scheduled build fetches sources, matches monitors, and writes a static data.json for the site to read.",
   "private": true,

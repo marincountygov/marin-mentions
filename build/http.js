@@ -1,7 +1,7 @@
 "use strict";
 
 const USER_AGENT =
-  "Mozilla/5.0 (compatible; MarinMediaMonitor/1.0; +https://github.com/marincountygov/marin-media-monitor)";
+  "Mozilla/5.0 (compatible; MarinMentions/1.0; +https://github.com/marincountygov/marin-mentions)";
 
 const DEFAULT_TIMEOUT_MS = 10_000;
 

@@ -218,6 +218,7 @@ function healthDefaults(source) {
     region: source.region,
     enabled: source.enabled,
     costCategory: source.costCategory,
+    official: source.official,
     note: source.note,
     link: sourceLink(source),
   };

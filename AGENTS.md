@@ -1,4 +1,4 @@
-# Working on marin-media-monitor
+# Working on marin-mentions
 
 ## Architecture
 
@@ -8,12 +8,13 @@ This departs from `marin-app-template`'s default (a static site with no build st
 
 ## Where things live
 
-- `config/sources.yaml` — every source: RSS URL, Google News query, or API type; region; enabled flag; verification notes.
+- `config/sources.yaml` — every source: RSS URL, Google News query, or API type; region; enabled flag; verification notes. `official: true` marks the County's own first-party channels (`marincounty-gov`, `marin-county-youtube`, `marin-county-fire-youtube`) as opposed to third-party coverage of them. `assets/app.js`'s `computeOfficialSourceIds()` derives the live set of official source ids from `data.json`'s `sources` array on every load (not hardcoded), used by both the Clippings release-attribution dropdown (`computeReleases()`) and the Stats tab (`renderStats()` excludes official sources from Top Sources, since that's the County's own volume, not third-party coverage). No separate connector or fetch for this — those three sources already flow through the normal build like every other source; the flag just marks which existing items count as "the County's own."
 - `config/monitors.yaml` — keyword/phrase monitors (include/exclude). Adding a monitor here needs no code change.
 - `build/connectors/*.js` — one file per source type (`rss`, `google-news`, `youtube`, `bluesky`, `reddit`, `nextdoor`). Each returns raw items; `build/normalize.js` converts them to the common `MediaItem` shape.
 - `build/match.js`, `build/dedupe.js` — monitor matching and dedup logic; see the comments there before changing matching semantics, dedup key priority, or story-grouping approach (grouping is deferred — not implemented).
 - `build/index.js` — orchestrator: loads config, decides which sources are due for refresh (`refreshIntervalMinutes` per source, checked against the previously published snapshot instead of a separate cache store), merges with the previous 60-day rolling window, writes `data.json`.
-- `assets/app.js` / `assets/app.css` — the console, Sources page, and Monitors page, all driven by the one `data.json`. `shared/app-shell.js`'s hash-based tab logic (`data-tab-section`) handles which section shows.
+- `assets/app.js` / `assets/app.css` — the console, Sources page, Monitors page, and Stats page, all driven by the one `data.json`. `shared/app-shell.js`'s hash-based tab logic (`data-tab-section`) handles which section shows.
+- `vendor/chart.min.js` — Chart.js, used by the Stats tab's two bar charts. Comes from `marin-ui`'s vendored bundle (opt-in, same as `vendor/xlsx.full.min.js` — see its `SYNCING.md`), not a CDN — don't add a `<script src="https://...">` tag or re-vendor a different copy locally.
 
 ## Before making changes
 

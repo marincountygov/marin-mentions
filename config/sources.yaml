@@ -1,4 +1,4 @@
-# Source configuration for marin-media-monitor.
+# Source configuration for marin-mentions.
 #
 # type: "rss" | "google-news" | "youtube" | "youtube-rss" | "bluesky" | "reddit" | "nextdoor"
 #
@@ -486,6 +486,7 @@ sources:
     channelId: UCAKBLAHslCeHRgyb1IVrcjw
     enabled: true
     costCategory: free
+    official: true
     note: >-
       Resolved from https://www.youtube.com/user/maringchannel — confirmed
       via the page's canonical link and externalId (channel is real,
@@ -503,6 +504,7 @@ sources:
     channelId: UCwerjlgCRw2l9ipnFS_PtfQ
     enabled: true
     costCategory: free
+    official: true
 
   # --- Google News discovery (not tied to one outlet) ---
   - id: google-news-marin-county
@@ -561,6 +563,7 @@ sources:
     query: site:marincounty.gov/news-releases when:60d
     link: https://www.marincounty.gov/news-releases
     enabled: true
+    official: true
     note: >-
       No usable RSS feed found — re-checked specifically at
       /news-releases (with ?format=rss, /rss, and ?feed=rss) and it's
