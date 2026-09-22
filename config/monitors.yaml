@@ -20,41 +20,15 @@
 # Department").
 #
 # `group` is UI-only — it controls how monitors are grouped in the
-# Console's sidebar and on /monitors (see assets/app.js's MONITOR_GROUPS
-# order). It has no effect on matching.
+# Console's sidebar and on /monitors. Display order of the groups
+# themselves is set by assets/app.js's MONITOR_GROUP_ORDER, not the order
+# they appear in this file; a group left out of that list falls back to
+# alphabetical and sorts after every explicitly ordered one. `group` has no
+# effect on matching either way.
 #
 # Add a new monitor by adding an entry here.
 
 monitors:
-  # --- General ---
-  - id: marin-county
-    name: Marin County
-    group: General
-    include:
-      - Marin County
-      - County of Marin
-      - Marin Co.
-      - Marin agencies
-    exclude:
-      - Marin County Florida
-      - Marin County, Florida
-
-  - id: civic-center
-    name: Marin Civic Center
-    group: General
-    include:
-      - Marin Civic Center
-      - Marin County Civic Center
-
-  - id: marin-center
-    name: Marin Center
-    group: General
-    include:
-      - Marin Center
-      - Marin Showcase Theater
-      - Marin Exhibit Hall
-      - Marin Veterans' Memorial Auditorium
-
   # --- Board & Courts ---
   - id: marin-supervisors
     name: Marin Board of Supervisors
@@ -341,6 +315,22 @@ monitors:
       - Engage Marin
 
   # --- Events & Places ---
+  - id: civic-center
+    name: Marin County Civic Center
+    group: Events & Places
+    include:
+      - Marin Civic Center
+      - Marin County Civic Center
+
+  - id: marin-center
+    name: Marin Center
+    group: Events & Places
+    include:
+      - Marin Center
+      - Marin Showcase Theater
+      - Marin Exhibit Hall
+      - Marin Veterans' Memorial Auditorium
+
   - id: marin-county-fair
     name: Marin County Fair
     group: Events & Places
@@ -355,13 +345,6 @@ monitors:
     include:
       - Marin Farmers Market
       - Marin County Farmers Market
-
-  - id: marin-wildfire-authority
-    name: Marin Wildfire Prevention Authority
-    group: Events & Places
-    include:
-      - Marin Wildfire Prevention Authority
-      - MWPA
 
   - id: marin-cultural-association
     name: Marin Cultural Association
@@ -383,28 +366,61 @@ monitors:
       - Roller Disco Daze
 
   # --- Topics ---
-  - id: marin-flooding
-    name: Marin County Flooding
+  # AND-clause pattern ([Marin County, word:TERM]) instead of full literal
+  # phrases — the previous Flooding/Officials/Budget monitors used
+  # contiguous phrases ("Marin County budget", "Marin budget") and matched
+  # almost nothing (0-2 items each) because real coverage rarely repeats
+  # that exact phrasing verbatim. Requiring "Marin County" AND the topic
+  # word to each appear anywhere in the text, independently, catches far
+  # more real coverage — confirmed directly: Fire went from a similarly
+  # narrow phrase-based monitor to 24 genuine matches on this pattern.
+  # word: avoids substring false positives on short/generic terms (e.g.
+  # bare "budget" is safe, but bare "flood" would also match "floodlight").
+  - id: marin-county
+    name: Marin County
     group: Topics
     include:
-      - Marin County flooding
-      - Marin flooding
-      - flooding in Marin
-      - Marin El Niño
+      - Marin County
+      - County of Marin
+      - Marin Co.
+      - Marin agencies
+    exclude:
+      - Marin County Florida
+      - Marin County, Florida
 
-  - id: marin-officials
-    name: Marin County Officials
+  # Wildfire coverage generally, distinct from marin-fire (the Fire
+  # Department as an organization, under Departments above) — this one
+  # matches even when the Department itself isn't named. word: on "fire"/
+  # "fires" avoids substring false positives on unrelated words containing
+  # them (e.g. bare "fires" would match inside "expires"); "wildfire" is
+  # safe as a plain substring, it's not a substring of anything unrelated.
+  - id: marin-fire-topic
+    name: Fire
     group: Topics
     include:
-      - Marin County officials
-      - Marin officials
+      - [Marin County, word:fire]
+      - [Marin County, word:fires]
+      - [Marin County, wildfire]
 
-  - id: marin-budget
-    name: Marin County Budget
+  - id: marin-budget-topic
+    name: Budget
     group: Topics
     include:
-      - Marin County budget
-      - Marin budget
+      - [Marin County, word:budget]
+
+  - id: marin-flooding-topic
+    name: Flooding
+    group: Topics
+    include:
+      - [Marin County, word:flood]
+      - [Marin County, word:flooding]
+      - [Marin County, word:floods]
+
+  - id: marin-strategic-plan-topic
+    name: Strategic plan
+    group: Topics
+    include:
+      - [Marin County, strategic plan]
 
   # --- People ---
   # One monitor per person (not one "People" monitor with everyone lumped

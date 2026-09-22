@@ -28,8 +28,14 @@ async function fetchYoutubeSource(source, { monitors, apiKey }) {
 
   // Flatten compound AND-clause entries (an array of phrases — see
   // match.js) into individual candidate terms; build/match.js is what
-  // actually enforces the AND requirement on the results afterward.
-  const terms = monitors.flatMap((monitor) => monitor.include || []).flat();
+  // actually enforces the AND requirement on the results afterward. Strip
+  // the "word:" whole-word-match prefix (match.js-only syntax) — left on,
+  // it would search YouTube for the literal text "word:fire" instead of
+  // "fire", silently losing recall for every monitor that uses it.
+  const terms = monitors
+    .flatMap((monitor) => monitor.include || [])
+    .flat()
+    .map((term) => term.replace(/^word:/, ""));
   if (terms.length === 0) return { items: [] };
 
   const query = Array.from(new Set(terms)).map((term) => `"${term}"`).join("|");

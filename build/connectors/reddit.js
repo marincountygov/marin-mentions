@@ -26,7 +26,7 @@ async function fetchRedditSource(source, { monitors, clientId, clientSecret }) {
     headers: {
       Authorization: `Basic ${basicAuth}`,
       "Content-Type": "application/x-www-form-urlencoded",
-      "User-Agent": "MarinMediaMonitor/1.0",
+      "User-Agent": "MarinMentions/1.0",
     },
     body: "grant_type=client_credentials",
   });
