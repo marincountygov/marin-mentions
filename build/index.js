@@ -12,6 +12,31 @@ const { dedupeItems } = require("./dedupe");
 
 const PRUNE_DAYS = 60;
 
+// Every sourceMethod that build/normalize.js's SOURCE_TYPE_BY_METHOD maps
+// to sourceType "social" — kept in sync with that map, not derived from it,
+// so a mismatch is a build-time error instead of a silent drift between
+// the two files.
+const SOCIAL_METHODS = new Set(["bluesky", "reddit", "nextdoor"]);
+
+/** Guards the News/Video/Social split the UI's content-type tabs rely on
+ * entirely (assets/app.js's matchesFilters() trusts item.sourceType with
+ * no further check) — fail the build loudly if a social-method item isn't
+ * classified sourceType: "social", or vice versa, instead of letting a
+ * misclassification quietly leak a social post into the News or Video
+ * tab (or a news item into Social). */
+function assertSocialClassification(items) {
+  for (const item of items) {
+    const isSocialMethod = SOCIAL_METHODS.has(item.sourceMethod);
+    const isSocialType = item.sourceType === "social";
+    if (isSocialMethod !== isSocialType) {
+      throw new Error(
+        `Social classification mismatch: "${item.title || item.url}" has sourceMethod ` +
+          `"${item.sourceMethod}" but sourceType "${item.sourceType}"`
+      );
+    }
+  }
+}
+
 function parseArgs(argv) {
   const args = {};
   for (const arg of argv) {
@@ -137,12 +162,25 @@ async function buildOnce({ previousSnapshotPath, outPath, env = process.env }) {
     try {
       const { items: rawItems } = await fetchSource(source, context);
       const normalized = rawItems.map(normalizeItem);
-      allItems.push(...normalized);
+      // Merge with what this source contributed last snapshot, not just this
+      // fetch's raw results — matchItems/dedupeItems below already dedupe
+      // safely across a re-processed previousItems (proven by the !due and
+      // catch branches above, which already push previousItems through the
+      // same pipeline). Without this, a source whose fetch doesn't inherently
+      // overlap with its own prior results — searchPosts returns only the
+      // top-N *latest* matches per term, not a stable feed — loses any
+      // previously-captured item that's aged out of that window the moment
+      // it next fetches successfully, even though it's still within the
+      // 60-day retention window. That silently reset Bluesky's whole known
+      // dataset to a single snapshot on every lucky (non-rate-limited) fetch
+      // instead of accumulating across polls, contradicting the "merge into
+      // the previous snapshot" behavior this file documents at the top.
+      allItems.push(...normalized, ...previousItems);
       health.push({
         ...healthDefaults(source),
         status: "connected",
         lastFetchedAt: new Date(now).toISOString(),
-        itemCount: normalized.length,
+        itemCount: normalized.length + previousItems.length,
       });
     } catch (error) {
       console.warn(`[${source.id}] fetch failed: ${error.message}`);
@@ -164,6 +202,8 @@ async function buildOnce({ previousSnapshotPath, outPath, env = process.env }) {
 
   const cutoff = now - PRUNE_DAYS * 24 * 60 * 60 * 1000;
   const pruned = deduped.filter((item) => new Date(item.publishedAt).getTime() >= cutoff);
+
+  assertSocialClassification(pruned);
 
   pruned.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
   pruned.forEach((item) => {

@@ -369,7 +369,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!skipFeedSource && state.selectedFeedSources.size > 0 && !state.selectedFeedSources.has(item.sourceId)) {
       return false;
     }
-    if (state.contentType !== "all" && item.sourceType !== state.contentType) return false;
+    // "All" means News + Video, not literally every sourceType — Social
+    // (Bluesky/Reddit/Nextdoor) only ever shows up when the Social tab
+    // itself is selected, never mixed into All/News/Video.
+    if (state.contentType === "all") {
+      if (item.sourceType === "social") return false;
+    } else if (item.sourceType !== state.contentType) {
+      return false;
+    }
     if (state.time !== "all") {
       const windowMs = TIME_WINDOWS_MS[state.time];
       if (Date.now() - new Date(item.publishedAt).getTime() > windowMs) return false;
