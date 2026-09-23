@@ -31,30 +31,70 @@ const SEARCH_URL = "https://api.bsky.app/xrpc/app.bsky.feed.searchPosts";
 const CONCURRENCY = 8;
 const BATCH_DELAY_MS = 300;
 
+// Matches build/index.js's PRUNE_DAYS — no reason to spend a request
+// fetching (and making match.js filter through) posts older than what the
+// build keeps anyway.
+const SINCE_DAYS = 60;
+
+// searchPosts' actual max page size (verified live 2026-09-23: limit=100
+// returns 100 posts with a cursor, same one request as limit=25 would've
+// been) — a straight 4x recall increase per term for zero added requests,
+// the highest-leverage lever before resorting to more requests via
+// pagination.
+const PAGE_LIMIT = 100;
+
+// Terms broad enough that even a full 100-result page plausibly caps out
+// before match.js's real AND/exclude matching even runs — worth a second
+// page for. Kept small and explicit rather than paginating every term,
+// which would double the total request count (130+ -> 260+) and
+// reintroduce the rate-limit risk the batching above already addresses.
+const PAGINATE_TERMS = new Set(["Marin County"]);
+
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function searchUrl(term, cursor) {
+  const since = new Date(Date.now() - SINCE_DAYS * 24 * 60 * 60 * 1000).toISOString();
+  const params = new URLSearchParams({ q: term, limit: String(PAGE_LIMIT), sort: "latest", since });
+  if (cursor) params.set("cursor", cursor);
+  return `${SEARCH_URL}?${params.toString()}`;
+}
+
 async function searchInBatches(terms) {
-  const results = [];
+  const entries = [];
   for (let i = 0; i < terms.length; i += CONCURRENCY) {
     const batch = terms.slice(i, i + CONCURRENCY);
-    const batchResults = await Promise.allSettled(
-      batch.map((term) => fetchJson(`${SEARCH_URL}?q=${encodeURIComponent(term)}&limit=25&sort=latest`))
-    );
-    results.push(...batchResults);
+    const batchResults = await Promise.allSettled(batch.map((term) => fetchJson(searchUrl(term))));
+    batchResults.forEach((result, index) => entries.push({ term: batch[index], result }));
     if (i + CONCURRENCY < terms.length) await sleep(BATCH_DELAY_MS);
   }
-  return results;
+
+  // A second page for PAGINATE_TERMS only, run sequentially after the main
+  // batch pass — the cursor isn't known until each term's first page comes
+  // back, so this can't be folded into the batching above.
+  for (const { term, result } of entries.slice()) {
+    if (result.status !== "fulfilled" || !PAGINATE_TERMS.has(term) || !result.value.cursor) continue;
+    try {
+      const page2 = await fetchJson(searchUrl(term, result.value.cursor));
+      entries.push({ term, result: { status: "fulfilled", value: page2 } });
+    } catch {
+      // A failed second page just means less recall for this one term —
+      // isolated the same way a single failed first-page request already
+      // is, not a reason to fail the whole source.
+    }
+  }
+
+  return entries.map(({ result }) => result);
 }
 
 /**
  * Bluesky's public AppView exposes app.bsky.feed.searchPosts without
  * authentication for public post search — no API key/app password needed
- * for the MVP's read-only monitoring use case. No pagination (cursor) is
- * implemented — one page of up to 25 results per term per refresh, which
- * matches the plan's "don't overbuild" guidance; revisit if that proves
- * too shallow in practice.
+ * for the MVP's read-only monitoring use case. One page of up to PAGE_LIMIT
+ * results per term per refresh, since-scoped to SINCE_DAYS, with a second
+ * page for PAGINATE_TERMS specifically (see searchInBatches above) rather
+ * than blanket pagination.
  */
 async function fetchBlueskySource(source, { monitors }) {
   // A monitor's include list can mix plain phrases with compound AND

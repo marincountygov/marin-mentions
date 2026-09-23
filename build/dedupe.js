@@ -41,13 +41,24 @@ function dedupeKeys(item) {
   }
   // 3. source domain + normalized title — catches "same story, direct RSS
   //    vs. Google News" pairs, since we can't resolve the Google News link.
-  const sourceDomain = hostnameOf(item.sourceUrl);
-  if (sourceDomain) {
-    keys.push(`domain-title:${sourceDomain}:${normalizeForMatch(item.title)}`);
-  }
   // 4. normalized title + publish date alone, as a last resort.
-  const day = (item.publishedAt || "").slice(0, 10);
-  keys.push(`title-day:${normalizeForMatch(item.title)}:${day}`);
+  // Both need a real title to mean anything — an item with no title (every
+  // Bluesky post; normalizeItem() coerces title: undefined to "") produces
+  // the *same* key as every other title-less item sharing that domain (key
+  // 3, not even date-scoped) or that day (key 4), so the first one "claims"
+  // the key and every later one is wrongly treated as its duplicate. This
+  // was collapsing Bluesky's results to effectively one surviving item
+  // across the whole retained window — confirmed directly, not inferred.
+  // Skip a key entirely rather than build it from an empty title; a
+  // title-less item is already correctly deduplicated by keys 1 (URL) and
+  // 2 (content ID), both of which every real post has.
+  const normalizedTitle = normalizeForMatch(item.title);
+  if (normalizedTitle) {
+    const sourceDomain = hostnameOf(item.sourceUrl);
+    if (sourceDomain) keys.push(`domain-title:${sourceDomain}:${normalizedTitle}`);
+    const day = (item.publishedAt || "").slice(0, 10);
+    keys.push(`title-day:${normalizedTitle}:${day}`);
+  }
   return keys;
 }
 
