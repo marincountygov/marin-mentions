@@ -6,66 +6,83 @@ const { parseFeed } = require("./rss");
 const SEARCH_URL = "https://www.googleapis.com/youtube/v3/search";
 const CHANNEL_FEED_URL = "https://www.youtube.com/feeds/videos.xml";
 
-/**
- * YouTube Data API v3 quota costs: search.list = 100 units, videos.list /
- * playlistItems.list = 1 unit. The default daily quota is 10,000 units.
- *
- * To stay well inside that on a single search.list call per refresh, build
- * ONE combined query across every monitor's primary phrase (YouTube's `q`
- * supports `|` as OR between terms) instead of one search per monitor —
- * build/match.js re-checks the real include/exclude phrases against the
- * returned title+description afterward, so an overly-broad YouTube-side
- * query just means a few extra discarded results, not false positives.
- *
- * Channel-based monitoring does NOT use this API at all — see
- * fetchYoutubeChannelRssSource below, which uses YouTube's free per-channel
- * RSS feed instead, so it costs zero quota regardless of refresh frequency.
- */
+// YouTube Data API v3 quota costs: search.list = 100 units, videos.list /
+// playlistItems.list = 1 unit. Default daily quota: 10,000 units.
+//
+// One search.list call per term below, not one combined OR query. That was
+// the original design (build ONE "term1"|"term2"|... query across every
+// monitor phrase) but live testing (2026-09-24) found a real bug in it: any
+// single quoted phrase alone works fine, but as soon as a phrase that would
+// return zero results on its own (e.g. the exact phrase "Marin Board of
+// Supervisors" — no video used it verbatim in 30 days) gets OR'd with
+// *anything else*, quoted or not, the entire combined result set collapses
+// to items: [] even though pageInfo.totalResults stays nonzero — confirmed
+// reproducible, not flaky, and confirmed to be that one phrase specifically
+// (every pairing that included it broke; pairings that didn't, worked).
+// There's no reliable way to know in advance which future monitor phrase
+// might trigger this, so the fix is to never combine terms via OR at all.
+//
+// That makes quota the real constraint: 100 units × N terms × refreshes/day
+// has to stay under 10,000. YOUTUBE_SEARCH_TERMS below is a small curated
+// set (driven by monitors.yaml's youtubeSearch: true flag, not all ~130
+// monitor phrases) paired with a 3-hour refresh interval (sources.yaml) —
+// 10 terms × 100 units × 8 refreshes/day = 8,000/day, leaving headroom.
+//
+// Channel-based monitoring does NOT use this API at all — see
+// fetchYoutubeChannelRssSource below, which uses YouTube's free per-channel
+// RSS feed instead, so it costs zero quota regardless of refresh frequency.
 async function fetchYoutubeSource(source, { monitors, apiKey }) {
   if (!apiKey) {
     throw new Error("YOUTUBE_API_KEY is not set");
   }
 
-  // Flatten compound AND-clause entries (an array of phrases — see
-  // match.js) into individual candidate terms; build/match.js is what
-  // actually enforces the AND requirement on the results afterward. Strip
-  // the "word:" whole-word-match prefix (match.js-only syntax) — left on,
-  // it would search YouTube for the literal text "word:fire" instead of
-  // "fire", silently losing recall for every monitor that uses it.
+  // Each flagged monitor's first include entry — stripped of the "word:"
+  // whole-word-match prefix (match.js-only syntax), and the first phrase if
+  // it's an AND-clause array — as one unquoted search term. Unquoted, not
+  // quoted: it returned real results even for the one phrase that broke
+  // when OR'd, and build/match.js re-verifies the actual required phrase
+  // against each result's real title/description afterward regardless, so
+  // there's no correctness reason to risk YouTube's exact-phrase quoting.
   const terms = monitors
-    .flatMap((monitor) => monitor.include || [])
-    .flat()
-    .map((term) => term.replace(/^word:/, ""));
+    .filter((monitor) => monitor.youtubeSearch)
+    .map((monitor) => {
+      const first = (monitor.include || [])[0];
+      const phrase = Array.isArray(first) ? first[0] : first;
+      return phrase?.replace(/^word:/, "");
+    })
+    .filter(Boolean);
   if (terms.length === 0) return { items: [] };
 
-  const query = Array.from(new Set(terms)).map((term) => `"${term}"`).join("|");
-  const publishedAfter = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const publishedAfter = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
+  const items = [];
 
-  const searchUrl =
-    `${SEARCH_URL}?part=snippet&type=video&order=date&maxResults=25` +
-    `&q=${encodeURIComponent(query)}&publishedAfter=${publishedAfter}&key=${apiKey}`;
-  const search = await fetchJson(searchUrl);
-  const videoIds = (search.items || []).map((item) => item.id?.videoId).filter(Boolean);
-  if (videoIds.length === 0) return { items: [] };
+  for (const term of terms) {
+    const searchUrl =
+      `${SEARCH_URL}?part=snippet&type=video&order=date&maxResults=25` +
+      `&q=${encodeURIComponent(term)}&publishedAfter=${publishedAfter}&key=${apiKey}`;
+    // Isolated per term — one bad/rejected term should only lose that
+    // term's results, never zero out every other term's (the exact failure
+    // mode this rewrite exists to fix).
+    const search = await fetchJson(searchUrl).catch(() => null);
+    for (const item of search?.items || []) {
+      if (!item.id?.videoId) continue;
+      items.push({
+        title: item.snippet.title,
+        link: `https://www.youtube.com/watch?v=${item.id.videoId}`,
+        description: item.snippet.description,
+        publishedAt: item.snippet.publishedAt,
+        image: item.snippet.thumbnails?.high?.url || item.snippet.thumbnails?.default?.url,
+        author: item.snippet.channelTitle,
+        sourceId: source.id,
+        sourceName: item.snippet.channelTitle,
+        sourceMethod: "youtube",
+        region: source.region,
+        _contentId: item.id.videoId,
+      });
+    }
+  }
 
-  // One extra 1-unit call to get accurate durations/stats isn't needed for
-  // the MVP fields (title/description/thumbnail/publishedAt already come
-  // back from search.list) — skip videos.list entirely to save quota.
-  return {
-    items: search.items.map((item) => ({
-      title: item.snippet.title,
-      link: `https://www.youtube.com/watch?v=${item.id.videoId}`,
-      description: item.snippet.description,
-      publishedAt: item.snippet.publishedAt,
-      image: item.snippet.thumbnails?.high?.url || item.snippet.thumbnails?.default?.url,
-      author: item.snippet.channelTitle,
-      sourceId: source.id,
-      sourceName: item.snippet.channelTitle,
-      sourceMethod: "youtube",
-      region: source.region,
-      _contentId: item.id.videoId,
-    })),
-  };
+  return { items };
 }
 
 /**

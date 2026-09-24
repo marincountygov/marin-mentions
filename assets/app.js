@@ -96,6 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
     youtube: "YouTube (search)",
     "youtube-rss": "YouTube (channel)",
     bluesky: "Bluesky",
+    "bluesky-author": "Bluesky (official account)",
     reddit: "Reddit",
     nextdoor: "Nextdoor",
   };
@@ -110,6 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
     youtube: "video",
     "youtube-rss": "video",
     bluesky: "social",
+    "bluesky-author": "social",
     reddit: "social",
     nextdoor: "social",
   };
@@ -371,8 +373,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     // "All" means News + Video, not literally every sourceType — Social
     // (Bluesky/Reddit/Nextdoor) only ever shows up when the Social tab
-    // itself is selected, never mixed into All/News/Video.
-    if (state.contentType === "all") {
+    // itself is selected, never mixed into All/News/Video. "Official" isn't
+    // a sourceType at all — it's cross-cutting (an official item can be
+    // News, Video, or Social), so it checks state.officialSourceIds instead
+    // of item.sourceType, and doesn't touch/replace the other content-type
+    // tabs — an official item still shows under its own News/Video/Social
+    // tab too, same as before.
+    if (state.contentType === "official") {
+      if (!state.officialSourceIds.has(item.sourceId)) return false;
+    } else if (state.contentType === "all") {
       if (item.sourceType === "social") return false;
     } else if (item.sourceType !== state.contentType) {
       return false;

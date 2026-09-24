@@ -91,6 +91,12 @@ function normalizeItem(raw) {
     matchedMonitors: [],
     sourceMethod: raw.sourceMethod,
     engagement: raw._engagement,
+    // Reddit only: "post" or "comment", and the t3_<id> of the post itself
+    // (a comment's own permalink always contains its parent post's id, even
+    // if that post has since aged out of the connector's own feed window —
+    // see build/connectors/reddit.js). undefined for every other source.
+    redditType: raw.redditType,
+    redditPostId: raw.redditPostId,
     // The outlet's own homepage (not the specific article) — e.g.
     // "https://www.kqed.org" — so the UI can link a card's source name to
     // where that outlet actually lives, not just the article/feed URL.

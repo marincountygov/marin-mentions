@@ -70,6 +70,12 @@ function applyMonitors(item, monitors) {
   const matchedMonitors = [];
 
   for (const monitor of monitors) {
+    // Optional: a monitor can restrict itself to specific sourceMethods
+    // (e.g. a broader/noisier catch-all meant only for one loose-chatter
+    // platform, not News/Video precision) — omitted means "applies
+    // everywhere," same as before this field existed.
+    if (monitor.sourceMethods && !monitor.sourceMethods.includes(item.sourceMethod)) continue;
+
     const excluded = (monitor.exclude || []).some((entry) => entryMatches(entry, haystack));
     if (excluded) continue;
 
@@ -86,9 +92,21 @@ function applyMonitors(item, monitors) {
 }
 
 /** Filter a list of normalized items down to those matching at least one
- * monitor, annotating each with matchedTerms/matchedMonitors. */
-function matchItems(items, monitors) {
-  return items.filter((item) => applyMonitors(item, monitors));
+ * monitor, annotating each with matchedTerms/matchedMonitors.
+ *
+ * officialSourceIds (optional) bypasses that requirement for items from an
+ * official: true source (config/sources.yaml) — applyMonitors() still runs
+ * first so a genuine match still gets real matchedTerms/matchedMonitors for
+ * display, but a real phrase match is no longer required to survive. An
+ * official account's own posts/videos/releases are relevant because of
+ * where they're from, not because they happen to contain a monitor phrase
+ * — confirmed directly this was silently dropping real content otherwise
+ * (e.g. every one of marin-parks-youtube's 15 fetched videos was being
+ * discarded, since none of their titles happened to say "Marin" or
+ * "Parks"). Defaults to an empty Set so any caller that doesn't pass this
+ * keeps today's exact behavior. */
+function matchItems(items, monitors, officialSourceIds = new Set()) {
+  return items.filter((item) => applyMonitors(item, monitors) || officialSourceIds.has(item.sourceId));
 }
 
 module.exports = { matchItems, applyMonitors, normalizeForMatch };
