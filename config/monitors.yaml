@@ -38,6 +38,7 @@ monitors:
       - Marin Board of Supervisors
       - Marin County Board of Supervisors
       - Marin County supervisor
+      - [Marin County, supervisor]
 
   - id: marin-superior-court
     name: Marin County Superior Court
@@ -111,12 +112,24 @@ monitors:
     group: Departments
     include:
       - Marin Office of Emergency Management
+      - [Marin County, word:OEM]
+      - [Marin County, emergency alert]
+      - [Marin County, king tide]
+      - [Marin County, evacuation]
+      - [Marin County, emergency]
+      - [Marin County, disaster]
+      - [Marin County, earthquake]
+      - [Marin County, power outage]
+      - [Marin County, word:heat]
+      - [Marin County, sandbag]
 
   - id: marin-county-counsel
     name: Marin County Counsel
     group: Departments
     include:
       - Marin County Counsel
+      - [Marin County, County Counsel]
+      - [Marin County, County attorney]
 
   - id: marin-sheriff
     name: Marin County Sheriff
@@ -126,6 +139,10 @@ monitors:
       - Marin County Sheriff
       - Marin County Sheriff's Office
       - Marin Sheriff
+      - [Marin County, word:crime]
+      - [Marin County, jail]
+      - [Marin County, arrest]
+      - [Marin County, use of force]
 
   - id: marin-fire
     name: Marin County Fire Department
@@ -135,6 +152,8 @@ monitors:
       - Marin County Fire Department
       - Marin County Fire
       - Marin Fire
+      - [Marin County, firefighters]
+      - [Marin County, fire chief]
 
   - id: marin-cda
     name: Marin County Community Development Agency
@@ -142,6 +161,14 @@ monitors:
     include:
       - Marin County Community Development Agency
       - Marin CDA
+      - [Marin County, planning]
+      - [Marin County, permits]
+      - [Marin County, redevelopment]
+      - [Marin County, housing]
+      - [Marin County, development]
+      - [Marin County, word:RHNA]
+      - [Marin County, word:ADU]
+      - [Marin County, zoning]
 
   - id: marin-ag-weights-measures
     name: Marin County Agriculture, Weights and Measures
@@ -150,6 +177,9 @@ monitors:
       - Marin County Agriculture, Weights and Measures
       - Marin Agriculture, Weights and Measures
       - Marin County Weights and Measures
+      - [Marin County, Agricultural Commissioner]
+      - [Marin County, pesticide]
+      - [Marin County, invasive species]
 
   - id: marin-assessor
     name: Marin County Assessor-Recorder-County Clerk
@@ -159,6 +189,13 @@ monitors:
       - Marin County Assessor
       - Marin County Recorder
       - Marin County Clerk
+      - Marin Assessor-Recorder-County Clerk
+      - [Marin County, property assessment]
+      - [Marin County, property records]
+      - [Marin County, marriage licenses]
+      - [Marin County, birth certificate]
+      - [Marin County, death certificate]
+      - [Marin County, fictitious]
 
   - id: marin-child-support
     name: Marin County Child Support Services
@@ -166,6 +203,7 @@ monitors:
     include:
       - Marin County Child Support Services
       - Marin Child Support Services
+      - [Marin County, child support]
 
   - id: marin-county-executive
     name: Marin County Executive
@@ -173,6 +211,7 @@ monitors:
     include:
       - Marin County Executive
       - Marin County Executive's Office
+      - [Marin County, County Executive]
 
   - id: marin-cultural-services
     name: Marin County Cultural Services
@@ -188,6 +227,10 @@ monitors:
       - Marin County District Attorney
       - Marin District Attorney
       - Marin County DA
+      - Marin DA
+      - Marin County DA's Office
+      - Marin District Attorney's Office
+      - Marin prosecutor
 
   - id: marin-elections
     name: Marin County Elections
@@ -197,6 +240,10 @@ monitors:
       - Marin County Elections
       - Marin County Registrar of Voters
       - Marin Registrar of Voters
+      - [Marin County, elections]
+      - [Marin County, voting]
+      - [Marin County, Registrar]
+      - [Marin County, ballot]
 
   - id: marin-finance
     name: Marin County Finance
@@ -204,6 +251,10 @@ monitors:
     include:
       - Marin County Department of Finance
       - Marin County Finance Department
+      - [Marin County, word:budget]
+      - [Marin County, spending]
+      - [Marin County, word:tax]
+      - [Marin County, word:fee]
 
   - id: marin-hhs
     name: Marin County Health and Human Services
@@ -215,12 +266,25 @@ monitors:
       - Marin HHS
       - Marin County Department of Health and Human Services
       - Marin County HHS
+      - [Marin County, social services]
+      - [Marin County, behavioral health]
+      - [Marin County, mental health]
+      - [Marin County, public health]
+      - [Marin County, substance use]
+      - [Marin County, overdose]
+      - [Marin County, fentanyl]
 
   - id: marin-hr
     name: Marin County Human Resources
     group: Departments
     include:
       - Marin County Human Resources
+      - [Marin County, workforce]
+      - [Marin County, labor]
+      - [Marin County, labor negotiations]
+      - [Marin County, collective bargaining]
+      - [Marin County, County employees]
+      - [Marin County, County workers]
 
   - id: marin-ist
     name: Marin County Information Services and Technology
@@ -228,6 +292,7 @@ monitors:
     include:
       - Marin County Information Services and Technology
       - Marin County IST
+      - [Marin County, cybersecurity]
 
   - id: marin-library
     name: Marin County Free Library
@@ -235,6 +300,8 @@ monitors:
     include:
       - Marin County Free Library
       - Marin County Library
+      - [Marin County, library]
+      - [Marin County, libraries]
 
   - id: marin-parks
     name: Marin County Parks
@@ -244,6 +311,9 @@ monitors:
       - Marin County Parks
       - Marin County Parks and Open Space
       - Parks and Open Space Commission
+      - [Marin County, preserve]
+      - [Marin County, trail]
+      - [Marin County, word:IPM]
 
   - id: marin-probation
     name: Marin County Probation
@@ -251,6 +321,8 @@ monitors:
     include:
       - Marin County Probation
       - Marin Probation Department
+      - [Marin County, juvenile justice]
+      - [Marin County, juvenile hall]
 
   - id: marin-public-defender
     name: Marin County Public Defender
@@ -258,6 +330,7 @@ monitors:
     include:
       - Marin County Public Defender
       - Marin Public Defender
+      - [Marin County, indigent defense]
 
   - id: marin-public-works
     name: Marin County Public Works
@@ -266,6 +339,49 @@ monitors:
     include:
       - Marin County Public Works
       - Marin Public Works
+      - [Marin County, word:DPW]
+      - [Marin County, road]
+      - [Marin County, flood]
+      - [Marin County, drainage]
+      - [Marin County, storm water]
+      - [Marin County, stormwater]
+      - [Marin County, waste]
+      - [Marin County, recycling]
+      - [Marin County, airport]
+      - [Marin County, traffic]
+      - [Marin County, mobility]
+      - [Marin County, climate change]
+      - [Marin County, sea level rise]
+
+  - id: zero-waste-marin
+    name: Zero Waste Marin
+    group: Departments
+    include:
+      - Zero Waste Marin
+
+  - id: gnoss-field-airport
+    name: Gnoss Field Airport
+    group: Departments
+    include:
+      - Gnoss Field Airport
+
+  - id: gallinas-creek
+    name: Gallinas Creek
+    group: Departments
+    include:
+      - Gallinas Creek
+
+  - id: marin-csa-6
+    name: County Service Area 6
+    group: Departments
+    include:
+      - [Marin County, CSA 6]
+
+  - id: marin-csa-29
+    name: County Service Area 29
+    group: Departments
+    include:
+      - [Marin County, CSA 29]
 
   - id: marin-retirement
     name: Marin County Employees' Retirement Association
@@ -273,12 +389,15 @@ monitors:
     include:
       - Marin County Employees' Retirement Association
       - MCERA
+      - [Marin County, retirement]
+      - [Marin County, pension]
 
   - id: marin-tax-collector
     name: Marin County Tax Collector
     group: Departments
     include:
       - Marin County Tax Collector
+      - [Marin County, property tax]
 
   - id: marin-uc-extension
     name: Marin UC Cooperative Extension
@@ -286,6 +405,9 @@ monitors:
     include:
       - Marin UC Cooperative Extension
       - UC Cooperative Extension Marin
+      - [Marin, word:UCCE]
+      - [Marin, Farm Advisor]
+      - [Marin, Master Gardeners]
 
   - id: marin-transit
     name: Marin Transit
@@ -308,6 +430,8 @@ monitors:
     include:
       - AlertMarin
       - Alert Marin
+      - [Marin, reverse 911]
+      - [Marin, emergency notifications]
 
   - id: readymarin
     name: ReadyMarin
@@ -321,6 +445,7 @@ monitors:
     group: Services
     include:
       - Engage Marin
+      - [Marin, engagement, portal]
 
   # --- Events & Places ---
   - id: civic-center
@@ -330,6 +455,8 @@ monitors:
     include:
       - Marin Civic Center
       - Marin County Civic Center
+      - [Marin, civic center]
+      - [Marin, county, offices]
 
   - id: marin-center
     name: Marin Center
@@ -339,6 +466,8 @@ monitors:
       - Marin Showcase Theater
       - Marin Exhibit Hall
       - Marin Veterans' Memorial Auditorium
+      - [Marin, Veterans Memorial Auditorium]
+      - [Marin, word:VMA]
 
   - id: marin-county-fair
     name: Marin County Fair
@@ -394,6 +523,7 @@ monitors:
       - County of Marin
       - Marin Co.
       - Marin agencies
+      - [Marin County, government]
     exclude:
       - Marin County Florida
       - Marin County, Florida
@@ -432,6 +562,7 @@ monitors:
     group: Topics
     include:
       - [Marin County, word:budget]
+      - [Marin County, spending plan]
 
   - id: marin-flooding-topic
     name: Flooding
@@ -440,12 +571,373 @@ monitors:
       - [Marin County, word:flood]
       - [Marin County, word:flooding]
       - [Marin County, word:floods]
+      - [Marin County, El Niño]
+      - [Marin County, sandbags]
 
   - id: marin-strategic-plan-topic
     name: Strategic plan
     group: Topics
     include:
       - [Marin County, strategic plan]
+      - [Marin County, Envision]
+
+  - id: marin-ebike-topic
+    name: E-bike
+    group: Topics
+    include:
+      - [Marin County, e-bike]
+      - [Marin County, ebike]
+
+  - id: marin-economic-development-topic
+    name: Economic Development
+    group: Topics
+    include:
+      - [Marin County, economy]
+      - [Marin County, economic development]
+
+  - id: marin-homelessness-topic
+    name: Homelessness
+    group: Topics
+    include:
+      - [Marin County, homelessness]
+      - [Marin County, homeless]
+      - [Marin County, unhoused]
+      - [Marin County, encampment]
+      - [Marin County, shelter]
+
+  - id: marin-immigration-topic
+    name: Immigration
+    group: Topics
+    include:
+      - [Marin County, immigration]
+      - [Marin County, immigrant]
+      - [Marin County, word:ICE]
+      - [Marin County, deportation]
+      - [Marin County, word:raid]
+
+  # --- Associations ---
+  # One monitor per association (same "one thing per monitor" pattern as
+  # Districts/People) rather than folding all of these into
+  # marin-hr's include list — each represents a distinct organization a
+  # user might want to filter to specifically.
+  - id: mape
+    name: MAPE (Marin Association of Public Employees)
+    group: Associations
+    include:
+      - MAPE
+
+  - id: mcmea
+    name: Marin County Management Employees' Association
+    group: Associations
+    include:
+      - Marin County Management Employees' Association
+      - [MCMEA, Marin]
+
+  - id: marin-deputy-sheriffs-association
+    name: Marin County Deputy Sheriffs' Association
+    group: Associations
+    include:
+      - Marin County Deputy Sheriffs' Association
+      - Marin Deputy Sheriffs' Association
+      - [Marin, word:DSA]
+      - [Marin, deputies union]
+
+  - id: marin-firefighters-association
+    name: Marin County Firefighters' Association
+    group: Associations
+    include:
+      - [Marin, Firefighters' Association]
+      - [Marin, firefighters Association]
+      - [Marin, word:MCFA]
+      - [Marin, firefighters union]
+      - IAFF Local 1775
+
+  - id: marin-fire-battalion-chiefs-association
+    name: Marin County Fire Battalion Chiefs' Association
+    group: Associations
+    include:
+      - Marin County Fire Battalion Chiefs' Association
+      - Marin Fire Battalion Chiefs Association
+      - [Marin, word:FBCA]
+
+  - id: marin-sheriffs-staff-officers-association
+    name: Marin County Sheriff's Staff Officers' Association
+    group: Associations
+    include:
+      - Marin County Sheriff's Staff Officers' Association
+      - Marin Sheriff's Staff Officers' Association
+      - [Marin, word:SSOA]
+
+  - id: marin-probation-managers-association
+    name: Marin County Probation Managers' Association
+    group: Associations
+    include:
+      - Marin County Probation Managers' Association
+      - Marin Probation Managers' Association
+      - [Marin, word:PMA]
+
+  - id: teamsters-local-856
+    name: Teamsters Local 856
+    group: Associations
+    include:
+      - Teamsters Local 856
+      - Teamsters 856
+      - [Marin, Teamsters]
+
+  - id: iatse-local-16
+    name: IATSE Local 16
+    group: Associations
+    include:
+      - IATSE Local 16
+      - [Marin, IATSE]
+
+  # --- Towns ---
+  # Unincorporated Marin communities/places. Most are distinctive enough as
+  # standalone phrases (no other "Inverness Park" or "Tamalpais Valley"
+  # anywhere); a handful are common words/names or generic 2-word phrases
+  # that exist elsewhere too (a person named Marshall, the fruit
+  # strawberry, another state's "Black Point") — those are paired with a
+  # Marin AND-clause instead of a bare phrase, same reasoning as everywhere
+  # else in this file.
+  - id: almonte
+    name: Almonte
+    group: Towns
+    include:
+      - Almonte
+
+  - id: bel-marin-keys
+    name: Bel Marin Keys
+    group: Towns
+    include:
+      - Bel Marin Keys
+
+  - id: black-point
+    name: Black Point
+    group: Towns
+    include:
+      - [Marin, Black Point]
+
+  - id: bolinas
+    name: Bolinas
+    group: Towns
+    include:
+      - Bolinas
+
+  - id: dillon-beach
+    name: Dillon Beach
+    group: Towns
+    include:
+      - Dillon Beach
+
+  - id: dogtown
+    name: Dogtown
+    group: Towns
+    include:
+      - [Marin, Dogtown]
+
+  - id: fallon
+    name: Fallon
+    group: Towns
+    include:
+      - [Marin, Fallon]
+
+  - id: forest-knolls
+    name: Forest Knolls
+    group: Towns
+    include:
+      - Forest Knolls
+
+  - id: greenbrae
+    name: Greenbrae
+    group: Towns
+    include:
+      - Greenbrae
+
+  - id: green-point
+    name: Green Point
+    group: Towns
+    include:
+      - [Marin, Green Point]
+
+  - id: homestead-valley
+    name: Homestead Valley
+    group: Towns
+    include:
+      - Homestead Valley
+
+  - id: ignacio
+    name: Ignacio
+    group: Towns
+    include:
+      - [Marin, Ignacio]
+
+  - id: indian-valley
+    name: Indian Valley
+    group: Towns
+    include:
+      - [Marin, Indian Valley]
+
+  - id: inverness
+    name: Inverness
+    group: Towns
+    include:
+      - Inverness
+
+  - id: inverness-park
+    name: Inverness Park
+    group: Towns
+    include:
+      - Inverness Park
+
+  - id: kentfield
+    name: Kentfield
+    group: Towns
+    include:
+      - Kentfield
+
+  - id: kent-woodlands
+    name: Kent Woodlands
+    group: Towns
+    include:
+      - Kent Woodlands
+
+  - id: lagunitas
+    name: Lagunitas
+    group: Towns
+    include:
+      - Lagunitas
+
+  - id: las-gallinas
+    name: Las Gallinas
+    group: Towns
+    include:
+      - Las Gallinas
+
+  - id: loma-verde
+    name: Loma Verde
+    group: Towns
+    include:
+      - [Marin, Loma Verde]
+
+  - id: lucas-valley
+    name: Lucas Valley
+    group: Towns
+    include:
+      - Lucas Valley
+
+  - id: marin-city
+    name: Marin City
+    group: Towns
+    include:
+      - Marin City
+
+  - id: marinwood
+    name: Marinwood
+    group: Towns
+    include:
+      - Marinwood
+
+  - id: marshall
+    name: Marshall
+    group: Towns
+    include:
+      - [Marin, Marshall]
+
+  - id: muir-beach
+    name: Muir Beach
+    group: Towns
+    include:
+      - Muir Beach
+
+  - id: nicasio
+    name: Nicasio
+    group: Towns
+    include:
+      - Nicasio
+
+  - id: olema
+    name: Olema
+    group: Towns
+    include:
+      - Olema
+
+  - id: paradise-cay
+    name: Paradise Cay
+    group: Towns
+    include:
+      - Paradise Cay
+
+  - id: point-reyes-station
+    name: Point Reyes Station
+    group: Towns
+    include:
+      - Point Reyes Station
+
+  - id: san-geronimo
+    name: San Geronimo
+    group: Towns
+    include:
+      - San Geronimo
+
+  - id: san-quentin
+    name: San Quentin
+    group: Towns
+    include:
+      - San Quentin
+
+  - id: santa-venetia
+    name: Santa Venetia
+    group: Towns
+    include:
+      - Santa Venetia
+
+  - id: sleepy-hollow
+    name: Sleepy Hollow
+    group: Towns
+    include:
+      - [Marin, Sleepy Hollow]
+
+  - id: stinson-beach
+    name: Stinson Beach
+    group: Towns
+    include:
+      - Stinson Beach
+
+  - id: strawberry
+    name: Strawberry
+    group: Towns
+    include:
+      - [Marin, Strawberry]
+
+  - id: tamalpais-valley
+    name: Tamalpais Valley
+    group: Towns
+    include:
+      - Tamalpais Valley
+
+  - id: tocaloma
+    name: Tocaloma
+    group: Towns
+    include:
+      - Tocaloma
+
+  - id: tomales
+    name: Tomales
+    group: Towns
+    include:
+      - Tomales
+
+  - id: west-marin
+    name: West Marin
+    group: Towns
+    include:
+      - West Marin
+
+  - id: woodacre
+    name: Woodacre
+    group: Towns
+    include:
+      - Woodacre
 
   # --- People ---
   # One monitor per person (not one "People" monitor with everyone lumped

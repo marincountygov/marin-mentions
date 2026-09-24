@@ -122,7 +122,17 @@ document.addEventListener("DOMContentLoaded", () => {
   // Monitors page) — config/monitors.yaml's own section-comment order,
   // not alphabetical. Any group not listed here falls back to alphabetical
   // and sorts after all of these (see sortedGroupEntries).
-  const MONITOR_GROUP_ORDER = ["Topics", "Services", "Events & Places", "Board & Courts", "Districts", "Departments", "People"];
+  const MONITOR_GROUP_ORDER = [
+    "Topics",
+    "Services",
+    "Events & Places",
+    "Towns",
+    "Board & Courts",
+    "Districts",
+    "Departments",
+    "Associations",
+    "People",
+  ];
 
   function escapeHtml(value) {
     return String(value ?? "")
