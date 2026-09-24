@@ -124,10 +124,6 @@ async function buildOnce({ previousSnapshotPath, outPath, env = process.env }) {
   const context = {
     monitors,
     apiKey: env.YOUTUBE_API_KEY,
-    clientId: env.REDDIT_CLIENT_ID,
-    clientSecret: env.REDDIT_CLIENT_SECRET,
-    redditUsername: env.REDDIT_USERNAME,
-    redditPassword: env.REDDIT_PASSWORD,
     blueskyHandle: env.BLUESKY_HANDLE,
     blueskyPassword: env.BLUESKY_APP_PASSWORD,
   };
@@ -197,7 +193,11 @@ async function buildOnce({ previousSnapshotPath, outPath, env = process.env }) {
 
   reattributeBySourceDomain(allItems, buildDomainIndex(sources));
 
-  const matched = matchItems(allItems, monitors);
+  // Mirrors assets/app.js's computeOfficialSourceIds() — an official
+  // source's items bypass matchItems()'s phrase-matching requirement (see
+  // that function's own comment for why).
+  const officialSourceIds = new Set(sources.filter((source) => source.official).map((source) => source.id));
+  const matched = matchItems(allItems, monitors, officialSourceIds);
   const deduped = dedupeItems(matched);
 
   const cutoff = now - PRUNE_DAYS * 24 * 60 * 60 * 1000;

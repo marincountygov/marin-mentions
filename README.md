@@ -12,7 +12,7 @@ A live, stateless media-monitoring console for the San Francisco Bay Area, prior
 
 Every ~10–15 minutes, a scheduled build:
 
-1. Fetches every enabled source in `config/sources.yaml` (direct RSS, Google News RSS, YouTube, Bluesky — Reddit and Nextdoor are disabled by default).
+1. Fetches every enabled source in `config/sources.yaml` (direct RSS, Google News RSS, YouTube, Bluesky, Reddit — Nextdoor is disabled, no activation path).
 2. Normalizes results into a common shape (see "Common media shape" below).
 3. Matches them against the monitors in `config/monitors.yaml` (include/exclude phrases, case-insensitive).
 4. Deduplicates, preferring a direct publisher result over a Google News result for the same story.
@@ -74,7 +74,11 @@ The trade-off: there's no true "fetch it right now" refresh, and if the schedule
 
 Two independent methods, two different cost profiles:
 
-**Keyword search** (`type: youtube` in `sources.yaml`) — `build/connectors/youtube.js`'s `fetchYoutubeSource` uses `search.list` (cost: 100 quota units/call against a 10,000/day default quota). To stay well inside that, it makes **one combined search per refresh** (all monitors' phrases OR'd together via YouTube's `q=term1|term2` syntax) rather than one search per monitor, and defaults to a 60-minute refresh interval (24 calls/day = 2,400 units/day). `build/match.js` re-checks the real include/exclude phrases against the returned title+description afterward, so a broader YouTube-side query just means a few extra discarded results, not false positives. Disabled (shows `error` on `/sources`) until `YOUTUBE_API_KEY` is set.
+**Keyword search** (`type: youtube` in `sources.yaml`) — `build/connectors/youtube.js`'s `fetchYoutubeSource` uses `search.list` (cost: 100 quota units/call against a 10,000/day default quota). Requires `YOUTUBE_API_KEY`.
+
+One `search.list` call per curated term, **not** one combined OR query across every monitor phrase — that was the original design, but a live test (2026-09-24, right after the key was first set) found a real bug in it: a single quoted phrase alone returns real results fine, but as soon as a phrase that has zero matches on its own gets OR'd (`|`) with anything else, quoted or not, YouTube's response silently collapses to `items: []` for the *entire* combined query (`pageInfo.totalResults` stays nonzero, so it isn't an obvious error) — confirmed reproducible, and confirmed it was one specific phrase poisoning every query it was combined into. Since there's no way to know in advance which future monitor phrase might do this, the fix is one call per term instead of combining them.
+
+That makes quota the limiting factor, so only a curated subset of monitors are searched this way — the ones flagged `youtubeSearch: true` in `config/monitors.yaml` (currently 10, spread across groups: the broadest catch-all plus one each from Sheriff, Fire, Civic Center, Superior Court, HHS, Public Works, Parks, Elections, Board of Supervisors). Each uses its first include phrase, unquoted (unquoted also proved reliable in testing, and `build/match.js` re-checks the real phrase against each result's actual title/description afterward anyway, so there's no correctness reason to risk YouTube's exact-phrase quoting). 10 terms × 100 units × 8 refreshes/day (`refreshIntervalMinutes: 180`, every 3 hours) = 8,000 units/day, leaving headroom under the 10,000/day quota.
 
 **Selected channels** (`type: youtube-rss`) — every YouTube channel publishes its own free Atom feed at `https://www.youtube.com/feeds/videos.xml?channel_id=<id>`. `fetchYoutubeChannelRssSource` fetches that directly — no API key, no quota, at the same 10-minute cadence as regular RSS sources. `build/connectors/rss.js`'s Atom parser extracts the thumbnail and channel name from YouTube's `<media:group>`/`<author>` extensions. Currently configured (channel IDs verified 2026-09-17 via a live fetch of each feed): KQED, ABC7 Bay Area, KTVU, KRON4, NBC Bay Area, CBS News Bay Area, SFGATE, and San Francisco Standard. To add another channel, find its channel ID (visit the channel page and search the HTML for `channel_id=`) and add a `youtube-rss` entry to `sources.yaml` — no code changes needed.
 
@@ -93,15 +97,13 @@ This is still read-only and still not OAuth — an App Password only grants the 
 
 ### Reddit
 
-Enabled in `config/sources.yaml`, scoped to `r/bayarea`, `r/sanfrancisco`, `r/Marin`, `r/oakland`, `r/berkeley`, `r/SanJose` (see `build/connectors/reddit.js`). Reddit's Data API requires an OAuth app (`REDDIT_CLIENT_ID`/`REDDIT_CLIENT_SECRET`, client-credentials grant) and caps free-tier use at 100 queries/minute per OAuth client — workable for one low-frequency poll every 10–15 minutes, but Reddit's terms require a paid contract for higher-volume or commercial use. Without those two secrets set, it shows `error` on `/sources` and contributes no items, the same as YouTube without `YOUTUBE_API_KEY`. **As of 2026-09-22 these secrets have never been set** — Reddit has contributed zero items in every production build so far; this is the main reason Social results have looked thin.
+Enabled in `config/sources.yaml`, scoped to `r/bayarea`, `r/sanfrancisco`, `r/Marin`, `r/oakland`, `r/berkeley`, `r/SanJose`, `r/Novato`, `r/MillValley`, `r/SanRafael` (see `build/connectors/reddit.js`). No credentials, no OAuth app, no bot account.
 
-To activate it:
+Reddit's Data API now requires going through a manual, approval-gated request process (a November 2025 policy change) — self-service OAuth app access is closed, and small non-commercial projects have real odds of rejection or no response at all. Rather than go through that, this connector reads Reddit's own public per-subreddit Atom feeds directly: `/new/.rss` (posts) and `/comments/.rss` (comments), combined across all six subreddits in one request each via Reddit's `r/a+b+c` multi-subreddit syntax, `?limit=100` for a full page per request. `build/match.js` does the real include/exclude keyword filtering against each entry's title/text afterward, same as every other connector — no per-term querying needed.
 
-1. Log into the Reddit account this app should run as, go to [reddit.com/prefs/apps](https://www.reddit.com/prefs/apps), click **create another app...**.
-2. Choose type **script**, fill in any name/description, set the redirect URI to `https://localhost` (unused for this grant type, but required by the form).
-3. After creating it, the app's client ID is the string shown directly under the app name (not labeled); the client secret is the field explicitly labeled **secret**.
-4. In this repo's GitHub settings: **Settings → Secrets and variables → Actions → New repository secret**, add `REDDIT_CLIENT_ID` and `REDDIT_CLIENT_SECRET` with those two values.
-5. No workflow change needed — `build/index.js` already reads both from the environment (see `.github/workflows/build-and-deploy.yml`); they just need to exist as repo secrets. The next scheduled build (or a manual re-run) picks them up automatically.
+A post's Atom `<id>` is `t3_<id>`; a comment's is `t1_<id>`, and its permalink always contains the parent post's id (`/r/<sub>/comments/<postId>/<slug>/<commentId>/`) even when that post itself has aged out of the current `/new/.rss` window — this connector derives each comment's `redditPostId` from the permalink rather than assuming any fixed ID length or format, since Reddit lengthened and randomized comment IDs in May 2026.
+
+Reddit's anonymous feed endpoints rate-limit hard and immediately (confirmed live: `x-ratelimit-remaining` hits `0.0` after a single request, with `x-ratelimit-reset` varying too much to hardcode a delay — a flat 20s produced a real `429` in testing). The two requests per refresh (posts, then comments) wait however long Reddit's own `x-ratelimit-reset` header says, clamped between 20-60s.
 
 ### Nextdoor
 

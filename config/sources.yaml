@@ -506,6 +506,72 @@ sources:
     costCategory: free
     official: true
 
+  # Channel IDs resolved 2026-09-24 from each @handle/vanity URL's canonical
+  # link tag, then verified with a live feed fetch (real title, real
+  # entries) — same method README.md documents for adding a channel.
+  - id: marin-elections-youtube
+    name: Marin County Elections (YouTube)
+    type: youtube-rss
+    region: marin
+    channelId: UCjVufWSdUBdYEpdJVuo65iw
+    enabled: true
+    costCategory: free
+    official: true
+
+  - id: marin-hhs-youtube
+    name: Marin HHS (YouTube)
+    type: youtube-rss
+    region: marin
+    channelId: UCl2K-mocQ-B7nzSaFnucYPQ
+    enabled: true
+    costCategory: free
+    official: true
+
+  - id: marin-library-youtube
+    name: Marin County Free Library (YouTube)
+    type: youtube-rss
+    region: marin
+    channelId: UCl2Ih_Eqlm76UIy95OdvRxA
+    enabled: true
+    costCategory: free
+    official: true
+
+  - id: marin-fair-youtube
+    name: Marin County Fair (YouTube)
+    type: youtube-rss
+    region: marin
+    channelId: UCvSM3czUli6xF7ZdioaMtOg
+    enabled: true
+    costCategory: free
+    official: true
+
+  - id: marin-parks-youtube
+    name: Marin County Parks (YouTube)
+    type: youtube-rss
+    region: marin
+    channelId: UCFmEtov4EbCuw-jAKDHLYAA
+    enabled: true
+    costCategory: free
+    official: true
+
+  - id: marin-sheriff-youtube
+    name: Marin Sheriff (YouTube)
+    type: youtube-rss
+    region: marin
+    channelId: UCcRs_M12Jjg2PZfOt4JNwig
+    enabled: true
+    costCategory: free
+    official: true
+
+  - id: marin-master-gardeners-youtube
+    name: UC Marin Master Gardeners (YouTube)
+    type: youtube-rss
+    region: marin
+    channelId: UCSD6omhthvgtmFPCqdbDxjQ
+    enabled: true
+    costCategory: free
+    official: true
+
   # --- Google News discovery (not tied to one outlet) ---
   - id: google-news-marin-county
     name: "Google News: Marin County"
@@ -588,12 +654,16 @@ sources:
     region: bay-area
     enabled: true
     costCategory: free-quota
-    refreshIntervalMinutes: 60
+    refreshIntervalMinutes: 180
     note: >-
       search.list costs 100 quota units/call against a 10,000/day default
-      quota. One combined query across all monitors, refreshed hourly
-      (24 calls/day = 2,400 units/day), leaves headroom instead of risking
-      quota exhaustion. See README.md "YouTube" for the cost model.
+      quota. One call per curated term (config/monitors.yaml's
+      youtubeSearch: true flag, ~10 monitors) — not one combined OR query
+      across every monitor, which a live 2026-09-24 test found silently
+      zeroes out results when any single phrase has no matches on its own
+      (see build/connectors/youtube.js). 10 terms x 100 units x 8
+      refreshes/day (every 3 hours) = 8,000 units/day, leaves headroom. See
+      README.md "YouTube" for the cost model.
 
   - id: bluesky
     name: Bluesky
@@ -602,14 +672,22 @@ sources:
     enabled: true
     costCategory: free
     note: >-
-      Disabled 2026-09-18: Bluesky's unauthenticated searchPosts endpoint
-      (tried both public.api.bsky.app and api.bsky.app) returned HTTP 403
-      consistently from multiple machines/networks, not just one blocked
-      sandbox. build/connectors/bluesky.js is otherwise a working,
-      already-implemented connector — the failure is upstream access, not
-      the code. Re-enable if Bluesky's access policy changes, or add App
-      Password authentication (see README.md "Bluesky") if you want it
-      working sooner.
+      Unauthenticated searchPosts on api.bsky.app — working (fixed
+      2026-09-23: a dedupe bug was discarding almost every title-less
+      Bluesky post; see build/dedupe.js and build/connectors/bluesky.js).
+
+  - id: marin-county-parks-bluesky
+    name: Marin County Parks (Bluesky)
+    type: bluesky-author
+    handle: marincountyparks.bsky.social
+    region: marin
+    enabled: true
+    costCategory: free
+    official: true
+    note: >-
+      The account's own posts via getAuthorFeed, not the keyword search
+      every other Bluesky item goes through — see
+      build/connectors/bluesky-author.js.
 
   - id: reddit
     name: Reddit
@@ -619,22 +697,26 @@ sources:
     costCategory: free-with-limits
     note: >-
       Covers r/bayarea, r/sanfrancisco, r/Marin, r/oakland, r/berkeley,
-      r/SanJose (see build/connectors/reddit.js). Needs REDDIT_CLIENT_ID /
-      REDDIT_CLIENT_SECRET secrets to actually pull anything — without
-      them this shows "error" on /sources, same as youtube without
-      YOUTUBE_API_KEY. Reddit's Data API caps free-tier use at 100
-      queries/minute per OAuth client, workable for a poll every 10-15
-      minutes; higher-volume/commercial use needs a paid contract. See
-      README.md "Reddit" section.
+      r/SanJose, r/Novato, r/MillValley, r/SanRafael (see
+      build/connectors/reddit.js). Pulls from Reddit's public per-subreddit
+      Atom feeds (combined via r/a+b+c syntax), not the OAuth Data API — no
+      credentials needed, sidesteps Reddit's Nov 2025 approval-gated API
+      access policy entirely. Two requests per refresh (posts, comments),
+      adaptively paced off Reddit's own x-ratelimit-reset header to stay
+      clear of its tight anonymous rate limit. See README.md "Reddit"
+      section.
 
-  - id: nextdoor
-    name: Nextdoor
-    type: nextdoor
-    region: bay-area
-    enabled: false
-    costCategory: approval-required
-    note: >-
-      Nextdoor has no public, self-serve content/search API. Its published
-      APIs (Creator/Ads, Local Deals) don't cover keyword monitoring of
-      neighborhood posts. Left disabled with a connector stub — see
-      README.md "Nextdoor" section for what activation would require.
+  # Hidden for now (not just disabled) — was still showing up in the Sources
+  # sidebar and /sources page labeled "Disabled," which was just clutter
+  # since it has no activation path. Uncomment to bring it back.
+  # - id: nextdoor
+  #   name: Nextdoor
+  #   type: nextdoor
+  #   region: bay-area
+  #   enabled: false
+  #   costCategory: approval-required
+  #   note: >-
+  #     Nextdoor has no public, self-serve content/search API. Its published
+  #     APIs (Creator/Ads, Local Deals) don't cover keyword monitoring of
+  #     neighborhood posts. Left disabled with a connector stub — see
+  #     README.md "Nextdoor" section for what activation would require.

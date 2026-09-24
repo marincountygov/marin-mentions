@@ -4,6 +4,7 @@ const { fetchRssSource } = require("./rss");
 const { fetchGoogleNewsSource } = require("./google-news");
 const { fetchYoutubeSource, fetchYoutubeChannelRssSource } = require("./youtube");
 const { fetchBlueskySource } = require("./bluesky");
+const { fetchBlueskyAuthorSource } = require("./bluesky-author");
 const { fetchRedditSource } = require("./reddit");
 const { fetchNextdoorSource } = require("./nextdoor");
 
@@ -13,6 +14,7 @@ const DEFAULT_REFRESH_MINUTES = {
   youtube: 60,
   "youtube-rss": 10,
   bluesky: 5,
+  "bluesky-author": 15,
   reddit: 15,
   nextdoor: 15,
 };
@@ -32,8 +34,10 @@ function fetchSource(source, context) {
       return fetchYoutubeChannelRssSource(source);
     case "bluesky":
       return fetchBlueskySource(source, context);
+    case "bluesky-author":
+      return fetchBlueskyAuthorSource(source);
     case "reddit":
-      return fetchRedditSource(source, context);
+      return fetchRedditSource(source);
     case "nextdoor":
       return fetchNextdoorSource(source, context);
     default:

@@ -33,6 +33,7 @@ monitors:
   - id: marin-supervisors
     name: Marin Board of Supervisors
     group: Board & Courts
+    youtubeSearch: true
     include:
       - Marin Board of Supervisors
       - Marin County Board of Supervisors
@@ -41,6 +42,7 @@ monitors:
   - id: marin-superior-court
     name: Marin County Superior Court
     group: Board & Courts
+    youtubeSearch: true
     include:
       - Marin County Superior Court
       - Marin Superior Court
@@ -119,6 +121,7 @@ monitors:
   - id: marin-sheriff
     name: Marin County Sheriff
     group: Departments
+    youtubeSearch: true
     include:
       - Marin County Sheriff
       - Marin County Sheriff's Office
@@ -127,6 +130,7 @@ monitors:
   - id: marin-fire
     name: Marin County Fire Department
     group: Departments
+    youtubeSearch: true
     include:
       - Marin County Fire Department
       - Marin County Fire
@@ -188,6 +192,7 @@ monitors:
   - id: marin-elections
     name: Marin County Elections
     group: Departments
+    youtubeSearch: true
     include:
       - Marin County Elections
       - Marin County Registrar of Voters
@@ -203,6 +208,7 @@ monitors:
   - id: marin-hhs
     name: Marin County Health and Human Services
     group: Departments
+    youtubeSearch: true
     include:
       - Marin County Health and Human Services
       - Marin Health and Human Services
@@ -233,6 +239,7 @@ monitors:
   - id: marin-parks
     name: Marin County Parks
     group: Departments
+    youtubeSearch: true
     include:
       - Marin County Parks
       - Marin County Parks and Open Space
@@ -255,6 +262,7 @@ monitors:
   - id: marin-public-works
     name: Marin County Public Works
     group: Departments
+    youtubeSearch: true
     include:
       - Marin County Public Works
       - Marin Public Works
@@ -318,6 +326,7 @@ monitors:
   - id: civic-center
     name: Marin County Civic Center
     group: Events & Places
+    youtubeSearch: true
     include:
       - Marin Civic Center
       - Marin County Civic Center
@@ -379,6 +388,7 @@ monitors:
   - id: marin-county
     name: Marin County
     group: Topics
+    youtubeSearch: true
     include:
       - Marin County
       - County of Marin
@@ -387,6 +397,21 @@ monitors:
     exclude:
       - Marin County Florida
       - Marin County, Florida
+
+  # Reddit-only, deliberately broader than every monitor above: casual
+  # Reddit chatter about Marin almost never uses a full phrase like "Marin
+  # County" — confirmed directly, genuine matches were landing at 0-1 per
+  # poll against 200 real raw items. sourceMethods restricts this to
+  # Reddit specifically (see build/match.js) so News/Video keep their
+  # existing phrase-level precision; accepting more noise here (e.g. a
+  # person named Marin) is the deliberate tradeoff for more recall on a
+  # platform that's inherently casual chatter, not curated coverage.
+  - id: marin-broad-reddit
+    name: Marin (general mention)
+    group: Topics
+    sourceMethods: [reddit]
+    include:
+      - word:Marin
 
   # Wildfire coverage generally, distinct from marin-fire (the Fire
   # Department as an organization, under Departments above) — this one
