@@ -369,6 +369,18 @@
         .replace(/>/g, "&gt;");
     }
 
+    // Strips a leading Conventional Commits-style prefix ("fix:", "feat
+    // (scope):", "chore:", etc.) and capitalizes what's left, so a title
+    // like "fix: stale cache key" reads as "Stale cache key" instead of
+    // exposing commit-message convention to a non-technical reader. This
+    // is text cleanup, not real plain-language rewriting — a static page
+    // has no way to genuinely rewrite arbitrary text at view time.
+    const CONVENTIONAL_COMMIT_PREFIX = /^[a-z]+(\([^)]*\))?!?:\s*/i;
+    function cleanTitle(rawTitle) {
+      const stripped = rawTitle.replace(CONVENTIONAL_COMMIT_PREFIX, "");
+      return stripped ? stripped[0].toUpperCase() + stripped.slice(1) : rawTitle;
+    }
+
     async function loadUpdates() {
       if (loaded) return;
       if (status) status.textContent = "Loading latest commits...";
@@ -394,7 +406,7 @@
           .slice(0, 10)
           .map((commit) => {
             const message = String(commit?.commit?.message ?? "").trim();
-            const title = message.split("\n")[0] || "Untitled commit";
+            const title = cleanTitle(message.split("\n")[0] || "Untitled commit");
             const bodyLines = message
               .split("\n")
               .slice(1)
@@ -416,10 +428,16 @@
                 : bodyLines.length === 1
                   ? `<p>${escapeHtml(bodyLines[0])}</p>`
                   : "";
+            const copyText = [title, ...bodyLines].join("\n");
             return (
               `<article class="app-card"><h3><a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">${escapeHtml(title)}</a></h3>` +
               `<p class="app-help-text">${escapeHtml(date)}</p>` +
               body +
+              `<button type="button" class="copy-button" data-copy-value="${escapeHtml(copyText)}" data-copy-announce="Update copied" aria-label="Copy this update">` +
+              `<svg class="copy-icon" aria-hidden="true" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>` +
+              `<svg class="copy-check-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>` +
+              `Copy` +
+              `</button>` +
               `</article>`
             );
           })
