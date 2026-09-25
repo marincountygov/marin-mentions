@@ -266,27 +266,92 @@
     });
   });
 
+  /** Render html into a hidden contenteditable element, select it, and let
+   * the browser's native execCommand("copy") capture both clipboard
+   * flavors from the real selection. Kept only as a fallback for browsers
+   * without the async Clipboard API's multi-flavor write() below — its
+   * plain-text flavor is the browser's own derivation from the selected
+   * DOM (visible text only, e.g. a link's href is dropped), not the exact
+   * `text` a caller asked for, which write() gives explicit control over. */
+  function copyRichTextViaExecCommand(html) {
+    const temp = document.createElement("div");
+    temp.contentEditable = "true";
+    temp.style.position = "fixed";
+    temp.style.left = "-9999px";
+    temp.innerHTML = html;
+    document.body.appendChild(temp);
+    const range = document.createRange();
+    range.selectNodeContents(temp);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    const copied = document.execCommand("copy");
+    selection.removeAllRanges();
+    document.body.removeChild(temp);
+    return copied;
+  }
+
+  /** Write both clipboard flavors explicitly so a plain-text paste gets
+   * exactly `text` (e.g. a link's URL, spelled out, not just its visible
+   * label) and a rich-text paste gets exactly `html`. Falls back to the
+   * execCommand technique above, then to plain writeText(text), for
+   * browsers without ClipboardItem/clipboard.write support. */
+  async function copyRich(text, html) {
+    if (typeof ClipboardItem !== "undefined" && navigator.clipboard?.write) {
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            "text/plain": new Blob([text], { type: "text/plain" }),
+            "text/html": new Blob([html], { type: "text/html" }),
+          }),
+        ]);
+        return true;
+      } catch {
+        // Fall through to the older technique below (older browser, or a
+        // permissions/user-gesture rejection ClipboardItem hit but
+        // execCommand might not).
+      }
+    }
+    try {
+      if (copyRichTextViaExecCommand(html)) return true;
+    } catch {
+      // Fall through to plain-text writeText in the caller.
+    }
+    return false;
+  }
+
   // Copy-to-clipboard: any button[data-copy-value] copies that value and
   // shows brief feedback. Announces through #app-status-message if present
   // (the standard app-shell live region), otherwise a page-supplied
-  // [data-copy-status] live region, if either exists.
+  // [data-copy-status] live region, if either exists. A button that also
+  // carries [data-copy-html] copies that richer formatting instead (falling
+  // back to the plain data-copy-value text if the rich copy fails).
   document.addEventListener("click", (event) => {
     const button = event.target.closest("[data-copy-value]");
     if (!button) return;
     const value = button.dataset.copyValue;
+    const html = button.dataset.copyHtml;
     const status = document.querySelector("#app-status-message, [data-copy-status]");
 
-    navigator.clipboard
-      .writeText(value)
-      .then(() => {
-        button.classList.add("is-copied");
-        clearTimeout(button.copyResetTimeout);
-        button.copyResetTimeout = setTimeout(() => button.classList.remove("is-copied"), 1500);
-        if (status) status.textContent = button.dataset.copyAnnounce || `Copied ${value}`;
-      })
-      .catch(() => {
-        if (status) status.textContent = `Couldn't copy ${value} — copy it manually`;
+    const onCopied = () => {
+      button.classList.add("is-copied");
+      clearTimeout(button.copyResetTimeout);
+      button.copyResetTimeout = setTimeout(() => button.classList.remove("is-copied"), 1500);
+      if (status) status.textContent = button.dataset.copyAnnounce || `Copied ${value}`;
+    };
+    const onFailed = () => {
+      if (status) status.textContent = `Couldn't copy ${value} — copy it manually`;
+    };
+
+    if (html) {
+      copyRich(value, html).then((copied) => {
+        if (copied) onCopied();
+        else navigator.clipboard.writeText(value).then(onCopied).catch(onFailed);
       });
+      return;
+    }
+
+    navigator.clipboard.writeText(value).then(onCopied).catch(onFailed);
   });
 
   // Share: any button[data-action="share"] copies the current page URL and
@@ -360,13 +425,21 @@
     if (!repo || !list) return;
 
     const owner = repo.includes("/") ? repo : `marincountygov/${repo}`;
+    // GitHub Pages project sites always serve at
+    // https://marincountygov.github.io/<repo-name>/, never the org root —
+    // strip the owner off "owner/repo" overrides to get the bare repo name.
+    const repoName = repo.includes("/") ? repo.split("/")[1] : repo;
+    const siteUrl = `https://marincountygov.github.io/${repoName}/`;
+    const SPARKLE_EMOJI = "✨"; // ✨
+    const POINT_RIGHT_EMOJI = "\u{1F449}"; // 👉
     let loaded = false;
 
     function escapeHtml(value) {
       return String(value ?? "")
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
     }
 
     // Strips a leading Conventional Commits-style prefix ("fix:", "feat
@@ -407,13 +480,14 @@
           .map((commit) => {
             const message = String(commit?.commit?.message ?? "").trim();
             const title = cleanTitle(message.split("\n")[0] || "Untitled commit");
-            const bodyLines = message
+            const rawBodyLines = message
               .split("\n")
               .slice(1)
-              .map((line) => line.trim().replace(/^[-*]\s*/, ""))
+              .map((line) => line.trim())
               .filter(Boolean);
-            const date = commit?.commit?.committer?.date
-              ? new Date(commit.commit.committer.date).toLocaleString([], {
+            const commitDate = commit?.commit?.committer?.date ? new Date(commit.commit.committer.date) : null;
+            const date = commitDate
+              ? commitDate.toLocaleString([], {
                   year: "numeric",
                   month: "short",
                   day: "numeric",
@@ -421,19 +495,94 @@
                   minute: "2-digit",
                 })
               : "Date unavailable";
+            // Kicker date, same granularity as this project's own news
+            // digest header ("Marin Mentions — Sep 25, 2026") — no time,
+            // since the kicker line is app + date, not this exact commit's
+            // timestamp (that's what the date line under the title is for).
+            const kickerDate = commitDate
+              ? commitDate.toLocaleString([], { year: "numeric", month: "short", day: "numeric" })
+              : "Date unavailable";
             const url = commit?.html_url || `https://github.com/${owner}/commits`;
-            const body =
-              bodyLines.length > 1
-                ? `<ul>${bodyLines.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>`
-                : bodyLines.length === 1
-                  ? `<p>${escapeHtml(bodyLines[0])}</p>`
-                  : "";
-            const copyText = [title, ...bodyLines].join("\n");
+
+            // A commit body is either a real bullet list (lines starting
+            // with -/*) or a hard-wrapped prose paragraph (this project's
+            // own commit convention). Treating every raw line as its own
+            // bullet, regardless of style, chopped wrapped sentences into
+            // fragments that read as unrelated bullet points — a real
+            // bullet's own wrapped continuation line isn't a new item, and
+            // a prose paragraph's hard-wrap points usually fall mid-
+            // sentence, not at a real boundary. Either way the list should
+            // end up one <li> per actual point: for real bullets, that's
+            // the bullet itself (with continuation lines merged back in);
+            // for prose, it's each full sentence, found by reflowing the
+            // wrapped lines back into one block first.
+            const hasBullets = rawBodyLines.some((line) => /^[-*]\s+/.test(line));
+            const bodyItems = [];
+            if (hasBullets) {
+              for (const line of rawBodyLines) {
+                if (/^[-*]\s+/.test(line)) bodyItems.push(line.replace(/^[-*]\s+/, ""));
+                else if (bodyItems.length) bodyItems[bodyItems.length - 1] += ` ${line}`;
+                else bodyItems.push(line);
+              }
+            } else if (rawBodyLines.length) {
+              // Split after ./!/? only when followed by whitespace then a
+              // capital letter, "(", or "`" — keeps abbreviations ("e.g."),
+              // decimals/versions ("1.17.2"), and dotted names ("Node.js")
+              // intact (no space follows their periods), while still
+              // splitting on genuine sentence boundaries.
+              rawBodyLines
+                .join(" ")
+                .split(/(?<=[.!?])\s+(?=[A-Z(`])/)
+                .map((sentence) => sentence.trim())
+                .filter(Boolean)
+                .forEach((sentence) => bodyItems.push(sentence));
+            }
+            const body = bodyItems.length
+              ? `<ul>${bodyItems.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
+              : "";
+            // A commit copied or shared on its own (e.g. pasted into a
+            // Slack message) loses the page context that says which app
+            // it's about, so the copied text/HTML carries an app-name +
+            // date kicker and a link back to the app's own site —
+            // copy-only, not shown on the page itself, where that context
+            // is already given by the page around the card. The kicker
+            // already carries the date, so the copy drops the separate
+            // date line the rendered card still shows under the title.
+            const kicker = appName ? `${SPARKLE_EMOJI} ${appName} updates — ${kickerDate}` : "";
+            const kickerHtml = appName
+              ? `${SPARKLE_EMOJI} <b>${escapeHtml(appName)} updates — <i>${escapeHtml(kickerDate)}</i></b>`
+              : "";
+            const visitText = appName ? `${POINT_RIGHT_EMOJI} Visit ${appName}` : "";
+            // Title and the full body content, as plain text - no link
+            // markup (the title is never a hyperlink in the copied text,
+            // only in the rendered card). A blank line sets the kicker
+            // apart from the update itself, which stays single-spaced
+            // internally (title/items/visit line).
+            const updateBlock = [title, ...bodyItems, visitText && `${visitText}: ${siteUrl}`]
+              .filter(Boolean)
+              .join("\n");
+            const copyText = [kicker, updateBlock].filter(Boolean).join("\n\n");
+            // Rich version of the same content, formatted the same way this
+            // project's own news-item copy is (bold title, then the
+            // content) — so a paste into email/docs keeps that formatting
+            // instead of landing as flat text.
+            const copyHtml =
+              (kickerHtml ? `${kickerHtml}<br><br>` : "") +
+              `<b>${escapeHtml(title)}</b>` +
+              body +
+              // <ul> is already a block element with its own spacing, so no
+              // <br> is needed before the visit line when a body list is
+              // present (that would double the gap) — only when there's no
+              // body list to provide that break itself.
+              (visitText
+                ? `${bodyItems.length ? "" : "<br>"}${POINT_RIGHT_EMOJI} <b><a href="${escapeHtml(siteUrl)}">Visit ${escapeHtml(appName)}</a></b>`
+                : "");
             return (
-              `<article class="app-card"><h3><a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">${escapeHtml(title)}</a></h3>` +
+              `<article class="app-card">` +
+              `<h3><a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">${escapeHtml(title)}</a></h3>` +
               `<p class="app-help-text">${escapeHtml(date)}</p>` +
               body +
-              `<button type="button" class="copy-button" data-copy-value="${escapeHtml(copyText)}" data-copy-announce="Update copied" aria-label="Copy this update">` +
+              `<button type="button" class="copy-button" data-copy-value="${escapeHtml(copyText)}" data-copy-html="${escapeHtml(copyHtml)}" data-copy-announce="Update copied" aria-label="Copy this update">` +
               `<svg class="copy-icon" aria-hidden="true" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>` +
               `<svg class="copy-check-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>` +
               `Copy` +
