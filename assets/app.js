@@ -227,9 +227,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!state.data || !elements.lastUpdated) return;
     const date = new Date(state.data.generatedAt);
     elements.lastUpdated.innerHTML =
-      `Last updated: <time datetime="${date.toISOString()}">${escapeHtml(
+      `Last updated: <em><time datetime="${date.toISOString()}">${escapeHtml(
         date.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
-      )}</time>` + ` (refreshes ~15 minutes)`;
+      )}</time></em>` + ` (refreshes ~15 minutes)`;
   }
 
   /** Group a list by a key function, preserving first-seen group order. */
@@ -378,7 +378,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // skipMonitor/skipPlatform let the facet-count logic ask "how many items
   // would match if every OTHER filter stayed as-is" for a given dimension,
   // instead of collapsing to whatever's currently selected in that facet.
-  function passesFilters(item, { skipMonitor = false, skipFeedSource = false } = {}) {
+  function passesFilters(item, { skipMonitor = false, skipFeedSource = false, skipContentType = false } = {}) {
     if (
       !skipMonitor &&
       state.selectedMonitors.size > 0 &&
@@ -397,12 +397,21 @@ document.addEventListener("DOMContentLoaded", () => {
     // of item.sourceType, and doesn't touch/replace the other content-type
     // tabs — an official item still shows under its own News/Video/Social
     // tab too, same as before.
-    if (state.contentType === "official") {
-      if (!state.officialSourceIds.has(item.sourceId)) return false;
-    } else if (state.contentType === "all") {
-      if (item.sourceType === "social") return false;
-    } else if (item.sourceType !== state.contentType) {
-      return false;
+    //
+    // skipContentType: Stats intentionally ignores which content-type tab
+    // is selected — switching All/News/Video/Social/Official shouldn't
+    // change what the charts show, only the Monitors/Sources/Time/Search
+    // filters in the sidebar should. Otherwise Stats would silently reset
+    // every time you flip tabs to check the feed, which reads as the
+    // charts "changing on their own."
+    if (!skipContentType) {
+      if (state.contentType === "official") {
+        if (!state.officialSourceIds.has(item.sourceId)) return false;
+      } else if (state.contentType === "all") {
+        if (item.sourceType === "social") return false;
+      } else if (item.sourceType !== state.contentType) {
+        return false;
+      }
     }
     if (state.time !== "all") {
       const windowMs = TIME_WINDOWS_MS[state.time];
@@ -603,7 +612,10 @@ document.addEventListener("DOMContentLoaded", () => {
       parts.push("All sources");
     }
 
-    if (state.contentType !== "all") {
+    // Stats ignores the content-type tab (see passesFilters), so don't
+    // claim one in its "Showing: ..." line — it would misdescribe what the
+    // charts actually reflect.
+    if (state.contentType !== "all" && !state.statsView) {
       const tabLabel = elements.contentTabs?.querySelector(`[data-content-type="${state.contentType}"]`)?.textContent;
       parts.push(tabLabel || state.contentType);
     }
@@ -655,7 +667,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // needs to already be visible before renderStats() creates the charts
     // in it, or they'd size themselves against a hidden (0-width) canvas.
     syncStatsView();
-    renderStats(items);
+    // Stats gets its own filter pass (skipContentType) — see passesFilters'
+    // own comment for why: the content-type tab shouldn't affect the
+    // charts, only Monitors/Sources/Time/Search should.
+    renderStats(state.data.items.filter((item) => passesFilters(item, { skipContentType: true })));
   }
 
   /** Shows the charts in place of the mention list, or vice versa, per
@@ -1645,8 +1660,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const statsButton = event.target.closest("#stats-toggle");
     if (statsButton) {
       state.statsView = !state.statsView;
-      syncStatsView();
       syncUrlFromState(); // so Copy Link's window.location.href includes view=stats
+      // Re-render (not just syncStatsView()) so the "Showing: ..." line
+      // drops/re-adds the content-type tab name — Stats ignores that
+      // filter (see passesFilters), so the line would otherwise claim a
+      // tab that doesn't actually scope what the charts show.
+      renderFeed();
       // Chart.js sizes a canvas at creation time — the first renderStats()
       // call happens while #stats-grid is still hidden (0 width), so a
       // freshly-created chart needs an explicit resize once it's actually
