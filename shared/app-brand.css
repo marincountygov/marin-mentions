@@ -1,4 +1,4 @@
-/* MarinOS brand bundle v1.16.1 */
+/* MarinOS brand bundle v1.17.4 */
 @font-face {
   font-family: "Jost";
   src: url("../vendor/fonts/Jost-wght.ttf") format("truetype");
@@ -754,6 +754,44 @@ th[aria-sort="descending"] .sort-button::after {
 
 .copy-button.is-copied .copy-check-icon {
   display: block;
+}
+
+/* The Updates feature (app-shell.js's loadUpdates()) renders its
+   per-entry copy button with a visible "Copy" label, which doesn't fit
+   the plain .copy-button class above — a fixed-size, icon-only 24x24
+   box by design, per this bundle's own docs (components.md never shows
+   it with visible text). Scoped to #updates so every other, genuinely
+   icon-only use of .copy-button elsewhere on a page is unaffected. Only
+   this bundle's own --app-*/--pico-border-radius tokens are used here
+   (not a consumer's own theme variables like --pico-secondary-*, which
+   not every consumer's vendored base stylesheet defines), so this
+   renders consistently across every app regardless of which base
+   stylesheet it vendors. */
+#updates .copy-button {
+  width: auto;
+  height: auto;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--app-border);
+  border-radius: var(--pico-border-radius);
+  background: var(--app-surface);
+  color: var(--app-text);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-top: 0.75rem;
+}
+
+#updates .copy-button:hover {
+  border-color: var(--app-accent);
+  color: var(--app-accent);
+  background: color-mix(in srgb, var(--app-accent) 8%, var(--app-surface));
+}
+
+#updates .copy-button svg {
+  width: 1rem;
+  height: 1rem;
 }
 
 .app-footer {
