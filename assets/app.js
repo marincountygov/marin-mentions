@@ -296,7 +296,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 const id = `monitor-${monitor.id}`;
                 const checked = state.selectedMonitors.has(monitor.id);
                 return (
-                  `<li><label for="${id}">` +
+                  // No for="${id}" here — the input is already nested inside
+                  // this label, so an explicit for pointing at the same id
+                  // it's a descendant of creates two competing label
+                  // associations for one control (WAVE: "multiple form
+                  // labels"). The wrapping alone is a complete, unambiguous
+                  // association.
+                  `<li><label>` +
                   `<input type="checkbox" id="${id}" data-monitor-id="${escapeHtml(monitor.id)}" ${checked ? "checked" : ""}>` +
                   `${escapeHtml(monitor.name)} <span class="search-facet-count" data-monitor-count="${escapeHtml(monitor.id)}"></span>` +
                   `</label></li>`
@@ -343,7 +349,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 const id = `feed-source-${source.id}`;
                 const checked = state.selectedFeedSources.has(source.id);
                 return (
-                  `<li><label for="${id}">` +
+                  // No for="${id}" — see the identical fix/comment in
+                  // renderMonitorChips above.
+                  `<li><label>` +
                   `<input type="checkbox" id="${id}" data-feed-source-id="${escapeHtml(source.id)}" ${checked ? "checked" : ""} ${source.enabled ? "" : "disabled"}>` +
                   `${escapeHtml(source.name)} <span class="search-facet-count" data-feed-source-count="${escapeHtml(source.id)}"></span>` +
                   `${source.enabled ? "" : ' <span class="app-help-text">(disabled)</span>'}` +
@@ -715,7 +723,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 const id = `source-${source.id}`;
                 const checked = state.selectedSources.has(source.id);
                 return (
-                  `<li><label for="${id}">` +
+                  // No for="${id}" — see the identical fix/comment in
+                  // renderMonitorChips above.
+                  `<li><label>` +
                   `<input type="checkbox" id="${id}" data-source-id="${escapeHtml(source.id)}" ${checked ? "checked" : ""}>` +
                   `${escapeHtml(source.name)} <span class="app-help-text">(${source.itemCount || 0})</span>` +
                   `</label></li>`
