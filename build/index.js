@@ -133,7 +133,18 @@ async function buildOnce({ previousSnapshotPath, outPath, env = process.env }) {
 
   for (const source of sources) {
     const previousHealth = previous.sources[source.id];
-    const previousItems = previous.items.filter((item) => item.sourceId === source.id);
+    // excludeUrls (optional, in sources.yaml): a one-time purge of specific
+    // items already accumulated in the retained snapshot, not an ongoing
+    // moderation list — e.g. a video that matched under search criteria
+    // that have since been narrowed (see the youtube source's own note).
+    // Narrowing what a source searches for going forward doesn't remove
+    // anything it already found; this does, once, for named URLs. Safe to
+    // delete an entry here once its target has aged out of the 60-day
+    // retention window on its own.
+    const excludeUrls = new Set(source.excludeUrls || []);
+    const previousItems = previous.items.filter(
+      (item) => item.sourceId === source.id && !excludeUrls.has(item.url)
+    );
 
     if (!source.enabled) {
       health.push({ ...healthDefaults(source), status: "disabled", itemCount: 0 });
