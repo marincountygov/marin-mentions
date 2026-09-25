@@ -206,6 +206,41 @@ th[aria-sort="descending"] .mm-sort-button::after {
   stroke-linejoin: round;
 }
 
+/* The Updates feature's per-entry copy button (marin-ui's shared
+   .copy-button, a small icon-only 24x24 control by design — see
+   marin-ui/docs/components.md, which never shows it with visible text)
+   carries a visible "Copy" label here, which doesn't fit that fixed size
+   and doesn't read as a real button. Restyle it, scoped to #updates only,
+   to match this app's own secondary buttons (Copy link, Copy) instead of
+   changing the shared component itself — every other MarinOS app uses it
+   icon-only, so its class/markup has to stay as-is for them. */
+#updates .copy-button {
+  width: auto;
+  height: auto;
+  padding: var(--pico-form-element-spacing-vertical) var(--pico-form-element-spacing-horizontal);
+  border: var(--pico-border-width) solid var(--pico-secondary-border);
+  border-radius: var(--pico-border-radius);
+  background: var(--pico-secondary-background);
+  color: var(--pico-secondary-inverse);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-weight: var(--pico-font-weight);
+  font-size: 1rem;
+  margin-top: 0.75rem;
+}
+
+#updates .copy-button:hover {
+  background: var(--pico-secondary-hover-background);
+  border-color: var(--pico-secondary-hover-border);
+  color: var(--pico-secondary-inverse);
+}
+
+#updates .copy-button svg {
+  width: 1rem;
+  height: 1rem;
+}
+
 .mm-copy-fallback {
   margin: 0 0 1rem;
 }
