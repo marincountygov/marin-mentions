@@ -517,7 +517,14 @@ monitors:
   - id: marin-county
     name: Marin County
     group: Topics
-    youtubeSearch: true
+    # No youtubeSearch here (unlike other Topics monitors) — confirmed live
+    # 2026-09-25: this bare geographic phrase pulls from an enormous,
+    # mostly-unrelated YouTube results pool (totalResults in the tens of
+    # thousands), surfacing hotel reviews, real estate listings, and other
+    # commercial content that's genuinely located in Marin County but has
+    # nothing to do with county government. The other youtubeSearch-flagged
+    # monitors are department/entity names with no such ambiguity. See
+    # build/connectors/youtube.js's own comment for the full story.
     include:
       - Marin County
       - County of Marin

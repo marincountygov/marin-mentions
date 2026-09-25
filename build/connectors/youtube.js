@@ -23,14 +23,30 @@ const CHANNEL_FEED_URL = "https://www.youtube.com/feeds/videos.xml";
 // might trigger this, so the fix is to never combine terms via OR at all.
 //
 // That makes quota the real constraint: 100 units × N terms × refreshes/day
-// has to stay under 10,000. YOUTUBE_SEARCH_TERMS below is a small curated
-// set (driven by monitors.yaml's youtubeSearch: true flag, not all ~130
+// has to stay under 10,000. The search term set is small and curated
+// (driven by monitors.yaml's youtubeSearch: true flag, not all ~130
 // monitor phrases) paired with a 3-hour refresh interval (sources.yaml) —
-// 10 terms × 100 units × 8 refreshes/day = 8,000/day, leaving headroom.
+// 9 terms × 100 units × 8 refreshes/day = 7,200/day, leaving headroom.
 //
 // Channel-based monitoring does NOT use this API at all — see
 // fetchYoutubeChannelRssSource below, which uses YouTube's free per-channel
 // RSS feed instead, so it costs zero quota regardless of refresh frequency.
+
+// Appended to every query. Confirmed live (2026-09-25) this genuinely
+// removes some commercial results (a hotel-review channel disappeared from
+// the results for "Marin County" with this applied) without breaking the
+// query — but it's a light, generalizable safety net, not a real fix on
+// its own: it only catches content that literally uses one of these
+// words, and testing showed it can't be relied on alone (excluding one
+// noisy result just let a different, equally irrelevant one take its
+// place in the fixed-size results page). The real fix for the one term
+// that actually needed it — the bare "Marin County" catch-all pulling from
+// an enormous, mostly-unrelated results pool — was dropping that term
+// entirely (see monitors.yaml's marin-county entry). This exists to guard
+// the remaining, already-narrower terms against the same commercial
+// categories, with nothing to maintain per-channel.
+const EXCLUDE_TERMS = "-hotel -realty -realtor -cleaning -review -listing -\"for sale\"";
+
 async function fetchYoutubeSource(source, { monitors, apiKey }) {
   if (!apiKey) {
     throw new Error("YOUTUBE_API_KEY is not set");
@@ -57,9 +73,10 @@ async function fetchYoutubeSource(source, { monitors, apiKey }) {
   const items = [];
 
   for (const term of terms) {
+    const query = `${term} ${EXCLUDE_TERMS}`;
     const searchUrl =
       `${SEARCH_URL}?part=snippet&type=video&order=date&maxResults=25` +
-      `&q=${encodeURIComponent(term)}&publishedAfter=${publishedAfter}&key=${apiKey}`;
+      `&q=${encodeURIComponent(query)}&publishedAfter=${publishedAfter}&key=${apiKey}`;
     // Isolated per term — one bad/rejected term should only lose that
     // term's results, never zero out every other term's (the exact failure
     // mode this rewrite exists to fix).
