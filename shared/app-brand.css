@@ -762,7 +762,7 @@ th[aria-sort="descending"] .sort-button::after {
    box by design, per this bundle's own docs (components.md never shows
    it with visible text). Scoped to #updates so every other, genuinely
    icon-only use of .copy-button elsewhere on a page is unaffected. Only
-   this bundle's own --app-*/--pico-border-radius tokens are used here
+   this bundle's own --app-* and --pico-border-radius tokens are used here
    (not a consumer's own theme variables like --pico-secondary-*, which
    not every consumer's vendored base stylesheet defines), so this
    renders consistently across every app regardless of which base
