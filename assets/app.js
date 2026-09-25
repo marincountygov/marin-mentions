@@ -1750,21 +1750,21 @@ document.addEventListener("DOMContentLoaded", () => {
     latestLink?.addEventListener("click", () => resetFilters());
   }
 
-  // Clicking a tab link (About/Updates in the header #app-nav, the header
-  // icon/title's own #latest link, or any of Latest/Monitors/Sources/Stats
-  // in #page-tabs) should always show that tab from the top. Without this,
-  // clicking the title while already on #latest but scrolled down into the
-  // filter form does nothing — the hash doesn't change, so no hashchange
+  // Clicking a tab link (About/Updates in the header #app-nav, or any of
+  // Latest/Monitors/Sources/Stats in #page-tabs) should always show that
+  // tab from the top. Without this, clicking a tab while already on it but
+  // scrolled down does nothing — the hash doesn't change, so no hashchange
   // event fires and the page stays wherever it was scrolled. Scroll on
   // click itself instead of on hashchange so the same-hash case is covered
-  // too, not just an actual tab switch.
+  // too, not just an actual tab switch. The header icon/title link doesn't
+  // need this — it's a real href="./" navigation (see index.html), so the
+  // browser already loads a fresh page at the top on its own.
   function scrollToTopOnTabClick(nav) {
     nav?.addEventListener("click", (event) => {
       if (event.target.closest("a[href^='#']")) window.scrollTo({ top: 0, behavior: "instant" });
     });
   }
   scrollToTopOnTabClick(document.querySelector("#app-nav"));
-  scrollToTopOnTabClick(document.querySelector(".app-title-row"));
   scrollToTopOnTabClick(pageTabs);
 
   loadData();
