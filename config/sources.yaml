@@ -658,12 +658,29 @@ sources:
     note: >-
       search.list costs 100 quota units/call against a 10,000/day default
       quota. One call per curated term (config/monitors.yaml's
-      youtubeSearch: true flag, ~10 monitors) — not one combined OR query
+      youtubeSearch: true flag, 9 monitors as of 2026-09-25 — dropped the
+      bare "Marin County" catch-all, confirmed live it pulled from an
+      enormous mostly-unrelated results pool) — not one combined OR query
       across every monitor, which a live 2026-09-24 test found silently
       zeroes out results when any single phrase has no matches on its own
-      (see build/connectors/youtube.js). 10 terms x 100 units x 8
-      refreshes/day (every 3 hours) = 8,000 units/day, leaves headroom. See
+      (see build/connectors/youtube.js). 9 terms x 100 units x 8
+      refreshes/day (every 3 hours) = 7,200 units/day, leaves headroom. See
       README.md "YouTube" for the cost model.
+    # One-time purge of items found under the old, broader "Marin County"
+    # search term before it was dropped 2026-09-25 — commercial content
+    # (hotel reviews, real estate listings, local business ads) genuinely
+    # located in Marin County but unrelated to county government. Narrowing
+    # the search stops finding *new* copies of this, but doesn't remove
+    # what's already in the retained snapshot (see build/index.js's
+    # excludeUrls handling) — this does, once. Safe to delete once these
+    # have aged out of the 60-day retention window on their own.
+    excludeUrls:
+      - https://www.youtube.com/watch?v=qdBMQWb_5UA
+      - https://www.youtube.com/watch?v=J-2glUEMIyw
+      - https://www.youtube.com/watch?v=cM8EPYCbkxA
+      - https://www.youtube.com/watch?v=Lt66Lo25TRQ
+      - https://www.youtube.com/watch?v=dDHbe3gRszc
+      - https://www.youtube.com/watch?v=7TZoHr7DZxo
 
   - id: bluesky
     name: Bluesky
