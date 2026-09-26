@@ -26,7 +26,7 @@
         </div>
         <div class="app-header__actions">
           <button type="button" class="app-menu-toggle secondary" id="menu-toggle" aria-expanded="false" aria-controls="app-nav">Menu</button>
-          <nav class="app-nav" id="app-nav" aria-label="Application navigation"><a href="#about">About</a><a href="#updates">Updates</a></nav>
+          <nav class="app-nav" id="app-nav" aria-label="Application navigation"><a href="#about">About</a><a href="#updates">Updates</a><a href="#security">Security</a></nav>
         </div>
       </div>
     </header>
@@ -188,12 +188,31 @@
           <li>Deduplication prefers a direct publisher result over a Google News result for the same story, matched by outlet + headline since Google's redirect links can't be resolved to a canonical URL server-side.</li>
           <li>YouTube requires an API key and Reddit requires OAuth credentials; see the README for activation status and quota/rate-limit notes. Bluesky's public search endpoint needs no key, but its reliability is outside this app's control.</li>
         </ul>
+        <h3>Related information</h3>
+        <ul>
+          <li><a href="#security">Security</a></li>
+        </ul>
       </section>
 
       <section id="updates" class="app-card" data-tab-section="updates" data-updates-repo="marin-mentions" data-app-name="Marin Mentions" hidden>
         <h2>Updates</h2>
         <p data-updates-status class="app-help-text" role="status" aria-live="polite" aria-atomic="true">Loading recent commits&hellip;</p>
         <div data-updates-list></div>
+      </section>
+
+      <section id="security" class="app-card" data-tab-section="security" data-security-json="security.json" hidden>
+        <h2>Security</h2>
+        <p>Marin Mentions follows the <a href="https://github.com/marincountygov/marin-digital-standards/blob/main/security/standard.md">MarinOS security standard</a>.</p>
+        <h3>Report an issue</h3>
+        <p>See <a href="/.well-known/security.txt">security.txt</a> for contact details.</p>
+        <h3>Application security</h3>
+        <p data-security-status class="app-help-text" role="status" aria-live="polite" aria-atomic="true">Loading security information&hellip;</p>
+        <div data-security-content></div>
+        <h3>Technical information</h3>
+        <ul>
+          <li><a href="security.json">security.json</a></li>
+          <li><a href="/.well-known/security.txt">security.txt</a></li>
+        </ul>
       </section>
     </main>
     <footer class="app-footer" role="contentinfo"><div class="app-footer__inner"><a href="https://marincountygov.github.io/marin-os/">MarinOS</a></div></footer>

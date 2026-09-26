@@ -201,6 +201,10 @@ Open `http://localhost:8000/` — see `docs/development.md` for details, testing
 
 GitHub Actions (`.github/workflows/build-and-deploy.yml`) on a `*/10 * * * *` schedule, `workflow_dispatch`, and pushes to `main` — builds `data.json` and deploys the static site to GitHub Pages via `actions/deploy-pages`. See `docs/development.md` for required repo settings and the 60-day scheduled-workflow inactivity limitation.
 
+## Security
+
+Marin Mentions follows the [MarinOS security standard](https://github.com/marincountygov/marin-digital-standards/blob/main/security/standard.md). See [`SECURITY.md`](SECURITY.md) to report an issue, or the app's own `#security` section for a plain-language summary.
+
 ## Limitations of a stateless, no-database monitor
 
 - **Refresh means "reload the latest snapshot," not "fetch live."** Data is at most ~10–15 minutes old (governed by the scheduled build's cadence and each source's `refreshIntervalMinutes`).

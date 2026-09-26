@@ -603,4 +603,84 @@
       if (!section.hidden) loadUpdates();
     }).observe(section, { attributes: true, attributeFilter: ["hidden"] });
   });
+
+  // Security: any [data-security-json="path"] section lazy-loads that path
+  // (same-origin, same repo — unlike Updates, there's no cross-repo GitHub
+  // API call needed) the first time it becomes visible, and renders its
+  // security.json's publicSecurity block only — never the full document,
+  // per marin-digital-standards/security/standard.md's public/internal
+  // separation. An app with no security.json yet (fetch 404s) gets a plain
+  // "not yet published" status instead of an error, since that's the
+  // honest, expected state for most apps today.
+  document.querySelectorAll("[data-security-json]").forEach((section) => {
+    const jsonPath = section.dataset.securityJson;
+    const status = section.querySelector("[data-security-status]");
+    const content = section.querySelector("[data-security-content]");
+    if (!jsonPath || !status || !content) return;
+
+    let loaded = false;
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    const PROFILE_LABELS = {
+      "public-web": "Public web application",
+      "public-api": "Public API",
+      authenticated: "Authenticated application",
+      internal: "For County staff",
+      custom: "Custom",
+    };
+
+    async function loadSecurity() {
+      if (loaded) return;
+      status.textContent = "Loading security information...";
+      try {
+        const response = await fetch(jsonPath, { cache: "no-store" });
+        if (response.status === 404) {
+          loaded = true;
+          status.textContent = "No security information has been published for this application yet.";
+          return;
+        }
+        if (!response.ok) throw new Error(`security.json fetch failed: ${response.status}`);
+        const config = await response.json();
+        const pub = config?.publicSecurity;
+        loaded = true;
+        if (!pub) {
+          status.textContent = "This application's security.json has no public security summary yet.";
+          return;
+        }
+        const profileLabel = pub.profile || PROFILE_LABELS[config.profile] || "Not set";
+        status.textContent = pub.lastReviewed ? `Last reviewed ${escapeHtml(pub.lastReviewed)}.` : "Review date not recorded.";
+        const controlsHtml =
+          Array.isArray(pub.controls) && pub.controls.length
+            ? `<ul>${pub.controls.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
+            : "<p>No controls listed yet.</p>";
+        const dataEntries = pub.data && typeof pub.data === "object" ? Object.entries(pub.data) : [];
+        const dataHtml = dataEntries.length
+          ? `<ul>${dataEntries
+              .map(([key, value]) => `<li>${escapeHtml(key)}: ${escapeHtml(String(value))}</li>`)
+              .join("")}</ul>`
+          : "";
+        content.innerHTML =
+          `<p><b>Security profile:</b> ${escapeHtml(profileLabel)}</p>` +
+          `<h4>Security controls</h4>${controlsHtml}` +
+          (dataHtml ? `<h4>Data</h4>${dataHtml}` : "");
+      } catch (error) {
+        loaded = true;
+        console.error(error);
+        status.textContent = "Couldn't load security information right now.";
+      }
+    }
+
+    if (!section.hidden) loadSecurity();
+
+    new MutationObserver(() => {
+      if (!section.hidden) loadSecurity();
+    }).observe(section, { attributes: true, attributeFilter: ["hidden"] });
+  });
 })();
