@@ -9,7 +9,7 @@ project:
   status: prototype
 
 platform:
-  marin-ui: 1.17.4
+  marin-ui: 1.18.0
   template: 1.1.0
 
 deployment:

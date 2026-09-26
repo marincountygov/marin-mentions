@@ -40,7 +40,7 @@ jobs:
           BLUESKY_APP_PASSWORD: ${{ secrets.BLUESKY_APP_PASSWORD }}
         run: |
           mkdir -p dist
-          cp -r index.html assets shared vendor dist/
+          cp -r index.html assets shared vendor security.json .well-known dist/
           node build/index.js \
             --out=dist/data.json \
             --previous="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/data.json"
