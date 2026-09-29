@@ -69,6 +69,8 @@ document.addEventListener("DOMContentLoaded", () => {
     copyFormatField: document.querySelector("#copy-format-field"),
     copyFallback: document.querySelector("#copy-fallback"),
     copyFallbackText: document.querySelector("#copy-fallback-text"),
+    rssFeedLink: document.querySelector("#rss-feed-link"),
+    rssFeedStatus: document.querySelector("#rss-feed-status"),
   };
 
   const TIME_WINDOWS_MS = {
@@ -163,6 +165,54 @@ document.addEventListener("DOMContentLoaded", () => {
     const query = params.toString();
     const url = `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`;
     window.history.replaceState(null, "", url);
+
+    updateRssFeedLink();
+  }
+
+  /** RSS feeds are static files built at fetch time (build/feeds.js) —
+   * time isn't one of the axes they're built for, since "past 24 hours"
+   * has no fixed meaning to a feed a reader polls later, so it's ignored
+   * here on purpose, not an oversight. Exactly one monitor selected, with
+   * no other narrowing filter, maps to that monitor's feed; a content-type
+   * tab with no monitor selected maps to that type's feed; nothing selected
+   * maps to the combined feed. Anything else (search text, a source
+   * filter, more than one monitor, or a monitor combined with a content
+   * type) has no matching file, so the link is disabled rather than
+   * pointing at a feed that doesn't actually match what's on screen. */
+  function updateRssFeedLink() {
+    if (!elements.rssFeedLink) return;
+
+    const monitorCount = state.selectedMonitors.size;
+    let href = null;
+    let reason = "";
+
+    if (state.search) {
+      reason = "RSS feeds aren't available for search results.";
+    } else if (state.selectedFeedSources.size > 0) {
+      reason = "RSS feeds aren't available when filtering by source.";
+    } else if (monitorCount > 1) {
+      reason = "RSS feeds are only available for a single monitor at a time.";
+    } else if (monitorCount === 1 && state.contentType !== "all") {
+      reason = "RSS feeds aren't available for a monitor combined with a content type.";
+    } else if (monitorCount === 1) {
+      href = `feeds/monitor-${encodeURIComponent(Array.from(state.selectedMonitors)[0])}.xml`;
+    } else if (state.contentType !== "all") {
+      href = `feeds/type-${encodeURIComponent(state.contentType)}.xml`;
+    } else {
+      href = "feeds/all.xml";
+    }
+
+    if (href) {
+      elements.rssFeedLink.href = href;
+      elements.rssFeedLink.removeAttribute("aria-disabled");
+      elements.rssFeedLink.removeAttribute("title");
+      if (elements.rssFeedStatus) elements.rssFeedStatus.textContent = "";
+    } else {
+      elements.rssFeedLink.removeAttribute("href");
+      elements.rssFeedLink.setAttribute("aria-disabled", "true");
+      elements.rssFeedLink.title = reason;
+      if (elements.rssFeedStatus) elements.rssFeedStatus.textContent = reason;
+    }
   }
 
   // Runs once, right after data.json loads (needs state.data.monitors/
@@ -203,6 +253,7 @@ document.addEventListener("DOMContentLoaded", () => {
       state.officialSourceIds = computeOfficialSourceIds();
       state.releases = computeReleases();
       if (!isRefresh) applyStateFromUrl();
+      updateRssFeedLink();
       renderAll();
       announce(isRefresh ? "Refreshed." : "Loaded.");
     } catch (error) {
@@ -529,11 +580,18 @@ document.addEventListener("DOMContentLoaded", () => {
     return (
       `<div class="mm-card__release"${clip ? "" : " hidden"}>` +
       `<label for="release-${escapeHtml(item.id)}">Release</label>` +
-      // aria-label supplements (doesn't replace) the short visible "Release"
-      // label — a screen reader's "list all form fields" navigation mode
-      // would otherwise show many identically-labeled "Release" selects
-      // with nothing to tell them apart.
-      `<select id="release-${escapeHtml(item.id)}" data-release-for="${escapeHtml(item.id)}" aria-label="Release for: ${escapeHtml(heading)}">` +
+      // A screen reader's "list all form fields" navigation mode would
+      // otherwise show many identically-labeled "Release" selects with
+      // nothing to tell them apart, so extra context is added — but not via
+      // aria-label: aria-label doesn't "supplement" a <label for>, it
+      // replaces it outright in the accessible name (that's how a control
+      // ends up with two competing label mechanisms — WAVE's "multiple form
+      // labels"). aria-describedby is the correct tool here: it adds to the
+      // accessible description without touching the name, so "Release"
+      // (from the <label>) stays the name and the heading is appended as a
+      // description instead.
+      `<span class="visually-hidden" id="release-desc-${escapeHtml(item.id)}">for: ${escapeHtml(heading)}</span>` +
+      `<select id="release-${escapeHtml(item.id)}" data-release-for="${escapeHtml(item.id)}" aria-describedby="release-desc-${escapeHtml(item.id)}">` +
       `<option value="">None</option>${options}</select>` +
       `</div>`
     );
@@ -705,6 +763,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (elements.copyEmailButton) elements.copyEmailButton.hidden = state.statsView;
     if (elements.copyFormatField) elements.copyFormatField.hidden = state.statsView;
     if (elements.downloadDataButton) elements.downloadDataButton.hidden = state.statsView;
+    if (elements.rssFeedLink) elements.rssFeedLink.hidden = state.statsView;
     if (elements.copyStatsButton) elements.copyStatsButton.hidden = !state.statsView;
     if (elements.downloadAllPngButton) elements.downloadAllPngButton.hidden = !state.statsView;
   }
