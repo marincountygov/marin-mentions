@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Marin Mentions | County of Marin</title><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='10' fill='%23000'/%3E%3Cg fill='none' stroke='%23e5b53b' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round' transform='translate(9,9) scale(1.25)'%3E%3Cpath d='M20.341 6.484A10 10 0 0 1 10.266 21.85'/%3E%3Cpath d='M3.659 17.516A10 10 0 0 1 13.74 2.152'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Ccircle cx='19' cy='5' r='2'/%3E%3Ccircle cx='5' cy='19' r='2'/%3E%3C/g%3E%3C/svg%3E">
     <meta name="description" content="A live media-monitoring console tracking Bay Area news, video, and social mentions of configured keywords and phrases.">
+    <link rel="alternate" type="application/rss+xml" title="Marin Mentions — All" href="feeds/all.xml">
     <link rel="stylesheet" href="vendor/pico.min.css">
     <link rel="stylesheet" href="shared/app-brand.css">
     <link rel="stylesheet" href="assets/app.css">
@@ -85,7 +86,6 @@
             </div>
 
             <div class="mm-results-buttons">
-              <button type="button" class="secondary mm-copy-button" id="copy-link-button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Copy link</button>
               <button type="button" class="secondary mm-copy-button" id="copy-stats-button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>Copy</button>
               <button type="button" class="secondary mm-copy-button" id="download-all-png-button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>All PNG</button>
               <span id="copy-format-field">
@@ -96,8 +96,11 @@
                 </select>
               </span>
               <button type="button" class="secondary mm-copy-button" id="copy-email-button"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>Copy</button>
+              <button type="button" class="secondary mm-copy-button" id="copy-link-button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Link</button>
               <button type="button" class="secondary mm-copy-button" id="download-data-button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>CSV</button>
+              <a role="button" class="secondary mm-copy-button" id="rss-feed-link" target="_blank" rel="noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>RSS</a>
             </div>
+            <p class="app-help-text" id="rss-feed-status" role="status"></p>
 
             <div class="mm-copy-fallback" id="copy-fallback" hidden>
               <label for="copy-fallback-text">Couldn't copy automatically — select the text below and copy it manually (Ctrl/Cmd+C)</label>

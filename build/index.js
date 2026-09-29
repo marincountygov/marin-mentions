@@ -9,6 +9,7 @@ const { fetchSource, refreshIntervalFor } = require("./connectors");
 const { normalizeItem, hostnameOf } = require("./normalize");
 const { matchItems } = require("./match");
 const { dedupeItems } = require("./dedupe");
+const { buildFeeds } = require("./feeds");
 
 const PRUNE_DAYS = 60;
 
@@ -237,6 +238,17 @@ async function buildOnce({ previousSnapshotPath, outPath, env = process.env }) {
   if (outPath) {
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
     fs.writeFileSync(outPath, JSON.stringify(output));
+
+    // Static RSS feeds live next to data.json (a feeds/ sibling directory),
+    // built from the same pruned item list and officialSourceIds computed
+    // above — see build/feeds.js for why this can't be done client-side.
+    const feedResults = buildFeeds({
+      items: pruned,
+      monitors,
+      officialSourceIds,
+      outDir: path.join(path.dirname(outPath), "feeds"),
+    });
+    console.log(`Wrote ${feedResults.length} RSS feeds to feeds/`);
   }
 
   return output;

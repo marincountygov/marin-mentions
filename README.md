@@ -18,6 +18,7 @@ Every ~10–15 minutes, a scheduled build:
 4. Deduplicates, preferring a direct publisher result over a Google News result for the same story.
 5. Merges the result into the previously published snapshot, keeping items from the last 60 days.
 6. Writes `data.json`, which the static site (`index.html` + `assets/app.js`) reads to render the console, `/sources` health page, and `/monitors` reference page.
+7. Writes a set of static RSS feeds (`build/feeds.js`) from that same item list — see "RSS feeds" below.
 
 ## Architecture
 
@@ -36,13 +37,23 @@ build/normalize.js  ->  build/match.js  ->  build/dedupe.js
    merge with previous data.json (60-day rolling window)
               |
               v
-        dist/data.json  +  static site  --(GitHub Actions)-->  GitHub Pages
+   dist/data.json + dist/feeds/*.xml + static site  --(GitHub Actions)-->  GitHub Pages
               |
               v
        assets/app.js fetches data.json and renders the console
 ```
 
 \* disabled by default; see "Reddit" and "Nextdoor" below.
+
+## RSS feeds
+
+An RSS reader fetches a URL and parses XML — it can't run `assets/app.js`, so a feed can only ever be one of a finite set of files built in advance, not an arbitrary combination of whatever's currently selected in the console. `build/feeds.js` builds three kinds of feed, all from the exact same matched/deduped/pruned item list that becomes `data.json`, written to `feeds/` next to it:
+
+- `feeds/all.xml` — everything.
+- `feeds/type-{news,video,social,official}.xml` — one per content-type tab (`official` mirrors the UI's cross-cutting official-source check, not a `sourceType` value).
+- `feeds/monitor-<id>.xml` — one per monitor in `config/monitors.yaml`.
+
+There's no feed for a source filter, search text, or more than one monitor at once — that's a static file per combination, which doesn't scale. The RSS button in the filter sidebar (`#rss-feed-link`) reflects this: `assets/app.js`'s `updateRssFeedLink()` disables it, with an explanation, for a filter state with no matching feed, rather than linking the nearest approximation.
 
 ### Why not a live per-request server (the plan's original Next.js proposal)?
 

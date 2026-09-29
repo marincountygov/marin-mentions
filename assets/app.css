@@ -188,6 +188,15 @@ th[aria-sort="descending"] .mm-sort-button::after {
   white-space: nowrap;
 }
 
+/* The RSS link is an <a role="button"> that's sometimes not a real link at
+   all (no href for a filter combination with no matching static feed —
+   see updateRssFeedLink() in app.js). role=button plus no href already
+   makes it inert and untabbable; this just makes that state visible. */
+.mm-copy-button[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Sits inline between the two copy buttons in .mm-results-buttons — override
    Pico's default block-level 100%-width <select> so it doesn't stretch to
    fill the flex row. */
