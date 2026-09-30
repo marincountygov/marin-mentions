@@ -573,7 +573,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .filter((release) => release.id !== item.id) // don't let a release attribute to itself
       .map((release) => {
         const selected = clip?.releaseId === release.id ? " selected" : "";
-        const label = `${release.title} (${formatReleaseDate(release.publishedAt)})`;
+        const label = `${formatReleaseDate(release.publishedAt)} - ${release.title}`;
         return `<option value="${escapeHtml(release.id)}"${selected}>${escapeHtml(label)}</option>`;
       })
       .join("");
