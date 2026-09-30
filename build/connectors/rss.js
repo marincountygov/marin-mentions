@@ -81,7 +81,15 @@ function parseFeed(xml) {
         title: textOf(entry.title),
         link: link || "",
         description: stripHtml(textOf(mediaGroup?.["media:description"] || entry.summary || entry.content)),
-        publishedAt: textOf(entry.updated || entry.published),
+        // <published> is an entry's true, fixed original date; <updated> is
+        // a last-modified timestamp — confirmed directly (2026-09-30)
+        // against a real YouTube channel feed that YouTube bumps <updated>
+        // independently of the actual upload date, sometimes to
+        // essentially "now," which was silently overriding a video's real
+        // age by up to years whenever both fields were present (nearly
+        // always). Prefer <published>; fall back to <updated> only for the
+        // rare feed that omits it.
+        publishedAt: textOf(entry.published || entry.updated),
         image: mediaGroup?.["media:thumbnail"]?.["@_url"],
         author: textOf(entry.author?.name),
       };
