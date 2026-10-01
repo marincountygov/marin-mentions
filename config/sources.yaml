@@ -411,6 +411,107 @@ sources:
     url: https://kpfa.org/feed/
     enabled: true
 
+  # --- National ---
+  # Same caveat as pbs-newshour above: these are national section feeds, not
+  # Marin/Bay Area coverage — Marin mentions only surface when a story
+  # reaches national coverage, same as any other national source here. All
+  # 11 URLs hand-verified 2026-10-01: HTTP 200, item pubDates from today.
+  - id: nytimes-homepage
+    name: The New York Times
+    type: rss
+    region: california
+    url: https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml
+    enabled: true
+    note: National feed — Marin/Bay Area mentions only surface when a story reaches national coverage.
+
+  - id: nytimes-us
+    name: "NYT: U.S."
+    type: rss
+    region: california
+    url: https://rss.nytimes.com/services/xml/rss/nyt/US.xml
+    enabled: true
+    note: National feed — Marin/Bay Area mentions only surface when a story reaches national coverage.
+
+  - id: nytimes-education
+    name: "NYT: Education"
+    type: rss
+    region: california
+    url: https://rss.nytimes.com/services/xml/rss/nyt/Education.xml
+    enabled: true
+    note: National feed — Marin/Bay Area mentions only surface when a story reaches national coverage.
+
+  - id: nytimes-politics
+    name: "NYT: Politics"
+    type: rss
+    region: california
+    url: https://rss.nytimes.com/services/xml/rss/nyt/Politics.xml
+    enabled: true
+    note: National feed — Marin/Bay Area mentions only surface when a story reaches national coverage.
+
+  - id: nytimes-business
+    name: "NYT: Business"
+    type: rss
+    region: california
+    url: https://rss.nytimes.com/services/xml/rss/nyt/Business.xml
+    enabled: true
+    note: National feed — Marin/Bay Area mentions only surface when a story reaches national coverage.
+
+  - id: nytimes-energy-environment
+    name: "NYT: Energy & Environment"
+    type: rss
+    region: california
+    url: https://rss.nytimes.com/services/xml/rss/nyt/EnergyEnvironment.xml
+    enabled: true
+    note: National feed — Marin/Bay Area mentions only surface when a story reaches national coverage.
+
+  - id: nytimes-small-business
+    name: "NYT: Small Business"
+    type: rss
+    region: california
+    url: https://rss.nytimes.com/services/xml/rss/nyt/SmallBusiness.xml
+    enabled: true
+    note: National feed — Marin/Bay Area mentions only surface when a story reaches national coverage.
+
+  - id: nytimes-economy
+    name: "NYT: Economy"
+    type: rss
+    region: california
+    url: https://rss.nytimes.com/services/xml/rss/nyt/Economy.xml
+    enabled: true
+    note: National feed — Marin/Bay Area mentions only surface when a story reaches national coverage.
+
+  - id: nytimes-dealbook
+    name: "NYT: DealBook"
+    type: rss
+    region: california
+    url: https://rss.nytimes.com/services/xml/rss/nyt/Dealbook.xml
+    enabled: true
+    note: National feed — Marin/Bay Area mentions only surface when a story reaches national coverage.
+
+  - id: nytimes-climate
+    name: "NYT: Climate"
+    type: rss
+    region: california
+    url: https://rss.nytimes.com/services/xml/rss/nyt/Climate.xml
+    enabled: true
+    note: National feed — Marin/Bay Area mentions only surface when a story reaches national coverage.
+
+  - id: nytimes-weather
+    name: "NYT: Weather"
+    type: rss
+    region: california
+    url: https://rss.nytimes.com/services/xml/rss/nyt/Weather.xml
+    enabled: true
+    note: National feed — Marin/Bay Area mentions only surface when a story reaches national coverage.
+
+  - id: ap-news-marin
+    name: AP News
+    type: google-news
+    region: california
+    query: site:apnews.com "Marin County"
+    enabled: true
+    note: "apnews.com has no queryable direct RSS feed; using the Google News site: fallback, same as bay-area-reporter/krcb above."
+
   # --- YouTube channels (free per-channel RSS feed, no API key/quota) ---
   # channelId values verified 2026-09-17: fetched
   # https://www.youtube.com/feeds/videos.xml?channel_id=<id> directly and
