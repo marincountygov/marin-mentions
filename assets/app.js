@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
     releases: [],
     // Stats charts, kept around so a filter change/data refresh updates
     // them in place instead of stacking a new chart on the canvas.
-    statsCharts: { timeline: null, sources: null, monitors: null },
+    statsCharts: { timeline: null, sources: null, monitors: null, authors: null, socialAccounts: null, places: null },
   };
 
   const elements = {
@@ -41,6 +41,11 @@ document.addEventListener("DOMContentLoaded", () => {
     contentTabs: document.querySelector("#content-tabs"),
     statsToggle: document.querySelector("#stats-toggle"),
     statsGrid: document.querySelector("#stats-grid"),
+    statsKpis: document.querySelector("#stats-kpis"),
+    statsKpiArticles: document.querySelector("#stats-kpi-articles"),
+    statsKpiSources: document.querySelector("#stats-kpi-sources"),
+    statsKpiSocial: document.querySelector("#stats-kpi-social"),
+    statsTrendingWrap: document.querySelector("#stats-trending-wrap"),
     searchInput: document.querySelector("#filter-search"),
     timeSelect: document.querySelector("#filter-time"),
     filtersForm: document.querySelector("#filters"),
@@ -57,6 +62,9 @@ document.addEventListener("DOMContentLoaded", () => {
     statsTimelineCanvas: document.querySelector("#stats-timeline-chart"),
     statsSourcesCanvas: document.querySelector("#stats-sources-chart"),
     statsMonitorsCanvas: document.querySelector("#stats-monitors-chart"),
+    statsAuthorsCanvas: document.querySelector("#stats-authors-chart"),
+    statsSocialCanvas: document.querySelector("#stats-social-chart"),
+    statsPlacesCanvas: document.querySelector("#stats-places-chart"),
     copyEmailButton: document.querySelector("#copy-email-button"),
     copyLinkButton: document.querySelector("#copy-link-button"),
     copyStatsButton: document.querySelector("#copy-stats-button"),
@@ -429,7 +437,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // skipMonitor/skipPlatform let the facet-count logic ask "how many items
   // would match if every OTHER filter stayed as-is" for a given dimension,
   // instead of collapsing to whatever's currently selected in that facet.
-  function passesFilters(item, { skipMonitor = false, skipFeedSource = false, skipContentType = false } = {}) {
+  function passesFilters(
+    item,
+    { skipMonitor = false, skipFeedSource = false, skipContentType = false, timeRange = null } = {}
+  ) {
     if (
       !skipMonitor &&
       state.selectedMonitors.size > 0 &&
@@ -464,7 +475,14 @@ document.addEventListener("DOMContentLoaded", () => {
         return false;
       }
     }
-    if (state.time !== "all") {
+    // timeRange overrides state.time entirely with an explicit [start, end]
+    // window — used by Trending Topics to look at the period immediately
+    // before the current one, which state.time's own "within the last N"
+    // check (relative to right now) can't express.
+    if (timeRange) {
+      const publishedMs = new Date(item.publishedAt).getTime();
+      if (publishedMs < timeRange.start || publishedMs > timeRange.end) return false;
+    } else if (state.time !== "all") {
       const windowMs = TIME_WINDOWS_MS[state.time];
       if (Date.now() - new Date(item.publishedAt).getTime() > windowMs) return false;
     }
@@ -747,6 +765,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (elements.feed) elements.feed.hidden = state.statsView;
     if (elements.selectAllField) elements.selectAllField.hidden = state.statsView;
     if (elements.statsGrid) elements.statsGrid.hidden = !state.statsView;
+    if (elements.statsKpis) elements.statsKpis.hidden = !state.statsView;
     if (elements.statsToggle) elements.statsToggle.setAttribute("aria-pressed", String(state.statsView));
     // Stats isn't a content type — while it's active, none of All/News/
     // Video/Social should read as selected too; restore the real
@@ -1012,12 +1031,20 @@ document.addEventListener("DOMContentLoaded", () => {
     renderFeed();
   }
 
-  /** The Monitors and Sources pages' "Filter" buttons jump to the Latest
-   * tab with that one monitor/source applied — switching the hash first
-   * so app-shell's tab-section logic shows #latest before the filter
-   * panel's own open/checked state gets updated underneath it. */
+  /** The Monitors and Sources pages' "Filter" buttons — and Trending
+   * Topics' per-row links — jump to the Latest tab with that one monitor/
+   * source applied, showing the actual filtered list rather than leaving
+   * Stats' charts up (which otherwise stay visible since Stats is a view
+   * within Latest, not a separate tab switching the hash alone would
+   * leave). Switches the hash first so app-shell's tab-section logic shows
+   * #latest before the filter panel's own open/checked state gets updated
+   * underneath it. */
   function goToLatestFilteredBy(applyFilter) {
     window.location.hash = "latest";
+    if (state.statsView) {
+      state.statsView = false;
+      syncStatsView();
+    }
     applyFilter();
   }
 
@@ -1105,21 +1132,149 @@ document.addEventListener("DOMContentLoaded", () => {
    * renderFeed() just drew cards from), not the whole dataset, and stay
    * current even while hidden, since this runs on every renderFeed() call
    * regardless of which view is showing. */
+  function monitorNameFor(id) {
+    return state.data.monitors.find((m) => m.id === id)?.name || id;
+  }
+
+  /** The period immediately before the current time filter's window, same
+   * length — e.g. "Past 7 days" compares against the 7 days before that.
+   * null for "all" (no fixed-length window to shift back by) and for a
+   * bounded window with no previous period actually reachable (nothing to
+   * divide by zero against; topCounts on an empty list just renders empty,
+   * handled naturally by renderTrendingTopics below). */
+  function previousPeriodRange() {
+    if (state.time === "all") return null;
+    const windowMs = TIME_WINDOWS_MS[state.time];
+    const end = Date.now() - windowMs;
+    return { start: end - windowMs, end };
+  }
+
+  function renderStatsKpis(items) {
+    if (!elements.statsKpiArticles) return;
+    const uniqueSources = new Set(items.map((item) => item.sourceId)).size;
+    // A count of mentions, not an engagement sum — Reddit has no engagement
+    // data at all (see build/connectors/reddit.js), so a sum would always
+    // undercount it; a plain count of sourceType "social" items (Bluesky +
+    // Reddit both normalize to "social" — see SOURCE_TYPE_BY_METHOD in
+    // build/normalize.js) treats both platforms the same way "Articles"
+    // already treats every news item the same way.
+    const socialCount = items.filter((item) => item.sourceType === "social").length;
+    elements.statsKpiArticles.textContent = items.length.toLocaleString();
+    elements.statsKpiSources.textContent = uniqueSources.toLocaleString();
+    elements.statsKpiSocial.textContent = socialCount.toLocaleString();
+  }
+
+  /** Topic | Articles | % of total | vs. previous period — the "Trending
+   * Topics" table, doubling as Share of Voice (the % of total column).
+   * "Articles" counts can sum to more than items.length, same as the Top
+   * Monitors chart above — one article can match several monitors. */
+  function renderTrendingTopics(items, previousItems) {
+    if (!elements.statsTrendingWrap) return;
+    if (state.time === "all") {
+      elements.statsTrendingWrap.innerHTML =
+        '<p class="app-help-text">Pick a specific time range (not "All available data") to see a period-over-period comparison.</p>';
+      return;
+    }
+    const previousCounts = new Map();
+    previousItems.flatMap((item) => item.matchedMonitors).forEach((id) => {
+      previousCounts.set(id, (previousCounts.get(id) || 0) + 1);
+    });
+    const currentCounts = topCounts(items.flatMap((item) => item.matchedMonitors), 15);
+    if (currentCounts.length === 0) {
+      elements.statsTrendingWrap.innerHTML = '<p class="app-help-text">No data for the current filters.</p>';
+      return;
+    }
+    const rows = currentCounts.map(([id, count]) => {
+      const previousCount = previousCounts.get(id) || 0;
+      const percentOfTotal = items.length ? ((count / items.length) * 100).toFixed(1) : "0.0";
+      let comparisonMarkup;
+      if (previousCount === 0) {
+        comparisonMarkup = count > 0 ? '<span class="app-badge">New</span>' : "—";
+      } else {
+        const change = ((count - previousCount) / previousCount) * 100;
+        const direction = change > 0 ? "up" : change < 0 ? "down" : "flat";
+        const arrow = direction === "up" ? "↗" : direction === "down" ? "↘" : "→";
+        comparisonMarkup = `<span class="mm-trend" data-direction="${direction}">${arrow} ${Math.abs(change).toFixed(1)}%</span>`;
+      }
+      return `<tr>
+        <td><button type="button" class="mm-monitor-name" data-goto-monitor="${escapeHtml(id)}">${escapeHtml(monitorNameFor(id))}</button></td>
+        <td>${count}</td>
+        <td>${percentOfTotal}%</td>
+        <td>${comparisonMarkup}</td>
+      </tr>`;
+    });
+    elements.statsTrendingWrap.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Topic</th>
+            <th>Articles</th>
+            <th>% of total</th>
+            <th>vs. previous period</th>
+          </tr>
+        </thead>
+        <tbody>${rows.join("")}</tbody>
+      </table>`;
+  }
+
   function renderStats(items) {
     if (!state.data) return;
 
+    renderStatsKpis(items);
+
     renderLineChart("timeline", elements.statsTimelineCanvas, buildTimeline(items));
 
+    // News only — Top Sources sits under the News section now, so Bluesky/
+    // Reddit (sourceType "social") shouldn't count as a "source" here any
+    // more than YouTube does; Top Social Accounts is their equivalent.
     const sourceCounts = topCounts(
-      items.filter((item) => !state.officialSourceIds.has(item.sourceId)).map((item) => item.source)
+      items
+        .filter((item) => item.sourceType === "news" && !state.officialSourceIds.has(item.sourceId))
+        .map((item) => item.source)
     );
     const monitorCounts = topCounts(items.flatMap((item) => item.matchedMonitors)).map(([id, count]) => [
-      state.data.monitors.find((m) => m.id === id)?.name || id,
+      monitorNameFor(id),
       count,
     ]);
 
     renderBarChart("sources", elements.statsSourcesCanvas, sourceCounts);
     renderBarChart("monitors", elements.statsMonitorsCanvas, monitorCounts);
+
+    const previousRange = previousPeriodRange();
+    const previousItems = previousRange
+      ? state.data.items.filter((item) => passesFilters(item, { skipContentType: true, timeRange: previousRange }))
+      : [];
+    renderTrendingTopics(items, previousItems);
+
+    // "Journalists" means news bylines, not social handles — Bluesky alone
+    // outnumbers direct-RSS by ~50x in practice (confirmed live), so
+    // without this restriction the chart is just whichever Bluesky
+    // accounts post the most, not reporters. sourceType "news" excludes
+    // Bluesky/Reddit (sourceType "social") and YouTube ("video").
+    const authorCounts = topCounts(
+      items
+        .filter((item) => item.sourceType === "news" && item.author && item.author.trim())
+        .map((item) => item.author)
+    );
+    renderBarChart("authors", elements.statsAuthorsCanvas, authorCounts);
+
+    // Bluesky + Reddit both normalize to sourceType "social" (see
+    // build/normalize.js) — same author field Top Journalists uses above,
+    // just the social side of that same split instead of the news side.
+    const socialAccountCounts = topCounts(
+      items
+        .filter((item) => item.sourceType === "social" && item.author && item.author.trim())
+        .map((item) => item.author)
+    );
+    renderBarChart("socialAccounts", elements.statsSocialCanvas, socialAccountCounts);
+
+    const placeMonitorIds = new Set(
+      state.data.monitors.filter((m) => m.group === "Towns" || m.group === "Districts").map((m) => m.id)
+    );
+    const placeCounts = topCounts(
+      items.flatMap((item) => item.matchedMonitors.filter((id) => placeMonitorIds.has(id)))
+    ).map(([id, count]) => [monitorNameFor(id), count]);
+    renderBarChart("places", elements.statsPlacesCanvas, placeCounts);
   }
 
   /** Canvas charts have no text content of their own — a screen reader
@@ -1589,11 +1744,17 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Shared by downloadAllChartPngs()/buildStatsSummaryText()/
+  // buildStatsSummaryHtml() below — every canvas-based chart on the Stats
+  // page (Trending Topics is a table, not a canvas, so it's not part of
+  // this list; the KPI row likewise has nothing to export as an image).
+  const STATS_CHART_KEYS = ["timeline", "sources", "monitors", "authors", "socialAccounts", "places"];
+
   function downloadAllChartPngs() {
     // A tiny stagger between triggers — some browsers only reliably allow
     // one programmatic download per tick without treating the rest as
     // unrequested/blocked, even within the same click's user activation.
-    ["timeline", "sources", "monitors"].forEach((key, index) => {
+    STATS_CHART_KEYS.forEach((key, index) => {
       setTimeout(() => downloadChartPng(key), index * 150);
     });
   }
@@ -1611,7 +1772,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function buildStatsSummaryText() {
     const monitorsLine = digestMonitorsLine();
     const lines = [`${DIGEST_EMOJI} Marin Mentions Stats — ${filenameDate()}`, ...(monitorsLine ? [monitorsLine] : []), ""];
-    [elements.statsTimelineCanvas, elements.statsSourcesCanvas, elements.statsMonitorsCanvas].forEach((canvas) => {
+    STATS_CHART_KEYS.map((key) => state.statsCharts[key]?.canvas).forEach((canvas) => {
       if (!canvas) return;
       lines.push(canvas.dataset.chartTitle || "Chart");
       const summary = chartSummaryOnly(canvas);
@@ -1640,7 +1801,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function buildStatsSummaryHtml() {
     const htmlHeaderLine = `${DIGEST_EMOJI} Marin Mentions Stats — <i>${escapeHtml(filenameDate())}</i>`;
     const monitorsLine = digestMonitorsLine();
-    const chartBlocks = [elements.statsTimelineCanvas, elements.statsSourcesCanvas, elements.statsMonitorsCanvas]
+    const chartBlocks = STATS_CHART_KEYS.map((key) => state.statsCharts[key]?.canvas)
       .filter(Boolean)
       .map((canvas) => {
         const title = canvas.dataset.chartTitle || "Chart";
@@ -1739,6 +1900,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // and renderSourceTableRows() redraw their lists from scratch on every
   // data refresh/sort.
   elements.monitorsList?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-goto-monitor]");
+    if (!button) return;
+    goToLatestFilteredBy(() => selectOnlyMonitor(button.dataset.gotoMonitor));
+  });
+
+  // Same pattern as #monitors-list above, for Trending Topics' own
+  // per-row "jump to this filter" buttons — a separate container, rebuilt
+  // from scratch on every renderStats(), so this needs its own delegated
+  // listener rather than sharing #monitors-list's.
+  elements.statsTrendingWrap?.addEventListener("click", (event) => {
     const button = event.target.closest("[data-goto-monitor]");
     if (!button) return;
     goToLatestFilteredBy(() => selectOnlyMonitor(button.dataset.gotoMonitor));
