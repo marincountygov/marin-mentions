@@ -38,7 +38,7 @@ monitors:
       - Marin Board of Supervisors
       - Marin County Board of Supervisors
       - Marin County supervisor
-      - [Marin County, supervisor]
+      - [word:Marin, supervisor]
 
   - id: marin-superior-court
     name: Marin County Superior Court
@@ -198,24 +198,24 @@ monitors:
     group: Departments
     include:
       - Marin Office of Emergency Management
-      - [Marin County, word:OEM]
-      - [Marin County, emergency alert]
-      - [Marin County, king tide]
-      - [Marin County, evacuation]
-      - [Marin County, emergency]
-      - [Marin County, disaster]
-      - [Marin County, earthquake]
-      - [Marin County, power outage]
-      - [Marin County, word:heat]
-      - [Marin County, sandbag]
+      - [word:Marin, word:OEM]
+      - [word:Marin, emergency alert]
+      - [word:Marin, king tide]
+      - [word:Marin, evacuation]
+      - [word:Marin, emergency]
+      - [word:Marin, disaster]
+      - [word:Marin, earthquake]
+      - [word:Marin, power outage]
+      - [word:Marin, word:heat]
+      - [word:Marin, sandbag]
 
   - id: marin-county-counsel
     name: Marin County Counsel
     group: Departments
     include:
       - Marin County Counsel
-      - [Marin County, County Counsel]
-      - [Marin County, County attorney]
+      - [word:Marin, County Counsel]
+      - [word:Marin, County attorney]
 
   - id: marin-sheriff
     name: Marin County Sheriff
@@ -225,10 +225,10 @@ monitors:
       - Marin County Sheriff
       - Marin County Sheriff's Office
       - Marin Sheriff
-      - [Marin County, word:crime]
-      - [Marin County, jail]
-      - [Marin County, arrest]
-      - [Marin County, use of force]
+      - [word:Marin, word:crime]
+      - [word:Marin, jail]
+      - [word:Marin, arrest]
+      - [word:Marin, use of force]
 
   - id: marin-fire
     name: Marin County Fire Department
@@ -238,8 +238,8 @@ monitors:
       - Marin County Fire Department
       - Marin County Fire
       - Marin Fire
-      - [Marin County, firefighters]
-      - [Marin County, fire chief]
+      - [word:Marin, firefighters]
+      - [word:Marin, fire chief]
 
   - id: marin-cda
     name: Marin County Community Development Agency
@@ -247,14 +247,14 @@ monitors:
     include:
       - Marin County Community Development Agency
       - Marin CDA
-      - [Marin County, planning]
-      - [Marin County, permits]
-      - [Marin County, redevelopment]
-      - [Marin County, housing]
-      - [Marin County, development]
-      - [Marin County, word:RHNA]
-      - [Marin County, word:ADU]
-      - [Marin County, zoning]
+      - [word:Marin, planning]
+      - [word:Marin, permits]
+      - [word:Marin, redevelopment]
+      - [word:Marin, housing]
+      - [word:Marin, development]
+      - [word:Marin, word:RHNA]
+      - [word:Marin, word:ADU]
+      - [word:Marin, zoning]
 
   - id: marin-ag-weights-measures
     name: Marin County Agriculture, Weights and Measures
@@ -263,9 +263,9 @@ monitors:
       - Marin County Agriculture, Weights and Measures
       - Marin Agriculture, Weights and Measures
       - Marin County Weights and Measures
-      - [Marin County, Agricultural Commissioner]
-      - [Marin County, pesticide]
-      - [Marin County, invasive species]
+      - [word:Marin, Agricultural Commissioner]
+      - [word:Marin, pesticide]
+      - [word:Marin, invasive species]
 
   - id: marin-assessor
     name: Marin County Assessor-Recorder-County Clerk
@@ -276,12 +276,12 @@ monitors:
       - Marin County Recorder
       - Marin County Clerk
       - Marin Assessor-Recorder-County Clerk
-      - [Marin County, property assessment]
-      - [Marin County, property records]
-      - [Marin County, marriage licenses]
-      - [Marin County, birth certificate]
-      - [Marin County, death certificate]
-      - [Marin County, fictitious]
+      - [word:Marin, property assessment]
+      - [word:Marin, property records]
+      - [word:Marin, marriage licenses]
+      - [word:Marin, birth certificate]
+      - [word:Marin, death certificate]
+      - [word:Marin, fictitious]
 
   - id: marin-child-support
     name: Marin County Child Support Services
@@ -289,7 +289,7 @@ monitors:
     include:
       - Marin County Child Support Services
       - Marin Child Support Services
-      - [Marin County, child support]
+      - [word:Marin, child support]
 
   - id: marin-county-executive
     name: Marin County Executive
@@ -297,7 +297,7 @@ monitors:
     include:
       - Marin County Executive
       - Marin County Executive's Office
-      - [Marin County, County Executive]
+      - [word:Marin, County Executive]
 
   - id: marin-cultural-services
     name: Marin County Cultural Services
@@ -326,10 +326,10 @@ monitors:
       - Marin County Elections
       - Marin County Registrar of Voters
       - Marin Registrar of Voters
-      - [Marin County, elections]
-      - [Marin County, voting]
-      - [Marin County, Registrar]
-      - [Marin County, ballot]
+      - [word:Marin, elections]
+      - [word:Marin, voting]
+      - [word:Marin, Registrar]
+      - [word:Marin, ballot]
 
   - id: marin-finance
     name: Marin County Finance
@@ -337,10 +337,10 @@ monitors:
     include:
       - Marin County Department of Finance
       - Marin County Finance Department
-      - [Marin County, word:budget]
-      - [Marin County, spending]
-      - [Marin County, word:tax]
-      - [Marin County, word:fee]
+      - [word:Marin, word:budget]
+      - [word:Marin, spending]
+      - [word:Marin, word:tax]
+      - [word:Marin, word:fee]
 
   - id: marin-hhs
     name: Marin County Health and Human Services
@@ -352,25 +352,25 @@ monitors:
       - Marin HHS
       - Marin County Department of Health and Human Services
       - Marin County HHS
-      - [Marin County, social services]
-      - [Marin County, behavioral health]
-      - [Marin County, mental health]
-      - [Marin County, public health]
-      - [Marin County, substance use]
-      - [Marin County, overdose]
-      - [Marin County, fentanyl]
+      - [word:Marin, social services]
+      - [word:Marin, behavioral health]
+      - [word:Marin, mental health]
+      - [word:Marin, public health]
+      - [word:Marin, substance use]
+      - [word:Marin, overdose]
+      - [word:Marin, fentanyl]
 
   - id: marin-hr
     name: Marin County Human Resources
     group: Departments
     include:
       - Marin County Human Resources
-      - [Marin County, workforce]
-      - [Marin County, labor]
-      - [Marin County, labor negotiations]
-      - [Marin County, collective bargaining]
-      - [Marin County, County employees]
-      - [Marin County, County workers]
+      - [word:Marin, workforce]
+      - [word:Marin, labor]
+      - [word:Marin, labor negotiations]
+      - [word:Marin, collective bargaining]
+      - [word:Marin, County employees]
+      - [word:Marin, County workers]
 
   - id: marin-ist
     name: Marin County Information Services and Technology
@@ -378,7 +378,7 @@ monitors:
     include:
       - Marin County Information Services and Technology
       - Marin County IST
-      - [Marin County, cybersecurity]
+      - [word:Marin, cybersecurity]
 
   - id: marin-library
     name: Marin County Free Library
@@ -386,8 +386,8 @@ monitors:
     include:
       - Marin County Free Library
       - Marin County Library
-      - [Marin County, library]
-      - [Marin County, libraries]
+      - [word:Marin, library]
+      - [word:Marin, libraries]
 
   - id: marin-parks
     name: Marin County Parks
@@ -397,9 +397,9 @@ monitors:
       - Marin County Parks
       - Marin County Parks and Open Space
       - Parks and Open Space Commission
-      - [Marin County, preserve]
-      - [Marin County, trail]
-      - [Marin County, word:IPM]
+      - [word:Marin, preserve]
+      - [word:Marin, trail]
+      - [word:Marin, word:IPM]
 
   - id: marin-probation
     name: Marin County Probation
@@ -407,8 +407,8 @@ monitors:
     include:
       - Marin County Probation
       - Marin Probation Department
-      - [Marin County, juvenile justice]
-      - [Marin County, juvenile hall]
+      - [word:Marin, juvenile justice]
+      - [word:Marin, juvenile hall]
 
   - id: marin-public-defender
     name: Marin County Public Defender
@@ -416,7 +416,7 @@ monitors:
     include:
       - Marin County Public Defender
       - Marin Public Defender
-      - [Marin County, indigent defense]
+      - [word:Marin, indigent defense]
 
   - id: marin-public-works
     name: Marin County Public Works
@@ -425,19 +425,19 @@ monitors:
     include:
       - Marin County Public Works
       - Marin Public Works
-      - [Marin County, word:DPW]
-      - [Marin County, road]
-      - [Marin County, flood]
-      - [Marin County, drainage]
-      - [Marin County, storm water]
-      - [Marin County, stormwater]
-      - [Marin County, waste]
-      - [Marin County, recycling]
-      - [Marin County, airport]
-      - [Marin County, traffic]
-      - [Marin County, mobility]
-      - [Marin County, climate change]
-      - [Marin County, sea level rise]
+      - [word:Marin, word:DPW]
+      - [word:Marin, road]
+      - [word:Marin, flood]
+      - [word:Marin, drainage]
+      - [word:Marin, storm water]
+      - [word:Marin, stormwater]
+      - [word:Marin, waste]
+      - [word:Marin, recycling]
+      - [word:Marin, airport]
+      - [word:Marin, traffic]
+      - [word:Marin, mobility]
+      - [word:Marin, climate change]
+      - [word:Marin, sea level rise]
 
   - id: zero-waste-marin
     name: Zero Waste Marin
@@ -461,13 +461,13 @@ monitors:
     name: County Service Area 6
     group: Departments
     include:
-      - [Marin County, CSA 6]
+      - [word:Marin, CSA 6]
 
   - id: marin-csa-29
     name: County Service Area 29
     group: Departments
     include:
-      - [Marin County, CSA 29]
+      - [word:Marin, CSA 29]
 
   - id: marin-retirement
     name: Marin County Employees' Retirement Association
@@ -475,15 +475,15 @@ monitors:
     include:
       - Marin County Employees' Retirement Association
       - MCERA
-      - [Marin County, retirement]
-      - [Marin County, pension]
+      - [word:Marin, retirement]
+      - [word:Marin, pension]
 
   - id: marin-tax-collector
     name: Marin County Tax Collector
     group: Departments
     include:
       - Marin County Tax Collector
-      - [Marin County, property tax]
+      - [word:Marin, property tax]
 
   - id: marin-uc-extension
     name: Marin UC Cooperative Extension
@@ -590,16 +590,25 @@ monitors:
       - Roller Disco Daze
 
   # --- Topics ---
-  # AND-clause pattern ([Marin County, word:TERM]) instead of full literal
+  # AND-clause pattern ([word:Marin, word:TERM]) instead of full literal
   # phrases — the previous Flooding/Officials/Budget monitors used
   # contiguous phrases ("Marin County budget", "Marin budget") and matched
   # almost nothing (0-2 items each) because real coverage rarely repeats
-  # that exact phrasing verbatim. Requiring "Marin County" AND the topic
-  # word to each appear anywhere in the text, independently, catches far
-  # more real coverage — confirmed directly: Fire went from a similarly
-  # narrow phrase-based monitor to 24 genuine matches on this pattern.
+  # that exact phrasing verbatim. Requiring Marin AND the topic word to each
+  # appear anywhere in the text, independently, catches far more real
+  # coverage — confirmed directly: Fire went from a similarly narrow
+  # phrase-based monitor to 24 genuine matches on this pattern.
   # word: avoids substring false positives on short/generic terms (e.g.
   # bare "budget" is safe, but bare "flood" would also match "floodlight").
+  #
+  # The anchor term itself is bare word:Marin (2026-10-01), not the literal
+  # phrase "Marin County" — real coverage refers to the county as "Marin
+  # County," "County of Marin," or just "Marin" more or less interchangeably,
+  # and the old literal-phrase anchor silently missed every AND-clause match
+  # that used either of the other two. word:Marin catches all three, since
+  # each one contains the standalone word "Marin" somewhere in it. This same
+  # change was made to every `[Marin County, ...]` AND-clause throughout this
+  # file (Departments, Districts, Towns), not just Topics.
   #
   # Organized below (2026-10-01) around the County's first strategic plan in
   # 25+ years, built on 6 named priority areas — each gets a comment banner
@@ -629,29 +638,29 @@ monitors:
     name: Strategic plan
     group: Topics
     include:
-      - [Marin County, strategic plan]
-      - [Marin County, Envision]
+      - [word:Marin, strategic plan]
+      - [word:Marin, Envision]
 
   # --- Housing ---
   - id: marin-homelessness-topic
     name: Homelessness
     group: Topics
     include:
-      - [Marin County, homelessness]
-      - [Marin County, homeless]
-      - [Marin County, unhoused]
-      - [Marin County, encampment]
-      - [Marin County, shelter]
+      - [word:Marin, homelessness]
+      - [word:Marin, homeless]
+      - [word:Marin, unhoused]
+      - [word:Marin, encampment]
+      - [word:Marin, shelter]
 
   - id: marin-affordable-housing-topic
     name: Affordable housing
     group: Topics
     include:
       - Increasing Affordable Housing and Homelessness Response
-      - [Marin County, affordable housing]
-      - [Marin County, housing element]
-      - [Marin County, below market rate]
-      - [Marin County, word:BMR]
+      - [word:Marin, affordable housing]
+      - [word:Marin, housing element]
+      - [word:Marin, below market rate]
+      - [word:Marin, word:BMR]
 
   # --- Equity ---
   - id: marin-racial-equity-topic
@@ -659,10 +668,10 @@ monitors:
     group: Topics
     include:
       - Building a Racially Equitable Community
-      - [Marin County, racial equity]
-      - [Marin County, word:DEI]
-      - [Marin County, equity and inclusion]
-      - [Marin County, disparities]
+      - [word:Marin, racial equity]
+      - [word:Marin, word:DEI]
+      - [word:Marin, equity and inclusion]
+      - [word:Marin, disparities]
 
   # --- Climate & Sustainability ---
   - id: marin-climate-topic
@@ -670,11 +679,11 @@ monitors:
     group: Topics
     include:
       - Reducing Emissions and Building Climate-Resilient Communities
-      - [Marin County, climate action]
-      - [Marin County, greenhouse gas]
-      - [Marin County, renewable energy]
-      - [Marin County, sea level rise]
-      - [Marin County, climate resilience]
+      - [word:Marin, climate action]
+      - [word:Marin, greenhouse gas]
+      - [word:Marin, renewable energy]
+      - [word:Marin, sea level rise]
+      - [word:Marin, climate resilience]
 
   # --- Emergency Readiness ---
   # Wildfire coverage generally, distinct from marin-fire (the Fire
@@ -687,29 +696,29 @@ monitors:
     name: Fire
     group: Topics
     include:
-      - [Marin County, word:fire]
-      - [Marin County, word:fires]
-      - [Marin County, wildfire]
+      - [word:Marin, word:fire]
+      - [word:Marin, word:fires]
+      - [word:Marin, wildfire]
 
   - id: marin-flooding-topic
     name: Flooding
     group: Topics
     include:
-      - [Marin County, word:flood]
-      - [Marin County, word:flooding]
-      - [Marin County, word:floods]
-      - [Marin County, El Niño]
-      - [Marin County, sandbags]
+      - [word:Marin, word:flood]
+      - [word:Marin, word:flooding]
+      - [word:Marin, word:floods]
+      - [word:Marin, El Niño]
+      - [word:Marin, sandbags]
 
   - id: marin-emergency-readiness-topic
     name: Emergency readiness
     group: Topics
     include:
       - Enhancing Disaster and Emergency Preparedness
-      - [Marin County, emergency preparedness]
-      - [Marin County, disaster preparedness]
-      - [Marin County, disaster response]
-      - [Marin County, resilience hub]
+      - [word:Marin, emergency preparedness]
+      - [word:Marin, disaster preparedness]
+      - [word:Marin, disaster response]
+      - [word:Marin, resilience hub]
 
   # --- Capital & Infrastructure ---
   # Folds the old, narrower E-bike monitor in as one of several transit/
@@ -718,28 +727,28 @@ monitors:
     name: Transportation
     group: Topics
     include:
-      - [Marin County, e-bike]
-      - [Marin County, ebike]
-      - [Marin County, transit]
-      - [Marin County, SMART train]
-      - [Marin County, bike lane]
-      - [Marin County, bike path]
-      - [Marin County, pedestrian safety]
-      - [Marin County, ferry]
-      - [Marin County, bus service]
-      - [Marin County, traffic congestion]
-      - [Marin County, Safe Routes to School]
+      - [word:Marin, e-bike]
+      - [word:Marin, ebike]
+      - [word:Marin, transit]
+      - [word:Marin, SMART train]
+      - [word:Marin, bike lane]
+      - [word:Marin, bike path]
+      - [word:Marin, pedestrian safety]
+      - [word:Marin, ferry]
+      - [word:Marin, bus service]
+      - [word:Marin, traffic congestion]
+      - [word:Marin, Safe Routes to School]
 
   - id: marin-infrastructure-topic
     name: Infrastructure
     group: Topics
     include:
       - Investing in Marin County's Infrastructure
-      - [Marin County, infrastructure]
-      - [Marin County, capital improvement]
-      - [Marin County, word:CIP]
-      - [Marin County, broadband]
-      - [Marin County, water system]
+      - [word:Marin, infrastructure]
+      - [word:Marin, capital improvement]
+      - [word:Marin, word:CIP]
+      - [word:Marin, broadband]
+      - [word:Marin, water system]
 
   # --- Economy ---
   - id: marin-economic-development-topic
@@ -747,12 +756,12 @@ monitors:
     group: Topics
     include:
       - Improving Community & Economic Vitality
-      - [Marin County, economy]
-      - [Marin County, economic development]
-      - [Marin County, economic vitality]
-      - [Marin County, small business]
-      - [Marin County, workforce development]
-      - [Marin County, tourism]
+      - [word:Marin, economy]
+      - [word:Marin, economic development]
+      - [word:Marin, economic vitality]
+      - [word:Marin, small business]
+      - [word:Marin, workforce development]
+      - [word:Marin, tourism]
 
   # --- Associations ---
   # One monitor per association (same "one thing per monitor" pattern as
