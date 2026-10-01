@@ -561,6 +561,18 @@ th[aria-sort="descending"] .mm-sort-button::after {
   margin: 1rem 0;
 }
 
+/* A plain section divider inside .mm-stats-grid's single column — grouping
+   News-specific and Social-specific charts apart from the shared/overall
+   ones above them (mentions over time, top monitors, trending topics,
+   coverage by town & district), which apply to every content type. */
+.mm-stats-section-heading {
+  margin: 0.5rem 0 0;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--app-border);
+  font-family: var(--app-font-heading);
+  font-size: 1.1rem;
+}
+
 .mm-stats-grid canvas {
   max-height: 320px;
 }
@@ -568,4 +580,42 @@ th[aria-sort="descending"] .mm-sort-button::after {
 .mm-chart-download {
   display: block;
   margin: 0.75rem auto 0;
+}
+
+.mm-stats-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.mm-stats-kpi {
+  padding: 1rem;
+  border: 1px solid var(--app-border);
+  border-radius: var(--pico-border-radius);
+  background: var(--app-surface);
+}
+
+.mm-stats-kpi__value {
+  margin: 0.25rem 0 0;
+  font-family: var(--app-font-heading);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--app-text);
+}
+
+.mm-trend {
+  font-weight: 600;
+}
+
+.mm-trend[data-direction="up"] {
+  color: var(--app-success);
+}
+
+.mm-trend[data-direction="down"] {
+  color: var(--app-danger);
+}
+
+.mm-trend[data-direction="flat"] {
+  color: var(--app-muted);
 }

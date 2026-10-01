@@ -21,6 +21,20 @@ function textOf(node) {
   return "";
 }
 
+/** RSS has two different author conventions: Dublin Core's <dc:creator>
+ * (just a plain name — WordPress/Substack's usual choice) and RSS 2.0's own
+ * <author> (conventionally "email@example.com (Display Name)" — extract
+ * just the name when present, since the raw value is mostly an email
+ * address otherwise). Atom's <author><name> is handled separately below,
+ * in parseFeed()'s atom branch. */
+function authorNameFrom(item) {
+  const creator = textOf(item["dc:creator"]);
+  if (creator) return creator;
+  const author = textOf(item.author);
+  const match = /\(([^)]+)\)/.exec(author);
+  return match ? match[1].trim() : author;
+}
+
 function firstImageUrl(item) {
   // RSS <enclosure>, Media RSS <media:content>/<media:thumbnail>, or a bare <image>.
   const enclosure = item.enclosure;
@@ -64,6 +78,7 @@ function parseFeed(xml) {
       sourceName: textOf(item.source),
       sourceUrl: item.source?.["@_url"],
       image: firstImageUrl(item),
+      author: authorNameFrom(item),
     }));
   }
   const atomEntries = doc?.feed?.entry;
