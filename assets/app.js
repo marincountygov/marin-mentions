@@ -985,11 +985,20 @@ document.addEventListener("DOMContentLoaded", () => {
    * buildItemTextBlock()/buildItemHtmlBlock() — the exact per-item format
    * the main toolbar Copy button builds a whole digest out of. */
   function renderCopyButtons(item, heading) {
-    const copyText = buildItemTextBlock(item);
-    const copyHtml = buildItemHtmlBlock(item);
     return (
       `<div class="mm-card__copy-actions">` +
-      `<button type="button" class="copy-button" data-copy-value="${escapeHtml(copyText)}" data-copy-html="${escapeHtml(copyHtml)}" data-copy-announce="Copied article to clipboard." aria-label="Copy article: ${escapeHtml(heading)}">` +
+      // data-copy-item (not data-copy-value/data-copy-html) — this button
+      // is wired up by its own dedicated listener below, via
+      // copyItemContentsToClipboard(), rather than shared/app-shell.js's
+      // generic handler. That generic handler's copyRich() prefers the
+      // modern navigator.clipboard.write([ClipboardItem]) API, which this
+      // project already found unreliable for rich HTML in one paste target
+      // (see buildStatsSummaryHtml()'s comment on the stats-chart copy
+      // feature) — confirmed directly here too: a pasted article's title
+      // lost its link under that path. copyRichTextToClipboard()'s
+      // execCommand/contenteditable technique, the same one the toolbar's
+      // own Copy button already relies on, doesn't have that problem.
+      `<button type="button" class="copy-button" data-copy-item="${escapeHtml(item.id)}" aria-label="Copy article: ${escapeHtml(heading)}">` +
       `<svg class="copy-icon" aria-hidden="true" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>` +
       `<svg class="copy-check-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>` +
       `</button>` +
@@ -1648,6 +1657,31 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  /** One card's own "copy contents" button — same buildItemTextBlock()/
+   * buildItemHtmlBlock() format as a single block inside the digest above,
+   * and the exact same copyRichTextToClipboard() mechanism, just scoped to
+   * one item and manually driving the button's own is-copied checkmark
+   * (shared/app-shell.js's generic handler normally does that, but this
+   * button bypasses it — see renderCopyButtons()'s comment on why). */
+  function copyItemContentsToClipboard(item, button) {
+    const text = buildItemTextBlock(item);
+    const html = buildItemHtmlBlock(item);
+    if (elements.copyFallback) elements.copyFallback.hidden = true;
+
+    try {
+      const copied = copyRichTextToClipboard(html);
+      if (!copied) throw new Error("execCommand(\"copy\") returned false");
+      button.classList.add("is-copied");
+      clearTimeout(button.copyResetTimeout);
+      button.copyResetTimeout = setTimeout(() => button.classList.remove("is-copied"), 1500);
+      announce("Copied article to clipboard.");
+    } catch (error) {
+      console.error(error);
+      showCopyFallback(text);
+      announce("Couldn't copy automatically — select the text below and copy it manually.");
+    }
+  }
+
   /** Shared by copyCurrentLink() and copyStatsToClipboard()'s no-image-
    * support fallback — writeText when available, else the execCommand
    * contenteditable trick, else the visible textarea fallback. */
@@ -1861,6 +1895,12 @@ document.addEventListener("DOMContentLoaded", () => {
   // Delegated: #media-feed's cards are fully re-rendered on every filter
   // change, so listeners are attached once here rather than per-card.
   elements.feed?.addEventListener("click", (event) => {
+    const copyItemButton = event.target.closest("[data-copy-item]");
+    if (copyItemButton) {
+      const item = state.data?.items.find((i) => i.id === copyItemButton.dataset.copyItem);
+      if (item) copyItemContentsToClipboard(item, copyItemButton);
+      return;
+    }
     const badge = event.target.closest("[data-filter-monitor]");
     if (!badge) return;
     selectOnlyMonitor(badge.dataset.filterMonitor);
