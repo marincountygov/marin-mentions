@@ -84,7 +84,6 @@ monitors:
       - Mary Sackett
       - [San Rafael, word:Marin]
       - Lucas Valley
-      - Lucas Valley-Marinwood
       - Marinwood
       - Santa Venetia
 
@@ -104,6 +103,7 @@ monitors:
       - Southwest San Rafael
       - Kentfield
       - Greenbrae
+      - Kent Woodlands
       - Oak Manor
       - [Marin, Sleepy Hollow]
 
@@ -119,13 +119,15 @@ monitors:
       - Marin City
       - Mill Valley
       - Tamalpais Valley
-      - Tamalpais-Homestead Valley
+      - Tam Valley
+      - Homestead Valley
       - Almonte
       - [word:Alto, word:Marin]
       - Alto-Sutton Manor
       - [Marin, Strawberry]
       - [Tiburon, word:Marin]
       - [Belvedere, word:Marin]
+      - Paradise Cay
       - [Marin, floating homes]
 
   - id: marin-district-4
@@ -136,21 +138,33 @@ monitors:
       - [District 4, word:Marin]
       - [4th District, word:Marin]
       - Dennis Rodoni
+
+      # West Marin
       - Dillon Beach
-      - Muir Beach
-      - Bolinas
-      - Stinson Beach
+      - [Marin, Fallon]
       - Tomales
       - [Marin, Marshall]
       - Inverness
+      - Inverness Park
       - Point Reyes Station
+      - Olema
+      - Tocaloma
       - Nicasio
       - Chileno Valley
+      - [Marin, Dogtown]
+      - Bolinas
+      - Stinson Beach
+      - Muir Beach
+      - West Marin
+
+      # San Geronimo Valley
       - Forest Knolls
       - Lagunitas
       - San Geronimo
       - San Geronimo Valley
       - Woodacre
+
+      # Other District 4 areas
       - Novato
       - West Novato
       - [San Rafael, word:Marin]
@@ -163,7 +177,7 @@ monitors:
   - id: marin-district-5
     name: Marin District 5
     group: Districts
-    supervisor: Magali Limeta
+    supervisor: Eric Lucan
     include:
       - [District 5, word:Marin]
       - [5th District, word:Marin]
@@ -817,24 +831,42 @@ monitors:
       - [Marin, IATSE]
 
   # --- Towns ---
-  # Unincorporated Marin communities/places. Most are distinctive enough as
-  # standalone phrases (no other "Inverness Park" or "Tamalpais Valley"
-  # anywhere); a handful are common words/names or generic 2-word phrases
-  # that exist elsewhere too (a person named Marshall, the fruit
-  # strawberry, another state's "Black Point") — those are paired with a
-  # Marin AND-clause instead of a bare phrase, same reasoning as everywhere
-  # else in this file.
+  # Marin County incorporated cities and towns plus commonly recognized
+  # unincorporated communities and places.
+  #
+  # Distinctive place names match as standalone phrases. Common or ambiguous
+  # names are paired with Marin to reduce false positives. Two of this
+  # list's own pairings (Alto, Ross) also get a word: prefix on top of that
+  # — both are substrings of something unrelated (Alto inside "Palo Alto",
+  # already a configured source in this project; Ross inside "across"/
+  # "gross"/"crossroads") that a bare Marin pairing alone wouldn't catch,
+  # same fix already applied to these same two names in the Districts
+  # section above. San Rafael is paired with Marin for the same reason it
+  # already is in Districts — it's a common place name outside Marin too
+  # (there's a San Rafael in Argentina, Guatemala, and elsewhere).
   - id: almonte
     name: Almonte
     group: Towns
     include:
       - Almonte
 
+  - id: alto
+    name: Alto
+    group: Towns
+    include:
+      - [word:Alto, word:Marin]
+
   - id: bel-marin-keys
     name: Bel Marin Keys
     group: Towns
     include:
       - Bel Marin Keys
+
+  - id: belvedere
+    name: Belvedere
+    group: Towns
+    include:
+      - [Marin, Belvedere]
 
   - id: black-point
     name: Black Point
@@ -848,6 +880,12 @@ monitors:
     include:
       - Bolinas
 
+  - id: corte-madera
+    name: Corte Madera
+    group: Towns
+    include:
+      - Corte Madera
+
   - id: dillon-beach
     name: Dillon Beach
     group: Towns
@@ -859,6 +897,12 @@ monitors:
     group: Towns
     include:
       - [Marin, Dogtown]
+
+  - id: fairfax
+    name: Fairfax
+    group: Towns
+    include:
+      - [Marin, Fairfax]
 
   - id: fallon
     name: Fallon
@@ -932,6 +976,12 @@ monitors:
     include:
       - Lagunitas
 
+  - id: larkspur
+    name: Larkspur
+    group: Towns
+    include:
+      - [Marin, Larkspur]
+
   - id: las-gallinas
     name: Las Gallinas
     group: Towns
@@ -968,6 +1018,12 @@ monitors:
     include:
       - [Marin, Marshall]
 
+  - id: mill-valley
+    name: Mill Valley
+    group: Towns
+    include:
+      - Mill Valley
+
   - id: muir-beach
     name: Muir Beach
     group: Towns
@@ -979,6 +1035,12 @@ monitors:
     group: Towns
     include:
       - Nicasio
+
+  - id: novato
+    name: Novato
+    group: Towns
+    include:
+      - Novato
 
   - id: olema
     name: Olema
@@ -998,6 +1060,18 @@ monitors:
     include:
       - Point Reyes Station
 
+  - id: ross
+    name: Ross
+    group: Towns
+    include:
+      - [word:Ross, word:Marin]
+
+  - id: san-anselmo
+    name: San Anselmo
+    group: Towns
+    include:
+      - San Anselmo
+
   - id: san-geronimo
     name: San Geronimo
     group: Towns
@@ -1010,17 +1084,43 @@ monitors:
     include:
       - San Quentin
 
+  - id: san-rafael
+    name: San Rafael
+    group: Towns
+    include:
+      - [San Rafael, word:Marin]
+
   - id: santa-venetia
     name: Santa Venetia
     group: Towns
     include:
       - Santa Venetia
 
+  - id: sausalito
+    name: Sausalito
+    group: Towns
+    include:
+      - Sausalito
+
+  - id: seadrift
+    name: Seadrift
+    group: Towns
+    include:
+      - [Marin, Seadrift]
+
   - id: sleepy-hollow
     name: Sleepy Hollow
     group: Towns
     include:
       - [Marin, Sleepy Hollow]
+
+  - id: st-vincents
+    name: St. Vincent's
+    group: Towns
+    include:
+      - [Marin, St. Vincent's]
+      - [Marin, St Vincents]
+      - [Marin, St. Vincent]
 
   - id: stinson-beach
     name: Stinson Beach
@@ -1039,6 +1139,13 @@ monitors:
     group: Towns
     include:
       - Tamalpais Valley
+      - Tam Valley
+
+  - id: tiburon
+    name: Tiburon
+    group: Towns
+    include:
+      - [Marin, Tiburon]
 
   - id: tocaloma
     name: Tocaloma
