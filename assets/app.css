@@ -129,18 +129,37 @@ th[aria-sort="descending"] .mm-sort-button::after {
   list-style: none;
 }
 
+/* vendor/pico.min.css's own <li> rule (meant for nav/menu lists) carries
+   padding: calc(--pico-nav-element-spacing-vertical) ... — 8px top+bottom
+   here, the actual bulk of this list's row spacing (not the 0 margin below,
+   which was the only thing touched in two earlier passes at this). */
 .search-facet-list li {
-  margin: 0.1rem 0;
+  margin: 0 0 0.45rem;
+  padding: 0;
   list-style: none;
+}
+
+.search-facet-list li:last-child {
+  margin-bottom: 0;
 }
 
 .search-facet-list label {
   display: flex;
   align-items: center;
   gap: 0.4rem;
+  margin-bottom: 0;
   font-size: 0.875rem;
   font-weight: 400;
   color: var(--app-text);
+}
+
+/* vendor/pico.min.css gives every checkbox a 1rem bottom margin by default
+   (its usual form-field spacing) — nowhere near "slightly less," so this
+   list's rows were reading as a stack of separate form fields rather than
+   a tight filter list. Overridden to 0 here; .search-facet-list li's own
+   small margin above controls the actual row spacing instead. */
+.search-facet-list input[type="checkbox"] {
+  margin: 0;
 }
 
 .search-facet-count {
@@ -417,7 +436,6 @@ th[aria-sort="descending"] .mm-sort-button::after {
 }
 
 .mm-facet-group .search-facet-list {
-  padding-left: 1rem;
   margin-top: 0.25rem;
 }
 
@@ -481,6 +499,28 @@ th[aria-sort="descending"] .mm-sort-button::after {
 .mm-term--button:focus-visible {
   background: color-mix(in srgb, var(--app-accent) 20%, transparent);
   color: var(--app-accent);
+}
+
+/* The per-card copy buttons below the monitor badges (copy article contents,
+   copy link) — shared/app-brand.css .copy-button icon buttons (same base as
+   the Updates feature's copy button), laid out side by side. Scoped here
+   (not in the shared bundle) to give them a visible border and background
+   like the Updates feature's bordered copy button, since every other,
+   genuinely icon-only use of .copy-button elsewhere should stay unaffected. */
+.mm-card__copy-actions {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.mm-card__copy-actions .copy-button {
+  border-color: var(--app-border);
+  background: var(--app-surface);
+}
+
+.mm-card__copy-actions .copy-button:hover {
+  border-color: var(--app-accent);
+  background: color-mix(in srgb, var(--app-accent) 8%, var(--app-surface));
 }
 
 /* Shown only once a card is clipped (see .mm-card__select) — attributes it

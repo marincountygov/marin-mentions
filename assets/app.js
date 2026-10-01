@@ -635,6 +635,7 @@ document.addEventListener("DOMContentLoaded", () => {
       `</p>` +
       (showSeparateSnippet ? `<p class="mm-card__text">${escapeHtml(truncate(item.text, 220))}</p>` : "") +
       renderMonitorBadges(item.matchedMonitors) +
+      renderCopyButtons(item, heading) +
       renderReleaseDropdown(item) +
       `</div>` +
       `</li>`
@@ -955,6 +956,32 @@ document.addEventListener("DOMContentLoaded", () => {
       .join("")}</div>`;
   }
 
+  /** Two small icon-only buttons below each card's monitor badges: copy this
+   * one item's own contents (left, clipboard icon), and copy its own URL
+   * (right, link icon — not window.location.href like copyCurrentLink()).
+   * Both use shared/app-shell.js's generic button[data-copy-value] handler
+   * (the same one the Updates feature uses) rather than a bespoke click
+   * handler, so they get that same copy-then-checkmark feedback and
+   * #app-status-message announcement for free. The contents button reuses
+   * buildItemTextBlock()/buildItemHtmlBlock() — the exact per-item format
+   * the main toolbar Copy button builds a whole digest out of. */
+  function renderCopyButtons(item, heading) {
+    const copyText = buildItemTextBlock(item);
+    const copyHtml = buildItemHtmlBlock(item);
+    return (
+      `<div class="mm-card__copy-actions">` +
+      `<button type="button" class="copy-button" data-copy-value="${escapeHtml(copyText)}" data-copy-html="${escapeHtml(copyHtml)}" data-copy-announce="Copied article to clipboard." aria-label="Copy article: ${escapeHtml(heading)}">` +
+      `<svg class="copy-icon" aria-hidden="true" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>` +
+      `<svg class="copy-check-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>` +
+      `</button>` +
+      `<button type="button" class="copy-button" data-copy-value="${escapeHtml(item.url)}" data-copy-announce="Copied link to clipboard." aria-label="Copy link to: ${escapeHtml(heading)}">` +
+      `<svg class="copy-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>` +
+      `<svg class="copy-check-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>` +
+      `</button>` +
+      `</div>`
+    );
+  }
+
   /** Set the sidebar filter to exactly one monitor (replacing whatever was
    * selected), used by clicking a monitor badge on a card. Syncs the
    * sidebar's own checkboxes/open state so the UI doesn't show a filter
@@ -1216,6 +1243,60 @@ document.addEventListener("DOMContentLoaded", () => {
     return `${TAG_EMOJI} Monitors: ${names.join(", ")}`;
   }
 
+  /** One mention's plain-text digest block — "🟢 heading", byline, optional
+   * snippet/release/monitors, then the url — shared by buildDigest() (the
+   * main toolbar Copy button's format) and each card's own "copy contents"
+   * button, so a single article's copy matches the digest format exactly. */
+  function buildItemTextBlock(item) {
+    const heading = item.title || item.text?.slice(0, 120) || item.source;
+    const when = new Date(item.publishedAt).toLocaleString([], {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+    const monitors = matchedMonitorNames(item);
+    const release = attributedRelease(item);
+    const lines = [`${TITLE_EMOJI} ${heading}`, `${when} — ${item.source}`];
+    if (item.title && item.text) lines.push(truncate(item.text, 220));
+    if (release) {
+      lines.push(`${RELEASE_EMOJI} Release: ${release.title} — ${release.url}`);
+    }
+    if (monitors.length) lines.push(`${TAG_EMOJI} ${monitors.join(", ")}`);
+    lines.push(item.url);
+    return lines.join("\n");
+  }
+
+  // Gmail/Outlook/etc. paste-sanitizers routinely strip inline margin/
+  // padding from pasted HTML, which silently ate the spacing here before
+  // (div margins and an empty spacer div both vanished on paste). <br> is
+  // structural content, not styling, so it survives — use it for every
+  // gap that has to actually show up once pasted, not CSS margins. <i>/<b>
+  // are plain inline formatting, not layout, so they survive too.
+  function buildItemHtmlBlock(item) {
+    const heading = item.title || item.text?.slice(0, 120) || item.source;
+    const when = new Date(item.publishedAt).toLocaleString([], {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+    const monitors = matchedMonitorNames(item);
+    const release = attributedRelease(item);
+    const fieldLines = [
+      `<b>${TITLE_EMOJI} <a href="${escapeHtml(item.url)}">${escapeHtml(heading)}</a></b>`,
+      `<i>${escapeHtml(when)}</i> &mdash; ${escapeHtml(item.source)}`,
+    ];
+    if (item.title && item.text) fieldLines.push(escapeHtml(truncate(item.text, 220)));
+    if (release) {
+      fieldLines.push(
+        `${RELEASE_EMOJI} Release: <a href="${escapeHtml(release.url)}">${escapeHtml(release.title)}</a>`
+      );
+    }
+    if (monitors.length) fieldLines.push(`${TAG_EMOJI} ${escapeHtml(monitors.join(", "))}`);
+    return fieldLines.join("<br>");
+  }
+
   function buildDigest(items) {
     const now = new Date();
     const generatedDate = now.toLocaleString([], { month: "short", day: "numeric", year: "numeric" });
@@ -1223,58 +1304,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const headerLine2 = `${COUNT_EMOJI} ${items.length} mention${items.length === 1 ? "" : "s"} ${digestRangeLabel(items)}`;
     const monitorsLine = digestMonitorsLine();
 
-    const textBlocks = items.map((item) => {
-      const heading = item.title || item.text?.slice(0, 120) || item.source;
-      const when = new Date(item.publishedAt).toLocaleString([], {
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-      });
-      const monitors = matchedMonitorNames(item);
-      const release = attributedRelease(item);
-      const lines = [`${TITLE_EMOJI} ${heading}`, `${when} — ${item.source}`];
-      if (item.title && item.text) lines.push(truncate(item.text, 220));
-      if (release) {
-        lines.push(`${RELEASE_EMOJI} Release: ${release.title} — ${release.url}`);
-      }
-      if (monitors.length) lines.push(`${TAG_EMOJI} ${monitors.join(", ")}`);
-      lines.push(item.url);
-      return lines.join("\n");
-    });
+    const textBlocks = items.map(buildItemTextBlock);
     const text = [headerLine1, headerLine2, ...(monitorsLine ? [monitorsLine] : []), "", textBlocks.join("\n\n")].join(
       "\n"
     );
 
-    // Gmail/Outlook/etc. paste-sanitizers routinely strip inline margin/
-    // padding from pasted HTML, which silently ate the spacing here before
-    // (div margins and an empty spacer div both vanished on paste). <br> is
-    // structural content, not styling, so it survives — use it for every
-    // gap that has to actually show up once pasted, not CSS margins. <i>/<b>
-    // are plain inline formatting, not layout, so they survive too.
-    const htmlBlocks = items.map((item) => {
-      const heading = item.title || item.text?.slice(0, 120) || item.source;
-      const when = new Date(item.publishedAt).toLocaleString([], {
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-      });
-      const monitors = matchedMonitorNames(item);
-      const release = attributedRelease(item);
-      const fieldLines = [
-        `<b>${TITLE_EMOJI} <a href="${escapeHtml(item.url)}">${escapeHtml(heading)}</a></b>`,
-        `<i>${escapeHtml(when)}</i> &mdash; ${escapeHtml(item.source)}`,
-      ];
-      if (item.title && item.text) fieldLines.push(escapeHtml(truncate(item.text, 220)));
-      if (release) {
-        fieldLines.push(
-          `${RELEASE_EMOJI} Release: <a href="${escapeHtml(release.url)}">${escapeHtml(release.title)}</a>`
-        );
-      }
-      if (monitors.length) fieldLines.push(`${TAG_EMOJI} ${escapeHtml(monitors.join(", "))}`);
-      return fieldLines.join("<br>");
-    });
+    const htmlBlocks = items.map(buildItemHtmlBlock);
     const htmlHeaderLine1 = `${DIGEST_EMOJI} Marin Mentions — <i>${escapeHtml(generatedDate)}</i>`;
     const html =
       `<div><b>${htmlHeaderLine1}</b><br>${escapeHtml(headerLine2)}` +

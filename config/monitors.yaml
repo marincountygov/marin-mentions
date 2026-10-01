@@ -64,47 +64,119 @@ monitors:
   # scoped to these five Board of Supervisors districts specifically. Each
   # district's representative name is added as its own standalone term
   # (already unambiguous, no Marin pairing needed) so a story naming just
-  # the supervisor still surfaces under their district.
+  # the supervisor still surfaces under their district. Expanded 2026-10-01
+  # with the actual towns/places each district covers; most are distinctive
+  # enough as bare phrases (matching the Towns section's own convention
+  # below), but a handful are common words/names that collide with
+  # something unrelated (a car model, a vodka brand, a Lee Enterprises
+  # paper's Google-News-covered "Palo Alto", a Scottish city already
+  # treated as safe-bare elsewhere in this file, etc.) — those are paired
+  # with a word:Marin AND clause instead, same as this section already does
+  # for "District 1"/"1st District" above and as the Towns section already
+  # does for e.g. Strawberry/Marshall/Sleepy Hollow.
   - id: marin-district-1
     name: Marin District 1
     group: Districts
+    supervisor: Mary Sackett
     include:
       - [District 1, word:Marin]
       - [1st District, word:Marin]
       - Mary Sackett
+      - [San Rafael, word:Marin]
+      - Lucas Valley
+      - Lucas Valley-Marinwood
+      - Marinwood
+      - Santa Venetia
 
   - id: marin-district-2
     name: Marin District 2
     group: Districts
+    supervisor: Brian Colbert
     include:
       - [District 2, word:Marin]
       - [2nd District, word:Marin]
       - Brian Colbert
+      - [Fairfax, word:Marin]
+      - San Anselmo
+      - [word:Ross, word:Marin]
+      - [Larkspur, word:Marin]
+      - [San Rafael, word:Marin]
+      - Southwest San Rafael
+      - Kentfield
+      - Greenbrae
+      - Oak Manor
+      - [Marin, Sleepy Hollow]
 
   - id: marin-district-3
     name: Marin District 3
     group: Districts
+    supervisor: Stephanie Moulton-Peters
     include:
       - [District 3, word:Marin]
       - [3rd District, word:Marin]
       - Stephanie Moulton-Peters
+      - Sausalito
+      - Marin City
+      - Mill Valley
+      - Tamalpais Valley
+      - Tamalpais-Homestead Valley
+      - Almonte
+      - [word:Alto, word:Marin]
+      - Alto-Sutton Manor
+      - [Marin, Strawberry]
+      - [Tiburon, word:Marin]
+      - [Belvedere, word:Marin]
+      - [Marin, floating homes]
 
   - id: marin-district-4
     name: Marin District 4
     group: Districts
+    supervisor: Dennis Rodoni
     include:
       - [District 4, word:Marin]
       - [4th District, word:Marin]
       - Dennis Rodoni
+      - Dillon Beach
+      - Muir Beach
+      - Bolinas
+      - Stinson Beach
+      - Tomales
+      - [Marin, Marshall]
+      - Inverness
+      - Point Reyes Station
+      - Nicasio
+      - Chileno Valley
+      - Forest Knolls
+      - Lagunitas
+      - San Geronimo
+      - San Geronimo Valley
+      - Woodacre
+      - Novato
+      - West Novato
+      - [San Rafael, word:Marin]
+      - East San Rafael
+      - San Quentin
+      - Corte Madera
+      - [Larkspur, word:Marin]
+      - Mill Valley
 
   - id: marin-district-5
     name: Marin District 5
     group: Districts
+    supervisor: Magali Limeta
     include:
       - [District 5, word:Marin]
       - [5th District, word:Marin]
       - Eric Lucan
       - Magali Limeta
+      - Novato
+      - Bel Marin Keys
+      - [Marin, Loma Verde]
+      - [Marin, Black Point]
+      - [Marin, Green Point]
+      - Rush Creek
+      - Atherton Corridor
+      - [Marin, Indian Valley]
 
   # --- Departments ---
   - id: marin-oem
@@ -514,42 +586,83 @@ monitors:
   # narrow phrase-based monitor to 24 genuine matches on this pattern.
   # word: avoids substring false positives on short/generic terms (e.g.
   # bare "budget" is safe, but bare "flood" would also match "floodlight").
+  #
+  # Organized below (2026-10-01) around the County's first strategic plan in
+  # 25+ years, built on 6 named priority areas — each gets a comment banner
+  # here (Housing, Equity, Climate & Sustainability, Emergency Readiness,
+  # Capital & Infrastructure, Economy) plus one new monitor built from that
+  # priority's official phrase (as a literal include term, since coverage may
+  # quote it verbatim) and a few topical AND-clauses. These are organizing
+  # banners only, not sidebar groups — every monitor below still has
+  # group: Topics, same as before, and assets/app.js sorts monitors within a
+  # group alphabetically by name regardless of file order.
   - id: marin-county
-    name: Marin County
+    name: General
     group: Topics
-    # No youtubeSearch here (unlike other Topics monitors) — confirmed live
-    # 2026-09-25: this bare geographic phrase pulls from an enormous,
-    # mostly-unrelated YouTube results pool (totalResults in the tens of
-    # thousands), surfacing hotel reviews, real estate listings, and other
-    # commercial content that's genuinely located in Marin County but has
-    # nothing to do with county government. The other youtubeSearch-flagged
-    # monitors are department/entity names with no such ambiguity. See
-    # build/connectors/youtube.js's own comment for the full story.
+    # Merged 2026-10-01 with the old Reddit-only "Marin (general mention)"
+    # monitor (bare word:Marin, kept platform-scoped specifically to avoid
+    # firing on News/Video) into this one. Deliberate tradeoff: word:Marin
+    # now applies everywhere, so this is broader/noisier on News/Video than
+    # the old "Marin County"-phrase-only version was — accepted in exchange
+    # for one simpler monitor instead of two.
     include:
-      - Marin County
-      - County of Marin
-      - Marin Co.
-      - Marin agencies
-      - [Marin County, government]
+      - word:Marin
     exclude:
       - Marin County Florida
       - Marin County, Florida
 
-  # Reddit-only, deliberately broader than every monitor above: casual
-  # Reddit chatter about Marin almost never uses a full phrase like "Marin
-  # County" — confirmed directly, genuine matches were landing at 0-1 per
-  # poll against 200 real raw items. sourceMethods restricts this to
-  # Reddit specifically (see build/match.js) so News/Video keep their
-  # existing phrase-level precision; accepting more noise here (e.g. a
-  # person named Marin) is the deliberate tradeoff for more recall on a
-  # platform that's inherently casual chatter, not curated coverage.
-  - id: marin-broad-reddit
-    name: Marin (general mention)
+  - id: marin-strategic-plan-topic
+    name: Strategic plan
     group: Topics
-    sourceMethods: [reddit]
     include:
-      - word:Marin
+      - [Marin County, strategic plan]
+      - [Marin County, Envision]
 
+  # --- Housing ---
+  - id: marin-homelessness-topic
+    name: Homelessness
+    group: Topics
+    include:
+      - [Marin County, homelessness]
+      - [Marin County, homeless]
+      - [Marin County, unhoused]
+      - [Marin County, encampment]
+      - [Marin County, shelter]
+
+  - id: marin-affordable-housing-topic
+    name: Affordable housing
+    group: Topics
+    include:
+      - Increasing Affordable Housing and Homelessness Response
+      - [Marin County, affordable housing]
+      - [Marin County, housing element]
+      - [Marin County, below market rate]
+      - [Marin County, word:BMR]
+
+  # --- Equity ---
+  - id: marin-racial-equity-topic
+    name: Racial equity
+    group: Topics
+    include:
+      - Building a Racially Equitable Community
+      - [Marin County, racial equity]
+      - [Marin County, word:DEI]
+      - [Marin County, equity and inclusion]
+      - [Marin County, disparities]
+
+  # --- Climate & Sustainability ---
+  - id: marin-climate-topic
+    name: Climate & sustainability
+    group: Topics
+    include:
+      - Reducing Emissions and Building Climate-Resilient Communities
+      - [Marin County, climate action]
+      - [Marin County, greenhouse gas]
+      - [Marin County, renewable energy]
+      - [Marin County, sea level rise]
+      - [Marin County, climate resilience]
+
+  # --- Emergency Readiness ---
   # Wildfire coverage generally, distinct from marin-fire (the Fire
   # Department as an organization, under Departments above) — this one
   # matches even when the Department itself isn't named. word: on "fire"/
@@ -564,13 +677,6 @@ monitors:
       - [Marin County, word:fires]
       - [Marin County, wildfire]
 
-  - id: marin-budget-topic
-    name: Budget
-    group: Topics
-    include:
-      - [Marin County, word:budget]
-      - [Marin County, spending plan]
-
   - id: marin-flooding-topic
     name: Flooding
     group: Topics
@@ -581,46 +687,58 @@ monitors:
       - [Marin County, El Niño]
       - [Marin County, sandbags]
 
-  - id: marin-strategic-plan-topic
-    name: Strategic plan
+  - id: marin-emergency-readiness-topic
+    name: Emergency readiness
     group: Topics
     include:
-      - [Marin County, strategic plan]
-      - [Marin County, Envision]
+      - Enhancing Disaster and Emergency Preparedness
+      - [Marin County, emergency preparedness]
+      - [Marin County, disaster preparedness]
+      - [Marin County, disaster response]
+      - [Marin County, resilience hub]
 
-  - id: marin-ebike-topic
-    name: E-bike
+  # --- Capital & Infrastructure ---
+  # Folds the old, narrower E-bike monitor in as one of several transit/
+  # mobility angles, rather than keeping e-bikes as their own monitor.
+  - id: marin-transportation-topic
+    name: Transportation
     group: Topics
     include:
       - [Marin County, e-bike]
       - [Marin County, ebike]
+      - [Marin County, transit]
+      - [Marin County, SMART train]
+      - [Marin County, bike lane]
+      - [Marin County, bike path]
+      - [Marin County, pedestrian safety]
+      - [Marin County, ferry]
+      - [Marin County, bus service]
+      - [Marin County, traffic congestion]
+      - [Marin County, Safe Routes to School]
 
-  - id: marin-economic-development-topic
-    name: Economic Development
+  - id: marin-infrastructure-topic
+    name: Infrastructure
     group: Topics
     include:
+      - Investing in Marin County's Infrastructure
+      - [Marin County, infrastructure]
+      - [Marin County, capital improvement]
+      - [Marin County, word:CIP]
+      - [Marin County, broadband]
+      - [Marin County, water system]
+
+  # --- Economy ---
+  - id: marin-economic-development-topic
+    name: Economy
+    group: Topics
+    include:
+      - Improving Community & Economic Vitality
       - [Marin County, economy]
       - [Marin County, economic development]
-
-  - id: marin-homelessness-topic
-    name: Homelessness
-    group: Topics
-    include:
-      - [Marin County, homelessness]
-      - [Marin County, homeless]
-      - [Marin County, unhoused]
-      - [Marin County, encampment]
-      - [Marin County, shelter]
-
-  - id: marin-immigration-topic
-    name: Immigration
-    group: Topics
-    include:
-      - [Marin County, immigration]
-      - [Marin County, immigrant]
-      - [Marin County, word:ICE]
-      - [Marin County, deportation]
-      - [Marin County, word:raid]
+      - [Marin County, economic vitality]
+      - [Marin County, small business]
+      - [Marin County, workforce development]
+      - [Marin County, tourism]
 
   # --- Associations ---
   # One monitor per association (same "one thing per monitor" pattern as
