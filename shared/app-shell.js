@@ -1,4 +1,27 @@
 (() => {
+  // Local QA convenience, used by everything below that otherwise points at
+  // MarinOS's production site: a link followed (or a fetch made) while
+  // testing locally should land on the local marin-os dev server, not the
+  // real deployed one, which can never reflect an uncommitted local change
+  // by definition. Only true on localhost/127.0.0.1 — never for a real
+  // visitor on a deployed site. Port matches this project's own established
+  // local-dev convention for marin-os (see its AGENTS.md / README).
+  const isLocalDev = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+  const MARINOS_HOMEPAGE_URL = isLocalDev ? "http://localhost:8935/" : "https://marincountygov.github.io/marin-os/";
+
+  // Rewrites any static link pointed at the MarinOS homepage (the footer's
+  // "MarinOS" link, bare, and its "Status" link, which points at
+  // .../marin-os/#status) the same way — plain DOM rewriting, not a build
+  // step, since these apps have none. Prefix match so it catches both the
+  // bare URL and any #-suffixed one without needing a separate rule per
+  // suffix. Does nothing in production, where the href is already correct.
+  const MARINOS_PROD_BASE = "https://marincountygov.github.io/marin-os/";
+  if (isLocalDev) {
+    document.querySelectorAll(`a[href^="${MARINOS_PROD_BASE}"]`).forEach((link) => {
+      link.href = link.getAttribute("href").replace(MARINOS_PROD_BASE, MARINOS_HOMEPAGE_URL);
+    });
+  }
+
   const menuToggle = document.querySelector("#menu-toggle");
   const navigation = document.querySelector("#app-nav");
   const menuQuery = window.matchMedia("(max-width: 720px)");
@@ -77,7 +100,17 @@
   // visit doesn't refetch the catalog on every page load.
   const marinosMenuPanel = document.querySelector("#marinos-menu-panel");
   if (marinosMenuPanel) {
-    const CATALOG_URL = "https://marincountygov.github.io/marin-os/catalog.json";
+    // Local QA convenience: on localhost, prefer a locally-running marin-os
+    // dev server over the real production catalog (isLocalDev, defined at
+    // the top of this file) — the production URL can never reflect an
+    // uncommitted local edit (to catalog.json, or to this file), by
+    // definition, which made every status-badge feature above impossible
+    // to actually QA locally before this. Fails silently back to the
+    // existing cache/static-fallback behavior below if nothing's listening
+    // on that port — same as any other fetch failure here.
+    const CATALOG_URL = isLocalDev
+      ? "http://localhost:8935/catalog.json"
+      : "https://marincountygov.github.io/marin-os/catalog.json";
     // Bump this whenever the expected catalog shape or rendering changes
     // (for example, adding the `icon` field) so browsers holding an older
     // cached shape refetch immediately instead of waiting out the TTL.
@@ -105,6 +138,11 @@
       }
     }
 
+    // Same labels/enum as marin-os's #status page — kept here too since
+    // this menu has no shared JS module to import them from (vendored as a
+    // plain script, not a module system).
+    const MARINOS_STATUS_LABELS = { alpha: "Alpha", beta: "Beta", live: "Live" };
+
     function renderMarinosMenu(entries) {
       if (!Array.isArray(entries)) return;
       const current = window.location.href;
@@ -119,11 +157,64 @@
             entry.icon && entry.icon.viewBox && entry.icon.markup
               ? `<span class="marinos-menu__icon" aria-hidden="true"><svg viewBox="${entry.icon.viewBox}">${entry.icon.markup}</svg></span>`
               : "";
-          return `<a href="${entry.url}">${icon}${entry.name}</a>`;
+          // Same .app-status badge every other status display uses — entries
+          // from before this field's enum existed (or a fetch that races an
+          // older cached shape) may have no recognized status; omit the
+          // badge entirely rather than show a blank or wrong one.
+          const label = MARINOS_STATUS_LABELS[entry.status];
+          const badge = label
+            ? `<span class="app-status marinos-menu__status" data-status="${entry.status}">${label}</span>`
+            : "";
+          return `<a href="${entry.url}">${icon}<span class="marinos-menu__name">${entry.name}</span>${badge}</a>`;
         })
         .join("");
       if (allLink) allLink.insertAdjacentHTML("beforebegin", links);
       else marinosMenuPanel.insertAdjacentHTML("beforeend", links);
+    }
+
+    // Same idea as the menu above, but for this page's own app title — "this
+    // app is Beta" is exactly as useful to show as "here's what else is
+    // Beta." Reuses the same fetched entries (no second request) and the
+    // same labels; finds "self" the same way the menu excludes it (the
+    // current URL starting with an entry's url). Idempotent: removes any
+    // badge it previously added before adding the current one, so the
+    // stale-while-revalidate re-render below doesn't stack a second badge
+    // next to the first. No match (an app not in the catalog, e.g. MarinOS
+    // itself) or no recognized status quietly renders nothing.
+    function renderOwnStatusBadge(entries) {
+      const titleEl = document.querySelector(".app-title");
+      if (!titleEl || !Array.isArray(entries)) return;
+      // Prefer <body data-app-id="..."> (matches catalog.json's own id
+      // field) over comparing production URLs — a URL comparison can never
+      // match when testing locally (http://localhost:PORT/ never starts
+      // with https://marincountygov.github.io/<repo>/, even once deployed
+      // for real), so local testing of this exact feature was silently
+      // impossible before this. Falls back to the URL comparison for any
+      // app that hasn't added the data-app-id marker yet.
+      const appId = document.body.dataset.appId;
+      const current = window.location.href;
+      const self = appId
+        ? entries.find((entry) => entry && entry.id === appId)
+        : entries.find((entry) => entry && entry.url && current.startsWith(entry.url));
+      const label = self && MARINOS_STATUS_LABELS[self.status];
+      // Not in the catalog (MarinOS itself — it doesn't list itself) or no
+      // recognized status: leave whatever's already there alone, same as
+      // the menu leaving static fallback links alone on failure. In
+      // particular, this must NOT remove a badge some other, non-generic
+      // markup put there (MarinOS's own index.html hardcodes its own,
+      // since it has no catalog entry for this mechanism to find) — only
+      // ever touch a badge this same function added, scoped by its own
+      // .app-title__status class, not the bare .app-status one.
+      if (!label) return;
+      const existing = titleEl.querySelector(".app-title__status");
+      if (existing) existing.remove();
+      // Links to MarinOS's #status section (MARINOS_HOMEPAGE_URL, defined
+      // at the top of this file — the local dev server when testing
+      // locally), where Alpha/Beta/Live are explained.
+      titleEl.insertAdjacentHTML(
+        "beforeend",
+        ` <a class="app-status app-title__status" href="${MARINOS_HOMEPAGE_URL}#status" data-status="${self.status}">${label}</a>`
+      );
     }
 
     // Stale-while-revalidate: the cache is only for instant paint on repeat
@@ -133,7 +224,10 @@
     // later — a stale-icon report once took hours to explain because of
     // this cache, before it revalidated on every load like this.
     const cachedEntries = readCatalogCache();
-    if (cachedEntries) renderMarinosMenu(cachedEntries);
+    if (cachedEntries) {
+      renderMarinosMenu(cachedEntries);
+      renderOwnStatusBadge(cachedEntries);
+    }
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 4000);
@@ -141,7 +235,10 @@
       .then((response) => (response.ok ? response.json() : Promise.reject(new Error("bad response"))))
       .then((entries) => {
         writeCatalogCache(entries);
-        if (JSON.stringify(entries) !== JSON.stringify(cachedEntries)) renderMarinosMenu(entries);
+        if (JSON.stringify(entries) !== JSON.stringify(cachedEntries)) {
+          renderMarinosMenu(entries);
+          renderOwnStatusBadge(entries);
+        }
       })
       .catch(() => {
         // Leave whatever's already rendered (cache or static banner links) as-is.

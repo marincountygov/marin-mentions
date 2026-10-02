@@ -6,10 +6,10 @@ project:
   type: app
   owner: TBD
   audience: staff
-  status: prototype
+  status: beta
 
 platform:
-  marin-ui: 1.18.0
+  marin-ui: 1.19.0
   template: 1.1.0
 
 deployment:
