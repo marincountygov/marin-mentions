@@ -461,15 +461,19 @@ document.addEventListener("DOMContentLoaded", () => {
     // tab too, same as before.
     //
     // skipContentType: Stats intentionally ignores which content-type tab
-    // is selected — switching All/News/Video/Social/Official shouldn't
-    // change what the charts show, only the Monitors/Sources/Time/Search
-    // filters in the sidebar should. Otherwise Stats would silently reset
-    // every time you flip tabs to check the feed, which reads as the
-    // charts "changing on their own."
-    if (!skipContentType) {
-      if (state.contentType === "official") {
-        if (!state.officialSourceIds.has(item.sourceId)) return false;
-      } else if (state.contentType === "all") {
+    // is selected — switching All/News/Video/Social shouldn't change what
+    // the charts show, only the Monitors/Sources/Time/Search filters in
+    // the sidebar should. Otherwise Stats would silently reset every time
+    // you flip tabs to check the feed, which reads as the charts "changing
+    // on their own." Official is the one exception: unlike All/News/Video/
+    // Social (just which section of the list you're browsing), Official is
+    // a deliberate filter — "show me only the County's own coverage" — the
+    // same kind of explicit narrowing Monitors/Sources/Time/Search already
+    // are, so it stays in effect for Stats too, skipContentType or not.
+    if (state.contentType === "official") {
+      if (!state.officialSourceIds.has(item.sourceId)) return false;
+    } else if (!skipContentType) {
+      if (state.contentType === "all") {
         if (item.sourceType === "social") return false;
       } else if (item.sourceType !== state.contentType) {
         return false;
@@ -1145,6 +1149,22 @@ document.addEventListener("DOMContentLoaded", () => {
     return state.data.monitors.find((m) => m.id === id)?.name || id;
   }
 
+  /** An item matches a monitor if ANY of its include terms are found — so
+   * filtering to a handful of Events & Places monitors (say) still returns
+   * items whose matchedMonitors also includes unrelated ones that happened
+   * to match the same text (the County-wide "General" catch-all, a town,
+   * etc.). Top Monitors/Trending Topics are about breaking down coverage
+   * *among the monitors you picked*, not surfacing whatever else tagged
+   * along — confirmed directly as a real point of confusion (a filtered
+   * Events & Places view surfacing Districts/Towns having nothing to do
+   * with the selected monitors). With no monitor filter active, there's
+   * nothing to scope to, so every matched monitor still counts, same as
+   * before. */
+  function relevantMonitorIdsFor(item) {
+    if (state.selectedMonitors.size === 0) return item.matchedMonitors;
+    return item.matchedMonitors.filter((id) => state.selectedMonitors.has(id));
+  }
+
   /** The period immediately before the current time filter's window, same
    * length — e.g. "Past 7 days" compares against the 7 days before that.
    * null for "all" (no fixed-length window to shift back by) and for a
@@ -1185,10 +1205,10 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     const previousCounts = new Map();
-    previousItems.flatMap((item) => item.matchedMonitors).forEach((id) => {
+    previousItems.flatMap(relevantMonitorIdsFor).forEach((id) => {
       previousCounts.set(id, (previousCounts.get(id) || 0) + 1);
     });
-    const currentCounts = topCounts(items.flatMap((item) => item.matchedMonitors), 15);
+    const currentCounts = topCounts(items.flatMap(relevantMonitorIdsFor), 15);
     if (currentCounts.length === 0) {
       elements.statsTrendingWrap.innerHTML = '<p class="app-help-text">No data for the current filters.</p>';
       return;
@@ -1241,7 +1261,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .filter((item) => item.sourceType === "news" && !state.officialSourceIds.has(item.sourceId))
         .map((item) => item.source)
     );
-    const monitorCounts = topCounts(items.flatMap((item) => item.matchedMonitors)).map(([id, count]) => [
+    const monitorCounts = topCounts(items.flatMap(relevantMonitorIdsFor)).map(([id, count]) => [
       monitorNameFor(id),
       count,
     ]);
