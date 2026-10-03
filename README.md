@@ -6,7 +6,7 @@ A live, stateless media-monitoring console for the San Francisco Bay Area, prior
 - **Audience:** Marin County staff.
 - **Owner:** TBD
 - **Repo:** marin-mentions
-- **Status:** Prototype (Phase 1+2 of the implementation plan — see "Roadmap" below)
+- **Status:** Beta (Phase 1+2 of the implementation plan — see "Roadmap" below)
 
 ## What this app does
 
