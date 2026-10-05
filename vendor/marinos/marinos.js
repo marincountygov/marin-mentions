@@ -6,11 +6,15 @@
     return;
   }
 
-  const SHELL_VERSION = "1.2.1";
+  const SHELL_VERSION = "1.4.0";
   const MARIN_UI_VERSION = "1.19.0";
   const MARINOS_URL = "https://marincountygov.github.io/marin-os/";
   const MARINOS_STATUS_URL = `${MARINOS_URL}#status`;
   const CATALOG_URL = `${MARINOS_URL}catalog.json`;
+  // Google Lighthouse accessibility results for every MarinOS app, written
+  // by marin-os's scripts/lighthouse.js. One shared file, keyed by catalog id.
+  const LIGHTHOUSE_URL = `${MARINOS_URL}data/lighthouse.json`;
+  const WCAG_URL = "https://www.w3.org/TR/WCAG22/";
   const FEEDBACK_URL = "https://form.asana.com/?k=qVUT83d5DBmlDiIyi-WAyQ&d=23133298259496";
   const SECURITY_STANDARD_URL =
     "https://github.com/marincountygov/marin-digital-standards/blob/main/security/standard.md";
@@ -574,17 +578,77 @@
         }
 
         if (key === "accessibility") {
-          if (templates.accessibility) {
-            section.append(templates.accessibility);
-          } else {
-            const description = document.createElement("p");
-            description.textContent =
-              `${appName} uses the shared MarinOS interface, including keyboard focus styles, responsive layouts, and reduced-motion support.`;
-            const reporting = document.createElement("p");
-            reporting.textContent =
-              "Use the Feedback control to report an accessibility problem. Include the task, page or feature, browser, and assistive technology involved, when applicable.";
-            section.append(description, reporting);
-          }
+          const standardParagraph = document.createElement("p");
+          standardParagraph.append(document.createTextNode(`${appName} targets `));
+          const wcagLink = document.createElement("a");
+          wcagLink.href = WCAG_URL;
+          wcagLink.textContent = "WCAG 2.2 Level AA";
+          standardParagraph.append(wcagLink, document.createTextNode("."));
+          section.append(standardParagraph);
+
+          if (templates.accessibility) section.append(templates.accessibility);
+
+          const scoreHeading = document.createElement("h3");
+          scoreHeading.textContent = "Accessibility score";
+          const status = document.createElement("p");
+          status.className = "app-help-text";
+          status.dataset.accessibilityStatus = "";
+          status.setAttribute("role", "status");
+          status.setAttribute("aria-live", "polite");
+          status.setAttribute("aria-atomic", "true");
+          status.innerHTML = "Loading accessibility score&hellip;";
+          const content = document.createElement("div");
+          content.dataset.accessibilityContent = "";
+          // The score is read live from marin-os's data/lighthouse.json,
+          // looked up by this app's catalog id (app-id attribute, the
+          // header's app-id, or <body data-app-id>; else matched by URL).
+          section.dataset.accessibilityScores = "";
+          section.dataset.accessibilityAppId = normalizedAttribute(this, "app-id");
+
+          const aboutHeading = document.createElement("h3");
+          aboutHeading.textContent = "About the score";
+          const aboutParagraph = document.createElement("p");
+          aboutParagraph.textContent =
+            "Scores come from Google Lighthouse accessibility testing through the PageSpeed Insights API. Scores range from 0\u2013100. Automated testing can identify many accessibility issues, but a score does not determine WCAG conformance.";
+
+          const standardHeading = document.createElement("h3");
+          standardHeading.textContent = "Accessibility standard";
+          const standardText = document.createElement("p");
+          standardText.append(document.createTextNode("County of Marin digital services target "));
+          const standardLink = document.createElement("a");
+          standardLink.href = WCAG_URL;
+          standardLink.textContent = "WCAG 2.2 Level AA";
+          standardText.append(
+            standardLink,
+            document.createTextNode(
+              ". WCAG provides internationally recognized requirements for making web content accessible to people with disabilities."
+            )
+          );
+
+          const reportHeading = document.createElement("h3");
+          reportHeading.textContent = "Report an issue";
+          const reportText = document.createElement("p");
+          reportText.textContent = `If you experience an accessibility problem with ${appName}, report the issue so we can review it.`;
+          const reportParagraph = document.createElement("p");
+          const reportLink = document.createElement("a");
+          reportLink.href = FEEDBACK_URL;
+          reportLink.target = "_blank";
+          reportLink.rel = "noreferrer";
+          reportLink.textContent = "Report an accessibility issue";
+          reportParagraph.append(reportLink);
+
+          section.append(
+            scoreHeading,
+            status,
+            content,
+            aboutHeading,
+            aboutParagraph,
+            standardHeading,
+            standardText,
+            reportHeading,
+            reportText,
+            reportParagraph
+          );
         }
 
         if (key === "updates") {
@@ -1422,6 +1486,157 @@
 
     new MutationObserver(() => {
       if (!section.hidden) loadSecurity();
+    }).observe(section, { attributes: true, attributeFilter: ["hidden"] });
+  });
+
+  // Builds an accessibility score gauge (see .app-score in app-brand.css) for
+  // an integer 0-100 Lighthouse score: a ring, the number, and the band word.
+  // Bands match Lighthouse's own. Exposed as window.marinScoreGauge so other
+  // scripts (marin-os's score table) draw the identical component.
+  function marinScoreGauge(score, { large = false } = {}) {
+    const value = Math.max(0, Math.min(100, Math.round(Number(score))));
+    const band = value >= 90 ? "good" : value >= 50 ? "needs-improvement" : "poor";
+    const label = { good: "Good", "needs-improvement": "Needs improvement", poor: "Poor" }[band];
+    const SVG = "http://www.w3.org/2000/svg";
+    const svgEl = (name, attrs) => {
+      const el = document.createElementNS(SVG, name);
+      Object.entries(attrs).forEach(([key, val]) => el.setAttribute(key, val));
+      return el;
+    };
+
+    const wrapper = document.createElement("span");
+    wrapper.className = `app-score${large ? " app-score--large" : ""}`;
+    wrapper.dataset.band = band;
+
+    // r = 100 / (2 * PI), so the circumference is exactly 100 and the arc's
+    // dash length is simply the score.
+    const ring = svgEl("svg", { class: "app-score__ring", viewBox: "0 0 36 36", "aria-hidden": "true", focusable: "false" });
+    ring.append(
+      svgEl("circle", { class: "app-score__track", cx: 18, cy: 18, r: 15.9155 }),
+      svgEl("circle", {
+        class: "app-score__arc",
+        cx: 18,
+        cy: 18,
+        r: 15.9155,
+        transform: "rotate(-90 18 18)",
+        "stroke-dasharray": `${value} 100`,
+      })
+    );
+    const number = svgEl("text", { class: "app-score__number", x: 18, y: 18 });
+    number.textContent = String(value);
+    ring.append(number);
+
+    const text = document.createElement("span");
+    text.className = "app-score__label";
+    const hidden = document.createElement("span");
+    hidden.className = "visually-hidden";
+    hidden.textContent = `Accessibility score ${value} out of 100: `;
+    text.append(hidden, document.createTextNode(label));
+
+    wrapper.append(ring, text);
+    return wrapper;
+  }
+  window.marinScoreGauge = marinScoreGauge;
+
+  // Accessibility: any [data-accessibility-scores] section lazy-loads the
+  // shared MarinOS Lighthouse results the first time it becomes visible and
+  // shows this app's own entry. Automated testing only — never labelled as
+  // WCAG conformance. A failed scan is not shown as a low score: the last good
+  // result stays visible with its date, or "not available" if there is none.
+  document.querySelectorAll("[data-accessibility-scores]").forEach((section) => {
+    const status = section.querySelector("[data-accessibility-status]");
+    const content = section.querySelector("[data-accessibility-content]");
+    if (!status || !content) return;
+
+    const STALE_AFTER_DAYS = 14;
+    const isLocal = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+    const scoresUrl = isLocal ? "http://localhost:8935/data/lighthouse.json" : LIGHTHOUSE_URL;
+    let loaded = false;
+
+    function formatDate(iso) {
+      const date = new Date(iso);
+      return Number.isNaN(date.getTime())
+        ? ""
+        : date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+    }
+
+    async function resolveAppId() {
+      const header = document.querySelector("marin-app-header");
+      const direct =
+        section.dataset.accessibilityAppId ||
+        (header ? normalizedAttribute(header, "app-id") : "") ||
+        document.body.dataset.appId ||
+        "";
+      if (direct) return direct;
+      const response = await fetch(CATALOG_URL);
+      if (!response.ok) throw new Error(`catalog fetch failed: ${response.status}`);
+      const current = window.location.href;
+      const match = (await response.json()).find((entry) => {
+        const href = safeLinkUrl(entry?.url);
+        return href && current.startsWith(href);
+      });
+      return match ? match.id : "";
+    }
+
+    function show(entry) {
+      const good =
+        entry && entry.status === "success"
+          ? { score: entry.score, testedAt: entry.testedAt }
+          : (entry && entry.lastSuccess) || null;
+      content.replaceChildren();
+      if (!good) {
+        status.textContent = "An accessibility score isn't available for this application yet.";
+        return;
+      }
+      const scoreLine = document.createElement("p");
+      scoreLine.append(marinScoreGauge(good.score, { large: true }));
+      const source = document.createElement("p");
+      source.className = "app-help-text";
+      const notes = [];
+      if (entry.status !== "success") notes.push("The latest scan didn't finish, so this is the last successful result.");
+      else if (Date.now() - new Date(good.testedAt).getTime() > STALE_AFTER_DAYS * 86400000) notes.push("This result is out of date.");
+      source.textContent = ["Google Lighthouse", `Tested ${formatDate(good.testedAt)}`, ...notes].join(". ") + (notes.length ? "" : ".");
+      content.append(scoreLine, source);
+      // The same test, run live: PageSpeed Insights' own results page for the
+      // tested address (mobile, matching how the stored score was produced).
+      const tested = entry.url;
+      if (tested) {
+        const report = document.createElement("p");
+        const link = document.createElement("a");
+        link.href = `https://pagespeed.web.dev/analysis?url=${encodeURIComponent(tested)}&form_factor=mobile`;
+        link.target = "_blank";
+        link.rel = "noreferrer";
+        link.textContent = "Lighthouse results";
+        report.append(link);
+        content.append(report);
+      }
+      status.textContent = "";
+    }
+
+    async function loadScore() {
+      if (loaded) return;
+      status.textContent = "Loading accessibility score...";
+      try {
+        const [appId, response] = await Promise.all([resolveAppId(), fetch(scoresUrl, { cache: "no-store" })]);
+        loaded = true;
+        if (response.status === 404) {
+          status.textContent = "Accessibility scores haven't been collected yet.";
+          return;
+        }
+        if (!response.ok) throw new Error(`scores fetch failed: ${response.status}`);
+        const data = await response.json();
+        show(appId && data && data.apps ? data.apps[appId] : null);
+      } catch (error) {
+        loaded = true;
+        console.error(error);
+        status.textContent = "Couldn't load the accessibility score right now.";
+      }
+    }
+
+    if (!section.hidden) loadScore();
+
+    new MutationObserver(() => {
+      if (!section.hidden) loadScore();
     }).observe(section, { attributes: true, attributeFilter: ["hidden"] });
   });
 

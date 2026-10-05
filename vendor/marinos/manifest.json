@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "name": "Marin App Shell",
-  "shellVersion": "1.2.1",
+  "shellVersion": "1.4.0",
   "marinUiVersion": "1.19.0",
   "installPath": "vendor/marinos",
   "fontPathContract": [
@@ -52,7 +52,7 @@
   "files": {
     "README.md": {
       "bytes": 1572,
-      "sha256": "03dd3a9e67506ba133f774eb3c4545ec3419e71a9261c6050faeab299c2fd520"
+      "sha256": "498fdafd75b91c29c89c252454b662aaffbf1dd75705b2a766a14c61e9ecc664"
     },
     "brand-source.json": {
       "bytes": 2289,
@@ -91,12 +91,12 @@
       "sha256": "01cd5ffb3a528c219a86e49a814c6c53bd8a69b9a3c305dd237074ba1c811af7"
     },
     "marinos.css": {
-      "bytes": 118260,
-      "sha256": "779c709199c8aa8baa0138bc265e3c356ef1f8228ff25d1d9cac1d52433cd070"
+      "bytes": 121046,
+      "sha256": "ab4c8d9c6759a53e20051b959d70b01ca27aab4dfab90dc6f53626bc5147b450"
     },
     "marinos.js": {
-      "bytes": 59792,
-      "sha256": "540647325457e35bf75618bc39ecf5501361e1c82ca44c82bbccbf81e2f02f8e"
+      "bytes": 69596,
+      "sha256": "7245a25656b32c09b473de0ae5d0e14060661bed373adc7cf501cecad668056e"
     }
   }
 }
