@@ -11,8 +11,7 @@
   "scripts": {
     "build": "node build/index.js",
     "dev": "node build/index.js --out=data.json --previous=data.json",
-    "dev:watch": "while true; do npm run dev; sleep 600; done",
-    "test": "node tests/run.js"
+    "dev:watch": "while true; do npm run dev; sleep 600; done"
   },
   "keywords": ["media-monitoring", "rss", "google-news", "bay-area", "marin"],
   "author": "",
