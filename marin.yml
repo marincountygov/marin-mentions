@@ -6,7 +6,7 @@ project:
   type: app
   owner: TBD
   audience: staff
-  status: beta
+  status: live
 
 platform:
   marin-ui: 1.19.0
