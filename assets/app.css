@@ -1,19 +1,20 @@
 /*
-  App-specific styles only. Load order: vendor/pico.min.css -> shared/app-brand.css -> this file.
+  App-specific styles only. Load order: vendor/marinos/marinos.css -> assets/app.css.
 
   Before adding a rule here:
-    1. Does an existing marin-ui component or class already do this? Use it.
-    2. Does a marin-ui token (color, spacing, radius) cover it? Use the token.
+    1. Does an existing App Shell component or bundled Marin UI class do this? Use it.
+    2. Does a bundled Marin UI token (color, spacing, radius) cover it? Use the token.
     3. Is this a small, genuinely app-specific addition? Add it below.
-    4. Would other Marin apps likely need this too? Propose it for marin-ui instead
-       of duplicating it here.
+    4. Would other Marin apps likely need this too? Propose it upstream in
+       marin-app-shell or marin-ui, then install a released App Shell bundle.
+       Do not edit vendor/marinos/ or duplicate standard status-badge styles here.
 
   The Console's filter sidebar + results layout below (.search-layout,
   .search-sidebar, .search-facet-group, .search-facet-list, .search-results,
   .search-results-list) mirrors marin-docs' search/shared/search-layout.css
   pattern, so every "search this data" tool in MarinOS reads the same way.
   It's copied rather than vendored from marin-docs (that repo isn't part of
-  this app's marin-ui bundle) — keep it in sync by eye if that pattern
+  this app's App Shell distribution) — keep it in sync by eye if that pattern
   changes there.
 */
 
@@ -130,7 +131,7 @@ th[aria-sort="descending"] .mm-sort-button::after {
   list-style: none;
 }
 
-/* vendor/pico.min.css's own <li> rule (meant for nav/menu lists) carries
+/* Pico's bundled <li> rule in vendor/marinos/marinos.css (meant for nav/menu lists) carries
    padding: calc(--pico-nav-element-spacing-vertical) ... — 8px top+bottom
    here, the actual bulk of this list's row spacing (not the 0 margin below,
    which was the only thing touched in two earlier passes at this). */
@@ -154,7 +155,7 @@ th[aria-sort="descending"] .mm-sort-button::after {
   color: var(--app-text);
 }
 
-/* vendor/pico.min.css gives every checkbox a 1rem bottom margin by default
+/* The bundled Pico baseline gives every checkbox a 1rem bottom margin by default
    (its usual form-field spacing) — nowhere near "slightly less," so this
    list's rows were reading as a stack of separate form fields rather than
    a tight filter list. Overridden to 0 here; .search-facet-list li's own
@@ -363,7 +364,7 @@ th[aria-sort="descending"] .mm-sort-button::after {
   color: var(--app-accent);
 }
 
-/* .app-badge comes from the vendored shared/app-brand.css bundle
+/* .app-badge comes from the vendored vendor/marinos/marinos.css bundle
    (font-weight: 700 there) — override it just for the card's badge rather
    than editing that vendored file. */
 .mm-card__meta .app-badge {
@@ -503,7 +504,7 @@ th[aria-sort="descending"] .mm-sort-button::after {
 }
 
 /* The per-card copy buttons below the monitor badges (copy article contents,
-   copy link) — shared/app-brand.css .copy-button icon buttons (same base as
+   copy link) — vendor/marinos/marinos.css .copy-button icon buttons (same base as
    the Updates feature's copy button), laid out side by side. Scoped here
    (not in the shared bundle) to give them a visible border and background
    like the Updates feature's bordered copy button, since every other,

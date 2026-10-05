@@ -1,5 +1,5 @@
 // App-specific behavior only. Standard menu, dialog, and navigation behavior
-// already come from shared/app-shell.js — do not reimplement them here.
+// already come from vendor/marinos/marinos.js — do not reimplement them here.
 
 document.addEventListener("DOMContentLoaded", () => {
   const state = {
@@ -908,7 +908,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderSourceTableRows();
   }
 
-  // shared/app-shell.js has a generic sortable-table behavior, but it only
+  // vendor/marinos/marinos.js has a generic sortable-table behavior, but it only
   // wires up tables present at page load — this one is rendered later,
   // once data.json has loaded, so it needs its own (same technique: sort
   // rows by their data-sort-<key> attribute, toggle direction on repeat
@@ -982,18 +982,18 @@ document.addEventListener("DOMContentLoaded", () => {
   /** Two small icon-only buttons below each card's monitor badges: copy this
    * one item's own contents (left, clipboard icon), and copy its own URL
    * (right, link icon — not window.location.href like copyCurrentLink()).
-   * Both use shared/app-shell.js's generic button[data-copy-value] handler
-   * (the same one the Updates feature uses) rather than a bespoke click
-   * handler, so they get that same copy-then-checkmark feedback and
-   * #app-status-message announcement for free. The contents button reuses
-   * buildItemTextBlock()/buildItemHtmlBlock() — the exact per-item format
-   * the main toolbar Copy button builds a whole digest out of. */
+   * The URL button uses vendor/marinos/marinos.js's generic
+   * button[data-copy-value] handler, including its checkmark feedback and
+   * #app-status-message announcement. The contents button uses the app's
+   * rich-text copy handler for paste compatibility (explained below), with
+   * buildItemTextBlock()/buildItemHtmlBlock() supplying the same per-item
+   * format used by the main toolbar's digest Copy button. */
   function renderCopyButtons(item, heading) {
     return (
       `<div class="mm-card__copy-actions">` +
       // data-copy-item (not data-copy-value/data-copy-html) — this button
       // is wired up by its own dedicated listener below, via
-      // copyItemContentsToClipboard(), rather than shared/app-shell.js's
+      // copyItemContentsToClipboard(), rather than vendor/marinos/marinos.js's
       // generic handler. That generic handler's copyRich() prefers the
       // modern navigator.clipboard.write([ClipboardItem]) API, which this
       // project already found unreliable for rich HTML in one paste target
@@ -1049,7 +1049,7 @@ document.addEventListener("DOMContentLoaded", () => {
    * source applied, showing the actual filtered list rather than leaving
    * Stats' charts up (which otherwise stay visible since Stats is a view
    * within Latest, not a separate tab switching the hash alone would
-   * leave). Switches the hash first so app-shell's tab-section logic shows
+   * leave). Switches the hash first so App Shell's tab-section logic shows
    * #latest before the filter panel's own open/checked state gets updated
    * underneath it. */
   function goToLatestFilteredBy(applyFilter) {
@@ -1681,7 +1681,7 @@ document.addEventListener("DOMContentLoaded", () => {
    * buildItemHtmlBlock() format as a single block inside the digest above,
    * and the exact same copyRichTextToClipboard() mechanism, just scoped to
    * one item and manually driving the button's own is-copied checkmark
-   * (shared/app-shell.js's generic handler normally does that, but this
+   * (vendor/marinos/marinos.js's generic handler normally does that, but this
    * button bypasses it — see renderCopyButtons()'s comment on why). */
   function copyItemContentsToClipboard(item, button) {
     const text = buildItemTextBlock(item);
@@ -2069,11 +2069,11 @@ document.addEventListener("DOMContentLoaded", () => {
     renderFeed();
   });
 
-  // shared/app-shell.js's tab-section logic only syncs aria-current on
+  // vendor/marinos/marinos.js's tab-section logic only syncs aria-current on
   // #app-nav (also its mobile menu-toggle target) — #page-tabs is a
   // second, always-visible nav below the header for Latest/Sources/
   // Monitors, so it needs its own sync. Don't edit the vendored
-  // app-shell.js for this; mirror its logic here instead.
+  // vendor/marinos/marinos.js for this; mirror its logic here instead.
   const pageTabs = document.querySelector("#page-tabs");
   if (pageTabs) {
     const pageTabNames = Array.from(pageTabs.querySelectorAll("a[href^='#']"), (a) => a.getAttribute("href").slice(1));

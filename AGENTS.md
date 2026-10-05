@@ -2,7 +2,7 @@
 
 ## Architecture
 
-This is a stateless media-monitoring console: a Node build script (`build/index.js`) fetches configured sources, matches them against configured monitors, deduplicates, and writes one `data.json` plus a set of static RSS feeds (`build/feeds.js`) built from that same item list. A GitHub Actions workflow runs that build on a schedule and deploys the static site (`index.html` + `assets/` + `shared/` + `vendor/` + the freshly-built `data.json` and `feeds/`) to GitHub Pages. There is no database, no server, and no client-side framework — `assets/app.js` is plain DOM code that fetches `data.json` and renders it.
+This is a stateless media-monitoring console: a Node build script (`build/index.js`) fetches configured sources, matches them against configured monitors, deduplicates, and writes one `data.json` plus a set of static RSS feeds (`build/feeds.js`) built from that same item list. A GitHub Actions workflow runs that build on a schedule and deploys the static site (`index.html` + `assets/` + `vendor/` + `marin.yml` + `security.json` + `.well-known/` + the freshly-built `data.json` and `feeds/`) to GitHub Pages. There is no database, no server, and no client-side framework — `assets/app.js` is plain DOM code that fetches `data.json` and renders it.
 
 This departs from `marin-app-template`'s default (a static site with no build step) because this app has a hard requirement the template doesn't: fetching RSS/Google News/YouTube/Bluesky server-side, both to avoid CORS failures (most publisher feeds don't send CORS headers) and to keep API keys out of the browser. See README.md's "Why not GitHub Pages alone / why not Next.js" section for the full reasoning — this was a deliberate, reviewed deviation, not a default to imitate elsewhere without the same justification.
 
@@ -14,8 +14,17 @@ This departs from `marin-app-template`'s default (a static site with no build st
 - `build/match.js`, `build/dedupe.js` — monitor matching and dedup logic; see the comments there before changing matching semantics, dedup key priority, or story-grouping approach (grouping is deferred — not implemented).
 - `build/feeds.js` — generates static RSS 2.0 files (one per monitor, one per content type matching the UI's tabs, plus a combined `all.xml`) from the same matched/deduped/pruned items that become `data.json`. Written into `feeds/` next to wherever `data.json` lands (`dist/feeds/` in production, `feeds/` at repo root under `npm run dev`) — both are gitignored, same as `data.json`. There is no feed for a source filter, search text, or more than one monitor selected at once — that would mean a static file per combination, which doesn't scale; `assets/app.js`'s `updateRssFeedLink()` disables the RSS button for those instead of guessing.
 - `build/index.js` — orchestrator: loads config, decides which sources are due for refresh (`refreshIntervalMinutes` per source, checked against the previously published snapshot instead of a separate cache store), merges with the previous 60-day rolling window, writes `data.json`.
-- `assets/app.js` / `assets/app.css` — the console, Sources page, Monitors page, and Stats page, all driven by the one `data.json`. `shared/app-shell.js`'s hash-based tab logic (`data-tab-section`) handles which section shows.
-- `vendor/chart.min.js` — Chart.js, used by the Stats tab's two bar charts. Comes from `marin-ui`'s vendored bundle (opt-in, same as `vendor/xlsx.full.min.js` — see its `SYNCING.md`), not a CDN — don't add a `<script src="https://...">` tag or re-vendor a different copy locally.
+- `assets/app.js` / `assets/app.css` — the console, Sources page, Monitors page, and Stats page, all driven by the one `data.json`. `vendor/marinos/marinos.js`'s hash-based tab logic (`data-tab-section`) handles which section shows.
+- `vendor/chart.min.js` - the app-specific Chart.js bundle used by Stats, outside the App Shell-managed files. Preserve its reviewed version and `vendor/CHART_LICENSE.md`; do not replace it as part of a shell update or load it from a CDN.
+
+## App Shell ownership
+
+- `vendor/marinos/` is the generated App Shell distribution. Its `manifest.json` records the version, hashes, and managed font/icon companions. `marin.yml` must declare the same version in `platform.shell`.
+- `project.status` in `marin.yml` is the local source of truth for the Alpha/Beta/Live title badge. Always deploy `marin.yml` next to `index.html`; do not hardcode a second status in app markup or CSS.
+- Load `vendor/marinos/marinos.css` before `assets/app.css` and deferred `vendor/marinos/marinos.js` before deferred `assets/app.js`. Pico and the shared Marin UI styles are already bundled.
+- Keep app-specific styles and behavior in `assets/`. Reuse shell classes for both release-status and source-health badges. The scoped `.mm-card__meta .app-badge` override is app-specific and should remain scoped.
+- Fix common components upstream, then use the App Shell installer's complete runtime install, including companion fonts and icons. Never directly edit the generated bundle or run an independent Marin UI consumer sync on this app. Upstream source paths in the shell's provenance are intentional; do not rewrite them.
+- `TEMPLATE_VERSION` is scaffold history, not a shell version pin. See `docs/development.md` for the update procedure.
 
 ## Before making changes
 
@@ -27,6 +36,7 @@ This departs from `marin-app-template`'s default (a static site with no build st
 
 ## Before finishing
 
+- Run `npm test` to verify shell hashes and companions, version metadata, load order, status-style ownership, Pages staging, and staged runtime asset completeness.
 - Run `npm run build` (or `npm run dev` for local iteration) and confirm it completes without throwing — a single source failing should never fail the whole build (each connector call is isolated in `build/index.js`).
 - If you touched `assets/app.js`, manually verify in a browser (or an equivalent DOM harness) that: the Latest tab renders cards, monitor chips/platform checkboxes/content tabs/search/time filter all narrow the list, and Sources + Monitors render from the same `data.json`.
 - Update README.md's "Verified sources" log if you added, removed, or re-verified a source.
@@ -34,5 +44,6 @@ This departs from `marin-app-template`'s default (a static site with no build st
 ## References
 
 - `marin-app-template` — the scaffold this was built from (shell, nav, brand bundle): https://github.com/marincountygov/marin-app-template
-- `marin-ui` — the vendored bundle (`shared/`, `vendor/`): https://github.com/marincountygov/marin-ui
+- `marin-app-shell` - the released runtime and installer: https://github.com/marincountygov/marin-app-shell
+- `marin-ui` - the upstream design system consumed through App Shell, not independently synchronized into this app: https://github.com/marincountygov/marin-ui
 - `marin-digital-standards` — accessibility, content, brand, product-design requirements: https://github.com/marincountygov/marin-digital-standards

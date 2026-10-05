@@ -6,7 +6,7 @@ A live, stateless media-monitoring console for the San Francisco Bay Area, prior
 - **Audience:** Marin County staff.
 - **Owner:** TBD
 - **Repo:** marin-mentions
-- **Status:** Beta (Phase 1+2 of the implementation plan — see "Roadmap" below)
+- **Status:** Defined by `project.status` in `marin.yml`; the App Shell reads it for the title badge.
 
 ## What this app does
 
@@ -189,7 +189,13 @@ Plain HTML/CSS/vanilla JS for the site (matching every other MarinOS app's `mari
 
 ## Marin App Shell
 
-This application vendors the Marin App Shell release under `vendor/marinos/`, providing standard MarinOS banner, header, info sections, footer, and feedback components. The pinned shell version is recorded in `marin.yml` (`platform.shell`). Do not edit vendored shell files directly under `vendor/marinos/`.
+This application uses Marin App Shell **1.4.0**, installed under `vendor/marinos/`. The shell provides the standard MarinOS banner, header, info sections, footer, feedback, and status badges. `marin.yml` records the shell version in `platform.shell`; `vendor/marinos/manifest.json` records the installed version, Marin UI baseline, and managed-file hashes.
+
+Load `vendor/marinos/marinos.css` before `assets/app.css`, and deferred `vendor/marinos/marinos.js` before deferred `assets/app.js`. The shell CSS already includes Pico and the shared Marin UI styles. Do not add a separate Pico stylesheet, copy standard status-badge rules into the app, or edit the generated shell files. App-specific overrides remain in `assets/app.css`, including the scoped media-card `.app-badge` font weight.
+
+The app's Alpha/Beta/Live title badge reads `project.status` from the deployed `marin.yml`. Publish that file next to `index.html`; the catalog is only a fallback when the local status is unavailable or unrecognized. The Sources table's connected/error badges also reuse the shell's styles; they are not the app's release status.
+
+Update the complete runtime with the App Shell installer, including its managed font and icon companions outside `vendor/marinos/`. Do not synchronize a separate Marin UI consumer bundle into this application. See `docs/development.md` for installation, testing, and deployment instructions. `TEMPLATE_VERSION` records scaffold history, not the current shell version.
 
 ## Environment variables
 
@@ -205,7 +211,8 @@ See `.env.example` for local development.
 ## Local development
 
 ```sh
-npm install
+npm ci
+npm test
 npm run dev
 python3 -m http.server 8000
 ```
@@ -214,7 +221,7 @@ Open `http://localhost:8000/` — see `docs/development.md` for details, testing
 
 ## Deployment
 
-GitHub Actions (`.github/workflows/build-and-deploy.yml`) on a `*/10 * * * *` schedule, `workflow_dispatch`, and pushes to `main` — builds `data.json` and deploys the static site to GitHub Pages via `actions/deploy-pages`. See `docs/development.md` for required repo settings and the 60-day scheduled-workflow inactivity limitation.
+GitHub Actions (`.github/workflows/build-and-deploy.yml`) validates the installed App Shell, stages the static files (including `marin.yml`, `security.json`, and `.well-known/`), and runs ingestion before uploading `dist/`. Its `*/10 * * * *` schedule, `workflow_dispatch`, and pushes to `main` trigger this build-and-deploy workflow, which publishes to GitHub Pages via `actions/deploy-pages`. See `docs/development.md` for required repo settings and the 60-day scheduled-workflow inactivity limitation.
 
 ## Security
 

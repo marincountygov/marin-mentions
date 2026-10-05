@@ -1,0 +1,5 @@
+# App Shell release hashes cover exact bytes, including line endings.
+# Keep managed runtime files unchanged by automatic Git text conversion.
+/vendor/marinos/** -text
+/vendor/fonts/** -text
+/vendor/icons/lucide/** -text

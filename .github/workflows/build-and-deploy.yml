@@ -33,14 +33,20 @@ jobs:
 
       - run: npm ci
 
+      - name: Validate App Shell integration
+        run: npm test
+
+      - name: Stage static site
+        run: |
+          mkdir -p dist
+          cp -r index.html assets vendor security.json marin.yml .well-known dist/
+
       - name: Build data.json (merging with the currently live snapshot)
         env:
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
           BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
           BLUESKY_APP_PASSWORD: ${{ secrets.BLUESKY_APP_PASSWORD }}
         run: |
-          mkdir -p dist
-          cp -r index.html assets shared vendor security.json .well-known dist/
           node build/index.js \
             --out=dist/data.json \
             --previous="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/data.json"

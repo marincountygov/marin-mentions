@@ -3,7 +3,8 @@
 ## Run locally
 
 ```sh
-npm install
+npm ci
+npm test
 npm run dev          # writes data.json to the project root
 python3 -m http.server 8000
 ```
@@ -21,34 +22,67 @@ REDDIT_CLIENT_ID=... REDDIT_CLIENT_SECRET=... npm run dev
 
 ## Run the build directly
 
+The ingestion command writes `data.json` and `feeds/`; it does not copy the static site:
+
 ```sh
 node build/index.js --out=dist/data.json --previous=data.json
 ```
 
-`--previous` accepts either a local file path or an `http(s)://` URL (production points it at the live site's own `data.json`).
+`--previous` accepts either a local file path or an `http(s)://` URL. Production points it at the live site's own `data.json`, preserving the existing rolling snapshot.
 
-## Customize the starter
-
-This project already has its real workflow built in — there's no starter `#start` section to replace. If you're extending it, the standard nav pattern still applies: `#console`, `#sources`, and `#monitors` are all in the default view's tab group; `#about` and `#updates` are their own tabs. See `marin-app-template`'s README for the general pattern.
-
-## Use marin-ui
-
-This project vendors a release of [`marin-ui`](https://github.com/marincountygov/marin-ui): `shared/app-brand.css`, `shared/app-shell.js`, `vendor/pico.min.css`, `vendor/fonts/Jost-wght.ttf`, and `BRAND_VERSION`.
-
-Prefer existing marin-ui components and tokens (`.app-card`, `.app-badge`, `.app-status`, `.app-table-wrap`, `.app-empty`, `.app-form-grid`, etc.) over new CSS — `assets/app.css` only defines the pieces marin-ui doesn't have yet (filter chips, content tabs, media cards).
-
-### Updating the marin-ui bundle
-
-From a local checkout of `marin-ui`:
+To reproduce the Pages staging and build locally (from a POSIX shell at the repository root):
 
 ```sh
-./scripts/sync-consumer.sh /path/to/marin-mentions
+npm ci
+npm test
+mkdir -p dist
+cp -r index.html assets vendor security.json marin.yml .well-known dist/
+node build/index.js --out=dist/data.json --previous=data.json
+python3 -m http.server 8000 --directory dist
 ```
 
-This copies `BRAND_VERSION`, `shared/app-brand.css`, `shared/app-shell.js`, `vendor/pico.min.css`, and `vendor/fonts/Jost-wght.ttf`. Don't edit the vendored `shared/`/`vendor/` files directly — fixes belong in `marin-ui`, then re-sync.
+Keep this copy list aligned with the workflow's **Stage static site** step. Required files must fail loudly when missing; do not suppress copy errors or recreate a legacy directory to make the workflow pass. `marin.yml` is a runtime dependency, not just development metadata.
+
+## Extend the application
+
+The app has its real workflow, not a starter section to replace. `#latest`, `#sources`, and `#monitors` are separate `data-tab-section` views. The App Shell renders the standard About, Security, Accessibility, and Updates views, header navigation, and footer from the custom elements in `index.html`. The app owns its secondary `#page-tabs` navigation and its filter/card/chart behavior.
+
+## Use Marin App Shell
+
+This project uses App Shell **1.4.0**, with the Marin UI baseline and complete file hashes recorded in `vendor/marinos/manifest.json`. `marin.yml` pins the installed version in `platform.shell`.
+
+The load order is:
+
+```text
+vendor/marinos/marinos.css -> assets/app.css
+vendor/marinos/marinos.js (defer) -> assets/app.js (defer)
+```
+
+Chart.js remains an app-specific dependency in `vendor/chart.min.js`. The App Shell CSS already contains Pico and the shared Marin UI component styles. Prefer those bundled components and tokens (`.app-card`, `.app-badge`, `.app-status`, `.app-table-wrap`, `.app-empty`, `.app-form-grid`, etc.) over new CSS. `assets/app.css` holds only app-specific layouts and scoped overrides, such as the media-card badge's font weight; it must not define a second Alpha/Beta/Live style system.
+
+The title badge reads `project.status` from the app's deployed `marin.yml`. Keep that file next to `index.html`. Catalog status is a compatibility fallback, not a replacement for publishing the local manifest. The Sources page reuses `.app-status` for connected/error health indicators; these do not change the application's release status.
+
+### Update the complete App Shell runtime
+
+Use a `marin-app-shell` source checkout at the reviewed release you intend to install. For this migration, retain **1.4.0**. From that checkout:
+
+```sh
+bash scripts/install.sh /path/to/marin-mentions
+```
+
+The installer copies `vendor/marinos/` and verifies/synchronizes its managed font and icon companions in `vendor/fonts/` and `vendor/icons/lucide/`. It needs the shell's verified font cache, a sibling `marin-ui` checkout, or an explicit font source as described in `vendor/marinos/README.md`; it does not download fonts from the network. Copying only `vendor/marinos/` is not a complete runtime installation. Preserve the companion licenses and the app-specific Chart.js bundle and icons.
+
+Set `platform.shell` in `marin.yml` to the installed release, run `npm test`, and review the diff before publishing. `.gitattributes` preserves exact bytes for managed runtime files so Git line-ending conversion does not invalidate their release hashes. `TEMPLATE_VERSION` records the original scaffold version and is not a shell pin. Never edit the generated shell files or bypass manifest/hash failures by changing the recorded hashes. Shared component fixes belong upstream, followed by a reviewed shell release and installation, not an independent Marin UI sync into this consumer.
+
+`vendor/marinos/brand-source.json` intentionally records upstream input filenames. Those provenance references are not application-level paths to recreate, deploy separately, or rewrite during cleanup.
 
 ## Test changes
 
+`npm test` uses Node's built-in test runner with no additional dependencies. It checks shell version agreement, release-file and companion hashes, runtime load order, standard status-style ownership, the workflow's static copy inputs, and staged runtime asset completeness. It makes no external requests and needs no API credentials. It is a focused integration regression suite, not a data-ingestion or connector test suite.
+
+The workflow runs it before staging or making live source requests. For browser checks, serve the repository or staged `dist/` over HTTP:
+
+- Status: confirm `marin.yml` loads successfully and the title badge matches its `project.status`. In developer tools, the title badge should have `data-marinos-status="manifest"`; verify this with the catalog unavailable as well.
 - Keyboard: tab through the page, confirm visible focus, and confirm the skip link, menu, and filter controls all work without a mouse.
 - Reflow: check the page at a narrow viewport and at 200% zoom.
 - Color mode: check both light and dark (the shell follows `prefers-color-scheme`, no manual toggle).
