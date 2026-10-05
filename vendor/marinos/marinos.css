@@ -1626,7 +1626,7 @@ th[aria-sort="descending"] .sort-button::after {
   stroke-linejoin: round;
 }
 
-/* Marin App Shell 1.2.1: component integration only.
+/* Marin App Shell 1.4.0: component integration only.
    General visual rules come from the locked, unmodified Marin UI input. */
 marin-os-banner,
 marin-app-header,
@@ -1737,4 +1737,105 @@ marin-app-footer {
   .app-nav[data-open] {
     display: flex;
   }
+}
+
+/* App Shell 1.2.2 compatibility override. Marin UI 1.19.0 uses gold text on
+   a tinted dark surface for Alpha. Use the County-approved black-on-gold
+   pairing here until the shared UI baseline adopts the same treatment. */
+@media (prefers-color-scheme: dark) {
+  .app-status[data-status="alpha"] {
+    background: var(--app-warning);
+    color: var(--marin-black);
+  }
+}
+
+/* App Shell 1.4.0 compatibility addition. The accessibility score gauge
+   (.app-score) is defined in Marin UI 1.21.0; the shell stays pinned to Marin
+   UI 1.19.0, so it carries these rules itself until the pinned baseline is
+   refreshed. Keep in step with marin-ui's shared/app-brand.css. */
+:root {
+  --app-score-good: #1a7f37;
+  --app-score-needs-improvement: #a85a00;
+  --app-score-poor: #c62828;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --app-score-good: #5cd68a;
+    --app-score-needs-improvement: #ffb454;
+    --app-score-poor: #ff8a80;
+  }
+}
+
+/* Accessibility score gauge (Google Lighthouse accessibility, 0-100) —
+   a ring whose arc length is the score, with the number inside and the band
+   word beside it. Color is never the only signal: the number and the band word
+   are always printed, and the ring itself is decorative (aria-hidden), with the
+   same information in visually hidden text. Bands match Lighthouse's own:
+   good 90-100, needs-improvement 50-89, poor 0-49. Build one with
+   marinScoreGauge(score) from shared/app-shell.js. A score is automated
+   testing only, not WCAG conformance. */
+.app-score {
+  --app-score-color: var(--app-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  vertical-align: middle;
+}
+
+.app-score[data-band="good"] { --app-score-color: var(--app-score-good); }
+.app-score[data-band="needs-improvement"] { --app-score-color: var(--app-score-needs-improvement); }
+.app-score[data-band="poor"] { --app-score-color: var(--app-score-poor); }
+
+.app-score__ring {
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+}
+
+.app-score__track {
+  fill: none;
+  stroke: var(--app-border);
+  stroke-width: 3.5;
+}
+
+.app-score__arc {
+  fill: none;
+  stroke: var(--app-score-color);
+  stroke-width: 3.5;
+  stroke-linecap: round;
+}
+
+.app-score__number {
+  fill: var(--app-text);
+  font-family: var(--app-font-body);
+  font-size: 13px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.app-score__label {
+  font-weight: 700;
+  color: var(--app-text);
+}
+
+.app-score--large {
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.app-score--large .app-score__ring {
+  width: 4.5rem;
+  height: 4.5rem;
+}
+
+.app-score--large .app-score__number {
+  font-size: 12px;
+}
+
+@media (forced-colors: active) {
+  .app-score__track { stroke: GrayText; }
+  .app-score__arc { stroke: Highlight; }
+  .app-score__number { fill: CanvasText; }
 }
