@@ -83,6 +83,7 @@ th[aria-sort="descending"] .mm-sort-button::after {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  width: 100%;
   max-width: var(--app-max-width);
   margin: 0 auto;
   padding: 0.5rem 1rem;

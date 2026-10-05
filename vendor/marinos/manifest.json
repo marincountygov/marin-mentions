@@ -1,0 +1,102 @@
+{
+  "schema": 1,
+  "name": "Marin App Shell",
+  "shellVersion": "1.2.1",
+  "marinUiVersion": "1.19.0",
+  "installPath": "vendor/marinos",
+  "fontPathContract": [
+    "../fonts/Jost-wght.ttf",
+    "../fonts/open-sans/OpenSans-VariableFont_wdth,wght.woff2"
+  ],
+  "fontAssets": {
+    "vendor/fonts/Jost-wght.ttf": {
+      "bytes": 134996,
+      "sha256": "6343b70971000b04c5d401c96ae08ce371086135e999d5e1e1413039c0213076"
+    },
+    "vendor/fonts/open-sans/OpenSans-VariableFont_wdth,wght.woff2": {
+      "bytes": 280576,
+      "sha256": "8dbf3d44655c72437f2a9acc46579058dc7d3f82b2231cfdd82d0d6d61145674"
+    },
+    "vendor/fonts/open-sans/OFL.txt": {
+      "bytes": 4216,
+      "sha256": "01cd5ffb3a528c219a86e49a814c6c53bd8a69b9a3c305dd237074ba1c811af7"
+    }
+  },
+  "companionIcons": {
+    "vendor/icons/lucide/check.svg": {
+      "source": "icons/lucide/check.svg",
+      "bytes": 192,
+      "sha256": "b530d60d6c39c3ff4aa172743239767ced4b2f1ebf3309c06dc15335a64076cc"
+    },
+    "vendor/icons/lucide/chevron-down.svg": {
+      "source": "icons/lucide/chevron-down.svg",
+      "bytes": 189,
+      "sha256": "197fa79b777d0e08a13d82005615716e9219b2cca04c0beff78d49593816fea2"
+    },
+    "vendor/icons/lucide/copy.svg": {
+      "source": "icons/lucide/copy.svg",
+      "bytes": 288,
+      "sha256": "a843b3977ad6be55232c4cc4fa618f26c3d25f6901fdf2a5d1bde008583d9a27"
+    },
+    "vendor/icons/lucide/layout-grid.svg": {
+      "source": "icons/lucide/layout-grid.svg",
+      "bytes": 357,
+      "sha256": "5f36d680531e3bccbf369b01d25b23eaa705d35f4a22dc92dd7cd708c0de767d"
+    },
+    "vendor/icons/lucide/LICENSE": {
+      "source": "icons/lucide/LICENSE",
+      "bytes": 3208,
+      "sha256": "b495047bd93a9b06913511076f504daba17d5bbeb3e0650f3bb53a4220329c57"
+    }
+  },
+  "files": {
+    "README.md": {
+      "bytes": 1572,
+      "sha256": "03dd3a9e67506ba133f774eb3c4545ec3419e71a9261c6050faeab299c2fd520"
+    },
+    "brand-source.json": {
+      "bytes": 2289,
+      "sha256": "56a30a90976e14a9d24287e33b8bf78d9def81bb27f3e28db3d5d7d77acb5123"
+    },
+    "icons/lucide/LICENSE": {
+      "bytes": 3208,
+      "sha256": "b495047bd93a9b06913511076f504daba17d5bbeb3e0650f3bb53a4220329c57"
+    },
+    "icons/lucide/check.svg": {
+      "bytes": 192,
+      "sha256": "b530d60d6c39c3ff4aa172743239767ced4b2f1ebf3309c06dc15335a64076cc"
+    },
+    "icons/lucide/chevron-down.svg": {
+      "bytes": 189,
+      "sha256": "197fa79b777d0e08a13d82005615716e9219b2cca04c0beff78d49593816fea2"
+    },
+    "icons/lucide/copy.svg": {
+      "bytes": 288,
+      "sha256": "a843b3977ad6be55232c4cc4fa618f26c3d25f6901fdf2a5d1bde008583d9a27"
+    },
+    "icons/lucide/layout-grid.svg": {
+      "bytes": 357,
+      "sha256": "5f36d680531e3bccbf369b01d25b23eaa705d35f4a22dc92dd7cd708c0de767d"
+    },
+    "licenses/LUCIDE_LICENSE.txt": {
+      "bytes": 3208,
+      "sha256": "b495047bd93a9b06913511076f504daba17d5bbeb3e0650f3bb53a4220329c57"
+    },
+    "licenses/MARIN_APP_SHELL_LICENSE.txt": {
+      "bytes": 1069,
+      "sha256": "d71155643d5fb89b606e09101c575307425af2eeefa3b4b4d56263a03cb52254"
+    },
+    "licenses/OPEN_SANS_OFL.txt": {
+      "bytes": 4216,
+      "sha256": "01cd5ffb3a528c219a86e49a814c6c53bd8a69b9a3c305dd237074ba1c811af7"
+    },
+    "marinos.css": {
+      "bytes": 118260,
+      "sha256": "779c709199c8aa8baa0138bc265e3c356ef1f8228ff25d1d9cac1d52433cd070"
+    },
+    "marinos.js": {
+      "bytes": 59792,
+      "sha256": "540647325457e35bf75618bc39ecf5501361e1c82ca44c82bbccbf81e2f02f8e"
+    }
+  }
+}

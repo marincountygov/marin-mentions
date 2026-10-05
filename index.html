@@ -6,33 +6,26 @@
     <title>Marin Mentions | County of Marin</title><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='10' fill='%23000'/%3E%3Cg fill='none' stroke='%23e5b53b' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round' transform='translate(9,9) scale(1.25)'%3E%3Cpath d='M20.341 6.484A10 10 0 0 1 10.266 21.85'/%3E%3Cpath d='M3.659 17.516A10 10 0 0 1 13.74 2.152'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Ccircle cx='19' cy='5' r='2'/%3E%3Ccircle cx='5' cy='19' r='2'/%3E%3C/g%3E%3C/svg%3E">
     <meta name="description" content="A live media-monitoring console tracking Bay Area news, video, and social mentions of configured keywords and phrases.">
     <link rel="alternate" type="application/rss+xml" title="Marin Mentions — All" href="feeds/all.xml">
-    <link rel="stylesheet" href="vendor/pico.min.css">
-    <link rel="stylesheet" href="shared/app-brand.css">
+    <link rel="stylesheet" href="vendor/marinos/marinos.css">
     <link rel="stylesheet" href="assets/app.css">
+    <script src="vendor/marinos/marinos.js" defer></script>
+    <script src="vendor/chart.min.js"></script>
+    <script src="assets/app.js" defer></script>
   </head>
-  <body data-app-id="marin-mentions">
-    <a class="skip-link" href="#main">Skip to main content</a>
-    <div class="marinos-banner">
-      <div class="marinos-banner__inner"><div class="menu marinos-menu"><button type="button" class="menu-toggle marinos-menu__toggle" aria-expanded="false" aria-controls="marinos-menu-panel"><span class="marinos-banner__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg></span>MarinOS <span class="app-status marinos-banner__status" data-status="alpha">Alpha</span><svg class="menu-toggle__caret" aria-hidden="true" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button><div id="marinos-menu-panel" class="menu-panel marinos-menu__panel" hidden><a href="https://marincountygov.github.io/marin-magic/"><span class="marinos-menu__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg></span>Marin Magic</a><a href="https://marincountygov.github.io/marin-decision-maker/"><span class="marinos-menu__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></svg></span>Marin Decision Maker</a><a href="https://marincountygov.github.io/marin-docs/"><span class="marinos-menu__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg></span>Marin Docs</a><a class="marinos-menu__all" href="https://marincountygov.github.io/marin-os/">Browse all in MarinOS</a></div></div></div>
-    </div>
-    <header class="app-header">
-      <div class="app-header__inner">
-        <div class="app-identity">
-          <div class="app-title-row">
-            <span class="app-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M20.341 6.484A10 10 0 0 1 10.266 21.85"/><path d="M3.659 17.516A10 10 0 0 1 13.74 2.152"/><circle cx="12" cy="12" r="3"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/></svg>
-            </span>
-            <div class="app-title-copy"><h1 class="app-title"><a class="app-title__link" href="./">Marin Mentions</a></h1><p class="app-subtitle">Marin County news, video, and social mentions</p></div>
-          </div>
-        </div>
-        <div class="app-header__actions">
-          <button type="button" class="app-menu-toggle secondary" id="menu-toggle" aria-expanded="false" aria-controls="app-nav">Menu</button>
-          <nav class="app-nav" id="app-nav" aria-label="Application navigation"><a href="#about">About</a><a href="#updates">Updates</a><a href="#security">Security</a></nav>
-        </div>
-      </div>
-    </header>
+  <body>
+    <marin-os-banner></marin-os-banner>
+
+    <marin-app-header
+      app-name="Marin Mentions"
+      app-description="Marin County news, video, and social mentions"
+    >
+      <template data-icon>
+        <svg viewBox="0 0 24 24"><path d="M20.341 6.484A10 10 0 0 1 10.266 21.85"/><path d="M3.659 17.516A10 10 0 0 1 13.74 2.152"/><circle cx="12" cy="12" r="3"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/></svg>
+      </template>
+    </marin-app-header>
+
     <nav class="mm-page-tabs" id="page-tabs" aria-label="Sections"><a href="#latest" aria-current="page">Latest</a><a href="#monitors">Monitors</a><a href="#sources">Sources</a></nav>
-    <main id="main" class="container app-main" tabindex="-1">
+    <main id="main" class="container app-main">
       <div id="app-status-message" class="visually-hidden" role="status" aria-live="polite"></div>
 
       <section id="latest" class="app-page-heading" data-tab-section="latest">
@@ -201,68 +194,46 @@
         <div id="monitors-list"><p class="app-help-text" id="monitors-status">Loading&hellip;</p></div>
       </section>
 
-      <section id="about" class="app-card" data-tab-section="about" hidden>
-        <h2>About</h2>
-        <p>Marin Mentions collects news stories, videos, and social media posts that mention Marin County, and shows them all in one place.</p>
+      <marin-app-info
+        app-name="Marin Mentions"
+        repo="marin-mentions"
+        security-src="security.json"
+      >
+        <template data-about>
+          <p>Marin Mentions collects news stories, videos, and social media posts that mention Marin County, and shows them all in one place.</p>
 
-        <h3>How the list updates</h3>
-        <p>The list updates on its own about every 15 minutes. Reload the page any time to see the newest list.</p>
+          <h3>How the list updates</h3>
+          <p>The list updates on its own about every 15 minutes. Reload the page any time to see the newest list.</p>
 
-        <h3>Saving mentions</h3>
-        <p>Check the box next to any mention to save it, or use <strong>Select all</strong> to save everything currently in the list. Once you check a box, a dropdown appears so you can pick which official County announcement that mention is about. If you've saved one or more mentions, the <strong>Copy</strong> button copies only those &mdash; otherwise it copies everything you're currently viewing. The dropdown next to Copy lets you choose how the copied text is organized: by news story, or grouped under each County announcement. The <strong>CSV</strong> button downloads the same list as a spreadsheet file. Saved mentions aren't kept after you close or reload the page.</p>
+          <h3>Saving mentions</h3>
+          <p>Check the box next to any mention to save it, or use <strong>Select all</strong> to save everything currently in the list. Once you check a box, a dropdown appears so you can pick which official County announcement that mention is about. If you've saved one or more mentions, the <strong>Copy</strong> button copies only those &mdash; otherwise it copies everything you're currently viewing. The dropdown next to Copy lets you choose how the copied text is organized: by news story, or grouped under each County announcement. The <strong>CSV</strong> button downloads the same list as a spreadsheet file. Saved mentions aren't kept after you close or reload the page.</p>
 
-        <h3>Charts</h3>
-        <p>Click the <strong>Stats</strong> button to see charts instead of the list &mdash; a summary row of key numbers, how many mentions came in over time, which topics and places came up most often (including which topics are trending compared to the period right before), a <strong>News</strong> section (top outlets and reporters) and a <strong>Social</strong> section (top Bluesky and Reddit accounts). The charts match whatever you're currently filtering by. Each chart has its own <strong>PNG</strong> button to save it as an image; <strong>All PNG</strong> saves every chart at once; <strong>Copy</strong> puts every chart on your clipboard so you can paste them into an email or chat message. (The summary row and the Trending Topics table aren't charts, so they're not included in PNG/Copy &mdash; copy that table's numbers by hand if you need them elsewhere.)</p>
+          <h3>Charts</h3>
+          <p>Click the <strong>Stats</strong> button to see charts instead of the list &mdash; a summary row of key numbers, how many mentions came in over time, which topics and places came up most often (including which topics are trending compared to the period right before), a <strong>News</strong> section (top outlets and reporters) and a <strong>Social</strong> section (top Bluesky and Reddit accounts). The charts match whatever you're currently filtering by. Each chart has its own <strong>PNG</strong> button to save it as an image; <strong>All PNG</strong> saves every chart at once; <strong>Copy</strong> puts every chart on your clipboard so you can paste them into an email or chat message. (The summary row and the Trending Topics table aren't charts, so they're not included in PNG/Copy &mdash; copy that table's numbers by hand if you need them elsewhere.)</p>
 
-        <h3>Things to know</h3>
-        <ul>
-          <li>The list only shows what was available the last time it updated. A story that was already gone from a site before we checked won't show up, even if it's from the right time period.</li>
-          <li>Some news links open through Google first instead of going straight to the article. That's normal, and the link still works.</li>
-          <li>YouTube and Reddit need special access set up to work, so they may not always be available. Bluesky doesn't need that, but can occasionally be slow or temporarily unavailable.</li>
-        </ul>
+          <h3>Things to know</h3>
+          <ul>
+            <li>The list only shows what was available the last time it updated. A story that was already gone from a site before we checked won't show up, even if it's from the right time period.</li>
+            <li>Some news links open through Google first instead of going straight to the article. That's normal, and the link still works.</li>
+            <li>YouTube and Reddit need special access set up to work, so they may not always be available. Bluesky doesn't need that, but can occasionally be slow or temporarily unavailable.</li>
+          </ul>
 
-        <h3>Technical</h3>
-        <p>Marin Mentions is a stateless media-monitoring console for the San Francisco Bay Area, prioritizing Marin County. It combines direct publisher RSS, Google News RSS, YouTube, Bluesky, and Reddit into one feed, matched against keyword/phrase monitors defined in <code>config/monitors.yaml</code>.</p>
-        <p>There is no database and no live per-request fetching. A scheduled GitHub Actions build runs roughly every ~15 minutes: it fetches every enabled source, matches monitors, deduplicates, merges the result with the previously published snapshot (keeping items from the last 7 days), and republishes <code>data.json</code>. Reloading the page re-fetches that same <code>data.json</code> &mdash; there's no separate manual-refresh action, and nothing on this page triggers a new build.</p>
-        <p>Saved (clipped) mentions can be attributed to the County's own official releases &mdash; marincounty.gov news releases and the County's own YouTube channels &mdash; from the past 60 days, listed by title, newest first. Clips are session-only, held in memory, and reset on reload.</p>
-        <p>Stats' Top Sources chart only counts news (not Bluesky/Reddit, which have their own Top Social Accounts chart) and excludes the County's own official sources, so it reflects third-party news coverage volume, not the County's own release/channel activity. Top Journalists only counts news bylines (not social posts), reflecting whatever authorship each feed itself provides; Google News strips authorship, so those stories won't show an author either. "Social" in the summary row is a count of Bluesky and Reddit mentions, not an engagement number. Trending Topics compares the current time filter to the same-length period right before it, so it isn't shown for "All available data."</p>
-        <ul>
-          <li>Time filters only apply to what the current snapshot holds. An item that scrolled off a source's own feed before it was ever fetched will never appear, even if it's within the selected time range.</li>
-          <li>Google News RSS links point to a Google redirect page, not the publisher's article directly &mdash; this is a Google limitation, not a broken link.</li>
-          <li>Deduplication prefers a direct publisher result over a Google News result for the same story, matched by outlet + headline since Google's redirect links can't be resolved to a canonical URL server-side.</li>
-          <li>YouTube requires an API key and Reddit requires OAuth credentials; see the README for activation status and quota/rate-limit notes. Bluesky's public search endpoint needs no key, but its reliability is outside this app's control.</li>
-        </ul>
-        <h3>Related information</h3>
-        <ul>
-          <li><a href="#security">Security</a></li>
-        </ul>
-      </section>
-
-      <section id="updates" class="app-card" data-tab-section="updates" data-updates-repo="marin-mentions" data-app-name="Marin Mentions" hidden>
-        <h2>Updates</h2>
-        <p data-updates-status class="app-help-text" role="status" aria-live="polite" aria-atomic="true">Loading recent commits&hellip;</p>
-        <div data-updates-list></div>
-      </section>
-
-      <section id="security" class="app-card" data-tab-section="security" data-security-json="security.json" hidden>
-        <h2>Security</h2>
-        <p>Marin Mentions follows the <a href="https://github.com/marincountygov/marin-digital-standards/blob/main/security/standard.md">MarinOS security standard</a>.</p>
-        <h3>Report an issue</h3>
-        <p>See <a href=".well-known/security.txt">security.txt</a> for contact details.</p>
-        <h3>Application security</h3>
-        <p data-security-status class="app-help-text" role="status" aria-live="polite" aria-atomic="true">Loading security information&hellip;</p>
-        <div data-security-content></div>
-        <h3>Technical information</h3>
-        <ul>
-          <li><a href="security.json">security.json</a></li>
-          <li><a href=".well-known/security.txt">security.txt</a></li>
-        </ul>
-      </section>
+          <h3>Technical</h3>
+          <p>Marin Mentions is a stateless media-monitoring console for the San Francisco Bay Area, prioritizing Marin County. It combines direct publisher RSS, Google News RSS, YouTube, Bluesky, and Reddit into one feed, matched against keyword/phrase monitors defined in <code>config/monitors.yaml</code>.</p>
+          <p>There is no database and no live per-request fetching. A scheduled GitHub Actions build runs roughly every ~15 minutes: it fetches every enabled source, matches monitors, deduplicates, merges the result with the previously published snapshot (keeping items from the last 7 days), and republishes <code>data.json</code>. Reloading the page re-fetches that same <code>data.json</code> &mdash; there's no separate manual-refresh action, and nothing on this page triggers a new build.</p>
+          <p>Saved (clipped) mentions can be attributed to the County's own official releases &mdash; marincounty.gov news releases and the County's own YouTube channels &mdash; from the past 60 days, listed by title, newest first. Clips are session-only, held in memory, and reset on reload.</p>
+          <p>Stats' Top Sources chart only counts news (not Bluesky/Reddit, which have their own Top Social Accounts chart) and excludes the County's own official sources, so it reflects third-party news coverage volume, not the County's own release/channel activity. Top Journalists only counts news bylines (not social posts), reflecting whatever authorship each feed itself provides; Google News strips authorship, so those stories won't show an author either. "Social" in the summary row is a count of Bluesky and Reddit mentions, not an engagement number. Trending Topics compares the current time filter to the same-length period right before it, so it isn't shown for "All available data."</p>
+          <ul>
+            <li>Time filters only apply to what the current snapshot holds. An item that scrolled off a source's own feed before it was ever fetched will never appear, even if it's within the selected time range.</li>
+            <li>Google News RSS links point to a Google redirect page, not the publisher's article directly &mdash; this is a Google limitation, not a broken link.</li>
+            <li>Deduplication prefers a direct publisher result over a Google News result for the same story, matched by outlet + headline since Google's redirect links can't be resolved to a canonical URL server-side.</li>
+            <li>YouTube requires an API key and Reddit requires OAuth credentials; see the README for activation status and quota/rate-limit notes. Bluesky's public search endpoint needs no key, but its reliability is outside this app's control.</li>
+          </ul>
+        </template>
+      </marin-app-info>
     </main>
-    <footer class="app-footer" role="contentinfo"><div class="app-footer__inner"><a href="https://marincountygov.github.io/marin-os/">MarinOS</a> <a href="https://marincountygov.github.io/marin-os/#projects">Projects</a> <a href="https://marincountygov.github.io/marin-os/#status">Status</a></div></footer>
-    <a class="app-feedback" href="https://form.asana.com/?k=qVUT83d5DBmlDiIyi-WAyQ&amp;d=23133298259496" target="_blank" rel="noreferrer">Feedback</a>
-    <script src="shared/app-shell.js"></script>
-    <script src="vendor/chart.min.js"></script>
-    <script src="assets/app.js"></script>
+
+    <marin-app-footer app-name="Marin Mentions"></marin-app-footer>
+    <marin-app-feedback></marin-app-feedback>
   </body>
 </html>

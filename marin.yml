@@ -9,13 +9,8 @@ project:
   status: live
 
 platform:
-  marin-ui: 1.19.0
-  template: 1.1.0
+  shell: 1.2.1
 
 deployment:
   target: github-pages
   url: https://marincountygov.github.io/marin-mentions/
-  note: >-
-    Deploys via a scheduled GitHub Actions build (.github/workflows/build-and-deploy.yml),
-    not a plain static push — see AGENTS.md and README.md for why this app departs from
-    the template's default "just enable Pages on the repo" deployment.

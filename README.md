@@ -187,6 +187,10 @@ MediaItem = {
 
 Plain HTML/CSS/vanilla JS for the site (matching every other MarinOS app's `marin-app-template` scaffold — no React/Next.js/build step for the frontend), plus plain Node (CommonJS, no TypeScript, no bundler) for the build-time ingestion pipeline — the same style as this org's `policy-knowledge-model`/`policy-learning-model` repos. `js-yaml` and `fast-xml-parser` are the only two runtime dependencies, both build-time only (never shipped to the browser).
 
+## Marin App Shell
+
+This application vendors the Marin App Shell release under `vendor/marinos/`, providing standard MarinOS banner, header, info sections, footer, and feedback components. The pinned shell version is recorded in `marin.yml` (`platform.shell`). Do not edit vendored shell files directly under `vendor/marinos/`.
+
 ## Environment variables
 
 Set these as GitHub Actions repository secrets (Settings → Secrets and variables → Actions), not in a committed `.env`:
