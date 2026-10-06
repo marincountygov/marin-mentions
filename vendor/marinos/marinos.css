@@ -1626,7 +1626,7 @@ th[aria-sort="descending"] .sort-button::after {
   stroke-linejoin: round;
 }
 
-/* Marin App Shell 1.4.0: component integration only.
+/* Marin App Shell 1.6.0: component integration only.
    General visual rules come from the locked, unmodified Marin UI input. */
 marin-os-banner,
 marin-app-header,
@@ -1838,4 +1838,46 @@ marin-app-footer {
   .app-score__track { stroke: GrayText; }
   .app-score__arc { stroke: Highlight; }
   .app-score__number { fill: CanvasText; }
+}
+
+/* App Shell 1.6.0 compatibility addition. Accent links directly on the page
+   background (outside a card) were 4.30:1 on Marin UI 1.19.0's #f6f7f8; Marin
+   UI 1.22.0 lightens it to #fdfdfe (4.54:1). Same override here until the
+   pinned baseline is refreshed; dark mode keeps its own value. */
+:root {
+  --app-bg-soft: #fdfdfe;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --app-bg-soft: #151b22;
+  }
+}
+
+/* App Shell 1.5.1 compatibility addition. Marin UI 1.19.0 sets accent-colored
+   text on a 8-14% tint of the same accent (current nav link, hovered menu
+   items, hovered Updates "Copy", current topic filter), only ~3.6-4.2:1 in
+   light mode, short of AA's 4.5:1. Marin UI 1.22.0 fixes this upstream with
+   --app-accent-on-tint; the shell stays pinned to 1.19.0, so it carries the
+   same token and rules until the pinned baseline is refreshed. Keep in step
+   with marin-ui's shared/app-brand.css. */
+:root {
+  --app-accent-on-tint: color-mix(in srgb, var(--marin-blue) 70%, black);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --app-accent-on-tint: var(--app-accent);
+  }
+}
+
+.menu-panel a:hover,
+.menu-panel a:focus-visible,
+.menu-panel button:hover,
+.menu-panel button:focus-visible,
+.app-nav a[aria-current="page"],
+.app-nav a:hover,
+#updates .copy-button:hover,
+.topic-filters a[aria-current="page"] {
+  color: var(--app-accent-on-tint);
 }

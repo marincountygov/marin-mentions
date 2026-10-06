@@ -64,12 +64,16 @@
           </aside>
 
           <div class="search-results">
-            <div role="tablist" aria-label="Content type" id="content-tabs">
-              <button type="button" role="tab" aria-selected="true" data-content-type="all" class="mm-tab">All</button>
-              <button type="button" role="tab" aria-selected="false" data-content-type="news" class="mm-tab">News</button>
-              <button type="button" role="tab" aria-selected="false" data-content-type="video" class="mm-tab">Video</button>
-              <button type="button" role="tab" aria-selected="false" data-content-type="social" class="mm-tab">Social</button>
-              <button type="button" role="tab" aria-selected="false" data-content-type="official" class="mm-tab">Official</button>
+            <div id="content-tab-row" class="mm-tab-row">
+              <div role="tablist" aria-label="Content type" id="content-tabs">
+                <button type="button" role="tab" aria-selected="true" data-content-type="all" class="mm-tab">All</button>
+                <button type="button" role="tab" aria-selected="false" data-content-type="news" class="mm-tab">News</button>
+                <button type="button" role="tab" aria-selected="false" data-content-type="video" class="mm-tab">Video</button>
+                <button type="button" role="tab" aria-selected="false" data-content-type="social" class="mm-tab">Social</button>
+                <button type="button" role="tab" aria-selected="false" data-content-type="official" class="mm-tab">Official</button>
+              </div>
+              <!-- Not inside the tablist: Stats is a view toggle, not a content-type tab, and a
+                   tablist may only contain tabs (ARIA required children). -->
               <button type="button" id="stats-toggle" class="mm-tab" aria-pressed="false">Stats</button>
             </div>
 

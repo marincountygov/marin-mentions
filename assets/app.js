@@ -39,6 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
     monitorChips: document.querySelector("#monitor-chips"),
     feedSourceFilter: document.querySelector("#feed-source-filter"),
     contentTabs: document.querySelector("#content-tabs"),
+    contentTabRow: document.querySelector("#content-tab-row"),
     statsToggle: document.querySelector("#stats-toggle"),
     statsGrid: document.querySelector("#stats-grid"),
     statsKpis: document.querySelector("#stats-kpis"),
@@ -759,8 +760,9 @@ document.addEventListener("DOMContentLoaded", () => {
    * tabs). renderStats() itself keeps the charts current regardless of
    * visibility, so this only ever needs to flip which one is hidden.
    *
-   * #stats-toggle sits inside #content-tabs (role="tablist") for visual
-   * position, but it isn't a content-type tab — it replaces the whole view
+   * #stats-toggle sits next to #content-tabs (role="tablist") in
+   * #content-tab-row for visual position — outside the tablist itself,
+   * since a tablist may only contain tabs — and it isn't a content-type tab; it replaces the whole view
    * rather than filtering it — so it's a plain <button> with aria-pressed
    * (real toggle-button semantics), not role="tab"/aria-selected like its
    * siblings. aria-selected is only valid on tab/option/row/gridcell-type
@@ -1981,7 +1983,9 @@ document.addEventListener("DOMContentLoaded", () => {
     goToLatestFilteredBy(() => selectOnlyFeedSource(button.dataset.gotoFeedSource));
   });
 
-  elements.contentTabs?.addEventListener("click", (event) => {
+  // Listens on the row, not the tablist: the Stats toggle sits beside the
+  // tabs, outside role="tablist" (a tablist may only contain tabs).
+  elements.contentTabRow?.addEventListener("click", (event) => {
     const statsButton = event.target.closest("#stats-toggle");
     if (statsButton) {
       state.statsView = !state.statsView;
