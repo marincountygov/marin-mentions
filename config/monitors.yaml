@@ -676,6 +676,10 @@ monitors:
       - [word:Marin, unhoused]
       - [word:Marin, encampment]
       - [word:Marin, shelter]
+      # Keyword list added 2026-10-06 (Marin Mentions Keywords.pdf).
+      - [word:Marin, Homeward Bound]
+      - [word:Marin, permanent supportive housing]
+      - [word:Marin, Project Homekey]
 
   - id: marin-affordable-housing-topic
     name: Affordable housing
@@ -686,6 +690,32 @@ monitors:
       - [word:Marin, housing element]
       - [word:Marin, below market rate]
       - [word:Marin, word:BMR]
+      # Keyword list added 2026-10-06 (Marin Mentions Keywords.pdf).
+      - [word:Marin, word:RHNA]
+      - regional housing needs allocation
+      - [word:Marin, rezoning]
+      - [word:Marin, housing sites]
+      - [word:Marin, word:ADU]
+      - [word:Marin, accessory dwelling unit]
+      - Marin Housing Authority
+      - [word:Marin, Section 8]
+      - [word:Marin, housing voucher]
+      - [word:Marin, rent increase]
+      - [word:Marin, tenant protections]
+      - [word:Marin, eviction]
+      - [word:Marin, Housing Trust]
+      - [word:Marin, workforce housing]
+      - [word:Marin, inclusionary housing]
+      - [word:Marin, Board of Supervisors, housing]
+      - [Marin City, housing]
+      - [Novato, housing]
+      - [San Rafael, housing]
+      - [Point Reyes Station, housing]
+      - [Dillon Beach, housing]
+      - [Marinwood, development]
+      - [Santa Venetia, development]
+      - [word:Marin, Housing Accountability Act]
+      - [word:Marin, builder's remedy]
 
   # --- Equity ---
   - id: marin-racial-equity-topic
@@ -697,6 +727,41 @@ monitors:
       - [word:Marin, word:DEI]
       - [word:Marin, equity and inclusion]
       - [word:Marin, disparities]
+      # Keyword list added 2026-10-06 (Marin Mentions Keywords.pdf).
+      - [word:Marin, equity]
+      - [Marin City, equity]
+      - [Canal neighborhood, San Rafael]
+      - Marin City Community Services District
+      - [word:Marin, Latino]
+      - [word:Marin, Latinx community]
+      - [word:Marin, Spanish-speaking]
+      - [word:Marin, language access]
+      - [word:Marin, interpretation services]
+      - [word:Marin, health disparities]
+      - [word:Marin, health equity]
+      - Marin County Health and Human Services
+      - [word:Marin, CalFresh]
+      - [word:Marin, Medi-Cal]
+      - [word:Marin, food insecurity]
+      - SF-Marin Food Bank
+      - [word:Marin, immigrant]
+      - [word:Marin, immigration enforcement]
+      - [word:Marin, word:ICE]
+      - [Marin Community Foundation, equity]
+      - [Marin County Office of Education, achievement gap]
+      - Marin Black
+      - [word:Marin, Black residents]
+      - [word:Marin, disability access]
+      - [word:Marin, seniors]
+      - [word:Marin, aging]
+      - Marin County Free Library programs
+      - [word:Marin, fair housing]
+      - [word:Marin, diversity, Board of Supervisors]
+      - [word:Marin, participatory budgeting]
+      - [word:Marin, community-based organizations]
+      - [word:Marin, nonprofit funding]
+      - [word:Marin, redlining]
+      - [word:Marin, reparations]
 
   # --- Climate & Sustainability ---
   - id: marin-climate-topic
@@ -709,6 +774,52 @@ monitors:
       - [word:Marin, renewable energy]
       - [word:Marin, sea level rise]
       - [word:Marin, climate resilience]
+      # Keyword list added 2026-10-06 (Marin Mentions Keywords.pdf).
+      - [word:Marin, sustainability]
+      - Bay Waterfront Adaptation and Vulnerability Evaluation
+      - word:BayWAVE
+      - Marin Shoreline
+      - [word:Marin, flood]
+      - [word:Marin, king tide]
+      - [word:Marin, carbon emissions]
+      - Marin Clean Energy
+      - [word:MCE, word:Marin]
+      - [word:Marin, electrification]
+      - [word:Marin, gas ban]
+      - [word:Marin, heat pump]
+      - [word:Marin, EV charging]
+      - [word:Marin, electric vehicles]
+      - Marin Sanitary
+      - Zero Waste Marin
+      - [word:Marin, recycling]
+      - Marin Municipal Water District
+      - [word:Marin, water supply]
+      - [word:Marin, drought]
+      - word:Marin Water
+      - Nicasio Reservoir
+      - Kent Lake
+      - Marin Open Space District
+      - Marin County Parks
+      - [word:Marin, tree removal]
+      - Mount Tamalpais
+      - Point Reyes National Seashore
+      - Bolinas Lagoon
+      - [word:Marin, wetlands]
+      - [word:Marin, habitat restoration]
+      - Gallinas Creek
+      - Corte Madera Creek
+      - Novato Creek
+      - [word:Marin, coastal commission]
+      - [word:Marin, Local Coastal Program]
+      - Marin Agricultural Land Trust
+      - [word:Marin, agriculture]
+      - Marin Transit
+      - Golden Gate Transit
+      - [word:Marin, SMART train]
+      - [word:Marin, active transportation]
+      - [word:Marin, bike path]
+      - Marin Carbon Project
+      - [word:Marin, regenerative agriculture]
 
   # --- Emergency Readiness ---
   # Wildfire coverage generally, distinct from marin-fire (the Fire
@@ -744,6 +855,49 @@ monitors:
       - [word:Marin, disaster preparedness]
       - [word:Marin, disaster response]
       - [word:Marin, resilience hub]
+      # Keyword list added 2026-10-06 (Marin Mentions Keywords.pdf).
+      - [word:Marin, wildfire]
+      - [word:Marin, fire season]
+      - [word:Marin, Red Flag Warning]
+      - Marin County Fire
+      - Marin Wildfire Prevention Authority
+      - [word:Marin, defensible space]
+      - [word:Marin, vegetation management]
+      - [word:Marin, evacuation]
+      - [word:Marin, evacuation zones]
+      - [word:Marin, Genasys Protect]
+      - Alert Marin
+      - [word:Marin, Nixle]
+      - [word:Marin, emergency alerts]
+      - ReadyMarin
+      - Weather Together
+      - [word:Marin, atmospheric river]
+      - [word:Marin, storm]
+      - [word:Marin, flooding]
+      - [word:Marin, power shutoff]
+      - [word:Marin, PG&E]
+      - word:PSPS
+      - Marin Office of Emergency Services
+      - word:Marin OES
+      - Marin Sheriff emergency
+      - [word:Marin, Sheriff's Office evacuation]
+      - [word:Marin, word:CERT]
+      - [word:Marin, Community Emergency Response Team]
+      - [word:Marin, earthquake]
+      - [word:Marin, tsunami]
+      - [word:Marin, shelter-in-place]
+      - [word:Marin, emergency shelter]
+      - Fire Safe Marin
+      - [word:Marin, Firewise]
+      - Marin Emergency Radio Authority
+      - Highway 101 flooding
+      - [word:Marin, Highway 1 closure]
+      - Marin General Hospital emergency
+      - [word:Marin, wildfire insurance]
+      - [word:Marin, FAIR Plan]
+      - [word:Marin, heat wave]
+      - [word:Marin, cooling center]
+      - [word:Marin, El Niño]
 
   # --- Capital & Infrastructure ---
   # Folds the old, narrower E-bike monitor in as one of several transit/
@@ -774,6 +928,54 @@ monitors:
       - [word:Marin, word:CIP]
       - [word:Marin, broadband]
       - [word:Marin, water system]
+      # Keyword list added 2026-10-06 (Marin Mentions Keywords.pdf).
+      - Marin County Civic Center
+      - [word:Marin, Civic Center]
+      - [Marin County Board of Supervisors, budget]
+      - [Marin County Board of Supervisors, capital improvement]
+      - [word:Marin, Department of Public Works]
+      - Marin Public Works
+      - [word:Marin, road repair]
+      - [word:Marin, paving]
+      - [word:Marin, pavement]
+      - [word:Marin, bridge]
+      - Richmond-San Rafael Bridge
+      - [word:Marin, Golden Gate Bridge]
+      - [word:Marin, Highway 101]
+      - Marin-Sonoma Narrows
+      - 101 widening
+      - Sir Francis Drake Boulevard
+      - Bolinas-Fairfax Road
+      - SMART train extension
+      - [word:SMART, Larkspur]
+      - [word:SMART, Greenbrae]
+      - Marin Transit
+      - [word:Marin, ferry]
+      - Larkspur Ferry
+      - [word:Marin, levee]
+      - [word:Marin, seawall]
+      - [word:Marin, stormwater]
+      - Marin sheriff facility
+      - [word:Marin, jail]
+      - [word:Marin, detention]
+      - [word:Marin, County facilities]
+      - [word:Marin, building project]
+      - Marin Municipal Water District infrastructure
+      - [Marin Municipal Water District, pipeline]
+      - [Marin Municipal Water District, water main]
+      - [word:Marin, internet]
+      - Marin County Fairgrounds
+      - Marin Center
+      - Marin County Free Library building
+      - [word:Marin, library renovation]
+      - Parks and Open Space bond
+      - [word:Marin, Measure A]
+      - [word:Marin, sales tax measure]
+      - [word:Marin, bond measure]
+      - Transportation Authority of Marin
+      - [word:TAM, word:Marin]
+      - [word:Marin, parking]
+      - [word:Marin, traffic]
 
   # --- Economy ---
   - id: marin-economic-development-topic
@@ -787,6 +989,44 @@ monitors:
       - [word:Marin, small business]
       - [word:Marin, workforce development]
       - [word:Marin, tourism]
+      # Keyword list added 2026-10-06 (Marin Mentions Keywords.pdf).
+      - [word:Marin, local business]
+      - Marin County Chamber
+      - [word:Marin, chamber of commerce]
+      - [word:Marin, visitor]
+      - Visit Marin
+      - Marin County budget
+      - [word:Marin, county budget deficit]
+      - [word:Marin, budget hearings]
+      - [word:Marin, county revenue]
+      - [word:Marin, property tax]
+      - [word:Marin, sales tax]
+      - Marin workforce
+      - [word:Marin, jobs]
+      - [word:Marin, employment]
+      - [word:Marin, cost of living]
+      - [word:Marin, affordability]
+      - Marin County Fair
+      - Marin Economic Forum
+      - [word:Marin, county employees]
+      - [word:Marin, union]
+      - [word:Marin, labor]
+      - Marin agriculture economy
+      - [word:Marin, farmers market]
+      - [word:Marin, retail]
+      - Northgate Mall
+      - Village at Corte Madera
+      - Marin commercial vacancy
+      - downtown San Rafael
+      - Marin Venture Partners
+      - [word:Marin, startup]
+      - Marin County salary
+      - Marin County pay
+      - [word:Marin, SEIU Local 1021]
+      - [word:Marin, tariffs]
+      - [word:Marin, federal funding cuts]
+      - [word:Marin, Medi-Cal cuts]
+      - [word:Marin, federal cuts county]
 
   # --- Associations ---
   # One monitor per association (same "one thing per monitor" pattern as
