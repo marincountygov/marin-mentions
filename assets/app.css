@@ -100,10 +100,20 @@ th[aria-sort="descending"] .mm-sort-button::after {
   color: var(--app-text);
 }
 
+/* Raw --app-accent on its own 14% tint is only 3.6:1 in light mode, short of
+   AA's 4.5:1 (a Lighthouse color-contrast failure), so light mode darkens it
+   (6.2:1 on the tint over the page background). Dark mode's accent is already
+   a light blue that clears AA as plain text color (7.3:1), so it reverts. */
 .mm-page-tabs a[aria-current="page"] {
   background: color-mix(in srgb, var(--app-accent) 14%, transparent);
-  color: var(--app-accent);
+  color: color-mix(in srgb, var(--app-accent) 70%, black);
   font-weight: 700;
+}
+
+@media (prefers-color-scheme: dark) {
+  .mm-page-tabs a[aria-current="page"] {
+    color: var(--app-accent);
+  }
 }
 
 .mm-reset {
@@ -291,7 +301,7 @@ th[aria-sort="descending"] .mm-sort-button::after {
   }
 }
 
-#content-tabs,
+#content-tab-row,
 #source-type-tabs {
   display: flex;
   gap: 0.5rem;
@@ -299,6 +309,14 @@ th[aria-sort="descending"] .mm-sort-button::after {
   border-bottom: 1px solid var(--app-border);
   padding-bottom: 0.5rem;
   margin-bottom: 1rem;
+}
+
+/* The real tablist, inside #content-tab-row next to the Stats toggle (which
+   can't be inside it — a tablist may only contain tabs). */
+#content-tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .mm-tab {
@@ -320,6 +338,15 @@ th[aria-sort="descending"] .mm-sort-button::after {
   background: var(--app-accent);
   color: #ffffff;
   font-weight: 700;
+}
+
+/* Dark mode's accent is a light blue (#8fcaff), where white text is 1.7:1;
+   dark text on it is 10.6:1. */
+@media (prefers-color-scheme: dark) {
+  .mm-tab[aria-selected="true"],
+  .mm-tab[aria-pressed="true"] {
+    color: #101418;
+  }
 }
 
 .mm-card {
