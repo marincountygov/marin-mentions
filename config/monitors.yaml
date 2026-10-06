@@ -629,29 +629,36 @@ monitors:
     # the old "Marin County"-phrase-only version was — accepted in exchange
     # for one simpler monitor instead of two.
     #
-    # Re-split 2026-10-02: bluesky carved back out, this time for the
-    # opposite reason reddit originally got the broad bare-word treatment.
-    # reddit's connector only polls a curated, already Bay-Area-relevant
-    # subreddit list (r/Marin, r/bayarea, r/SanRafael, etc. — see
-    # build/connectors/reddit.js config), so bare "Marin" chatter there is
-    # genuinely almost always on-topic. bluesky's connector is a true
-    # unscoped keyword search across the entire network — confirmed live,
-    # its "Top social accounts" was dominated by unrelated bot/spam
-    # accounts and people/places that just happen to share the name
-    # (a Scotland jobs bot, "aiko fangirl da ada e marin," etc.), none of
-    # which ever say "Marin County." See marin-county-bluesky below for the
-    # stricter phrase-only version scoped to just bluesky.
-    sourceMethods: [rss, google-news, youtube, reddit]
+    # Re-split 2026-10-02: bluesky carved back out into its own
+    # phrase-only monitor (see marin-county-social below), since its
+    # connector is a true unscoped keyword search across the entire
+    # network — confirmed live, its "Top social accounts" was dominated by
+    # unrelated bot/spam accounts and people/places that just happen to
+    # share the name (a Scotland jobs bot, "aiko fangirl da ada e marin,"
+    # etc.), none of which ever say "Marin County." At the time, reddit was
+    # kept on the broad bare-word:Marin rule here, on the theory that its
+    # curated, already Bay-Area-relevant subreddit list (r/Marin,
+    # r/bayarea, r/SanRafael, etc.) made bare "Marin" chatter there almost
+    # always on-topic.
+    #
+    # Reddit moved to the strict monitor too, 2026-10-06: that theory
+    # didn't hold in practice — Social was visibly pulling in more
+    # distinct monitors than News/Video, because reddit's bare "Marin" was
+    # still firing on this one same as before. Every social platform
+    # (bluesky and reddit both) now requires the actual phrase "Marin
+    # County" or "County of Marin," not just the word "Marin" — see
+    # marin-county-social below.
+    sourceMethods: [rss, google-news, youtube]
     include:
       - word:Marin
     exclude:
       - Marin County Florida
       - Marin County, Florida
 
-  - id: marin-county-bluesky
-    name: General (Bluesky)
+  - id: marin-county-social
+    name: General (Social)
     group: Topics
-    sourceMethods: [bluesky]
+    sourceMethods: [bluesky, reddit]
     include:
       - Marin County
       - County of Marin
