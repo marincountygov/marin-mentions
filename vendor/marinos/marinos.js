@@ -6,7 +6,7 @@
     return;
   }
 
-  const SHELL_VERSION = "1.6.0";
+  const SHELL_VERSION = "1.7.0";
   const MARIN_UI_VERSION = "1.19.0";
   const MARINOS_URL = "https://marincountygov.github.io/marin-os/";
   const MARINOS_STATUS_URL = `${MARINOS_URL}#status`;
@@ -188,7 +188,7 @@
     return badge;
   }
 
-  function manifestProjectStatus(source) {
+  function manifestProjectScalar(source, key) {
     if (typeof source !== "string") return "";
     const lines = source.replace(/\r\n?/g, "\n").split("\n");
     let projectIndent = null;
@@ -205,10 +205,9 @@
       if (indent <= projectIndent) break;
       if (indent !== projectIndent + 2) continue;
 
-      const match = line.trim().match(/^status\s*:\s*(?:"([^"]*)"|'([^']*)'|([^#]*?))\s*(?:#.*)?$/);
-      if (!match) continue;
-      const value = (match[1] ?? match[2] ?? match[3] ?? "").trim().toLowerCase();
-      return MARINOS_STATUS_LABELS[value] ? value : "";
+      const match = line.trim().match(/^([A-Za-z_-]+)\s*:\s*(?:"([^"]*)"|'([^']*)'|([^#]*?))\s*(?:#.*)?$/);
+      if (!match || match[1] !== key) continue;
+      return (match[2] ?? match[3] ?? match[4] ?? "").trim().toLowerCase();
     }
     return "";
   }
@@ -228,6 +227,11 @@
     badge.dataset.marinosStatus = source;
     title.append(document.createTextNode(" "), badge);
     return true;
+  }
+
+  function manifestProjectStatus(source) {
+    const value = manifestProjectScalar(source, "status");
+    return MARINOS_STATUS_LABELS[value] ? value : "";
   }
 
   // project.status in the app's own marin.yml is the local source of truth.
@@ -1533,6 +1537,14 @@
         .replace(/"/g, "&quot;");
     }
 
+    // Who the app is for comes from project.audience in the app's own
+    // marin.yml, so it can't drift from the manifest. The security profile
+    // label is only the fallback when marin.yml can't be read.
+    const AUDIENCE_LABELS = {
+      staff: "County staff",
+      public: "The public",
+      developers: "Developers",
+    };
     const PROFILE_LABELS = {
       "public-web": "Public web application",
       "public-api": "Public API",
@@ -1559,7 +1571,11 @@
           status.textContent = "This application's security.json has no public security summary yet.";
           return;
         }
-        const profileLabel = pub.profile || PROFILE_LABELS[config.profile] || "Not set";
+        const manifest = await fetch("marin.yml", { cache: "no-store" })
+          .then((res) => (res.ok ? res.text() : ""))
+          .catch(() => "");
+        const audienceLabel = AUDIENCE_LABELS[manifestProjectScalar(manifest, "audience")];
+        const profileLabel = audienceLabel || PROFILE_LABELS[config.profile] || "Not set";
         status.textContent = pub.lastReviewed ? `Last reviewed ${escapeHtml(pub.lastReviewed)}.` : "Review date not recorded.";
         const controlsHtml =
           Array.isArray(pub.controls) && pub.controls.length
@@ -1572,7 +1588,7 @@
               .join("")}</ul>`
           : "";
         content.innerHTML =
-          `<p><b>Security profile:</b> ${escapeHtml(profileLabel)}</p>` +
+          `<p><b>${audienceLabel ? "Built for" : "Security profile"}:</b> ${escapeHtml(profileLabel)}</p>` +
           `<h4>Security controls</h4>${controlsHtml}` +
           (dataHtml ? `<h4>Data</h4>${dataHtml}` : "");
       } catch (error) {
