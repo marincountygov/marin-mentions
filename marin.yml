@@ -9,7 +9,7 @@ project:
   status: live
 
 platform:
-  shell: 1.8.0
+  shell: 1.9.0
 
 deployment:
   target: github-pages
@@ -17,3 +17,35 @@ deployment:
 
 ai:
   used: false
+
+services:
+  youtube-data-api:
+    name: YouTube Data API
+    purpose: Searches for videos that mention the monitored keywords
+    runs: build
+    visitor-data: false
+  youtube-feeds:
+    name: YouTube channel feeds
+    purpose: Reads new videos from monitored channels
+    runs: build
+    visitor-data: false
+  bluesky-api:
+    name: Bluesky API
+    purpose: Searches posts and reads monitored accounts
+    runs: build
+    visitor-data: false
+  google-news:
+    name: Google News RSS search
+    purpose: Finds news stories that mention the monitored keywords
+    runs: build
+    visitor-data: false
+  reddit-feeds:
+    name: Reddit RSS feeds
+    purpose: Finds Reddit posts that mention the monitored keywords
+    runs: build
+    visitor-data: false
+  news-feeds:
+    name: News and blog RSS feeds
+    purpose: Reads stories from local and regional news sites and newsletters
+    runs: build
+    visitor-data: false
