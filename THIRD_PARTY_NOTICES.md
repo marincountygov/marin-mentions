@@ -18,4 +18,6 @@ Font assets remain under `vendor/fonts/`, outside the replaceable shell director
 
 ## Chart.js
 
+- Chart.js 4.5.1 — MIT License
+
 Vendored Chart.js bundle (`vendor/chart.min.js`) is used for rendering stats charts. See `vendor/CHART_LICENSE.md`.
