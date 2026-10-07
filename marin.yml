@@ -9,8 +9,11 @@ project:
   status: live
 
 platform:
-  shell: 1.7.0
+  shell: 1.8.0
 
 deployment:
   target: github-pages
   url: https://marincountygov.github.io/marin-mentions/
+
+ai:
+  used: false

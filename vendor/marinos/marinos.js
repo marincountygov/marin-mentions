@@ -6,7 +6,7 @@
     return;
   }
 
-  const SHELL_VERSION = "1.7.0";
+  const SHELL_VERSION = "1.8.0";
   const MARIN_UI_VERSION = "1.19.0";
   const MARINOS_URL = "https://marincountygov.github.io/marin-os/";
   const MARINOS_STATUS_URL = `${MARINOS_URL}#status`;
@@ -14,6 +14,9 @@
   // Google Lighthouse accessibility results for every MarinOS app, written
   // by marin-os's scripts/lighthouse.js. One shared file, keyed by catalog id.
   const LIGHTHOUSE_URL = `${MARINOS_URL}data/lighthouse.json`;
+  // Languages, dependencies, bundled components and declared AI use for every
+  // MarinOS app, written by marin-os's scripts/tech.js. SBOM files sit beside it.
+  const TECH_URL = `${MARINOS_URL}data/tech.json`;
   const WCAG_URL = "https://www.w3.org/TR/WCAG22/";
   const FEEDBACK_URL = "https://form.asana.com/?k=qVUT83d5DBmlDiIyi-WAyQ&d=23133298259496";
   const SECURITY_STANDARD_URL =
@@ -23,6 +26,7 @@
     about: "About",
     security: "Security",
     accessibility: "Accessibility",
+    tech: "Tech",
     updates: "Updates",
   });
   const MARINOS_STATUS_LABELS = Object.freeze({ alpha: "Alpha", beta: "Beta", live: "Live" });
@@ -460,6 +464,7 @@
         about: cloneTemplate(this, "template[data-about]"),
         security: cloneTemplate(this, "template[data-security-intro]"),
         accessibility: cloneTemplate(this, "template[data-accessibility]"),
+        tech: cloneTemplate(this, "template[data-tech]"),
         updates: cloneTemplate(this, "template[data-updates-intro]"),
       };
       const appName = normalizedAttribute(this, "app-name", "This application");
@@ -469,7 +474,7 @@
       const securityContactUrl = normalizedAttribute(this, "security-contact-url", ".well-known/security.txt");
       const sectionKeys = parseTokenList(
         this.getAttribute("sections"),
-        "about security accessibility updates"
+        "about security accessibility tech updates"
       ).filter((key, index, values) => STANDARD_LINKS[key] && values.indexOf(key) === index);
 
       if (!this.hasAttribute("app-name")) componentWarning(this, 'missing recommended "app-name" attribute');
@@ -655,6 +660,26 @@
           );
         }
 
+        if (key === "tech") {
+          if (templates.tech) section.append(templates.tech);
+          const intro = document.createElement("p");
+          intro.textContent = `What ${appName} is made of: its languages, software dependencies, and whether it uses AI as part of the deployed service.`;
+          const status = document.createElement("p");
+          status.className = "app-help-text";
+          status.dataset.techStatus = "";
+          status.setAttribute("role", "status");
+          status.setAttribute("aria-live", "polite");
+          status.setAttribute("aria-atomic", "true");
+          status.innerHTML = "Loading technology information&hellip;";
+          const content = document.createElement("div");
+          content.dataset.techContent = "";
+          // Read live from marin-os's data/tech.json by catalog id (app-id
+          // attribute, the header's app-id, or <body data-app-id>; else URL).
+          section.dataset.techData = "";
+          section.dataset.techAppId = normalizedAttribute(this, "app-id");
+          section.append(intro, status, content);
+        }
+
         if (key === "updates") {
           if (templates.updates) section.append(templates.updates);
           const status = document.createElement("p");
@@ -684,7 +709,7 @@
       if (this.dataset.rendered === "true") return;
 
       const appName = normalizedAttribute(this, "app-name", "Application");
-      const requestedLinks = parseTokenList(this.getAttribute("links"), "about security accessibility updates").filter(
+      const requestedLinks = parseTokenList(this.getAttribute("links"), "about security accessibility tech updates").filter(
         (key, index, values) => STANDARD_LINKS[key] && values.indexOf(key) === index
       );
       // About, Security, Accessibility, and Updates are required for every
@@ -1753,6 +1778,258 @@
 
     new MutationObserver(() => {
       if (!section.hidden) loadScore();
+    }).observe(section, { attributes: true, attributeFilter: ["hidden"] });
+  });
+
+  // Tech: any [data-tech-data] section lazy-loads the shared MarinOS tech data
+  // the first time it becomes visible and shows this app's own entry. Missing
+  // data is never shown as zero, "No", or "none": each part says "Not
+  // available", "Not documented" or "Unable to retrieve" instead.
+  document.querySelectorAll("[data-tech-data]").forEach((section) => {
+    const status = section.querySelector("[data-tech-status]");
+    const content = section.querySelector("[data-tech-content]");
+    if (!status || !content) return;
+
+    const isLocal = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+    const base = isLocal ? "http://localhost:8935/" : MARINOS_URL;
+    const ECOSYSTEMS = { npm: "npm", githubactions: "GitHub Actions", pypi: "PyPI", github: "GitHub" };
+    let loaded = false;
+
+    const formatDate = (iso) => {
+      const date = new Date(iso);
+      return Number.isNaN(date.getTime())
+        ? ""
+        : date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+    };
+    const el = (name, text, className) => {
+      const node = document.createElement(name);
+      if (text !== undefined) node.textContent = text;
+      if (className) node.className = className;
+      return node;
+    };
+    const labelled = (label, value) => {
+      const p = document.createElement("p");
+      p.append(el("strong", `${label}: `), value instanceof Node ? value : document.createTextNode(value));
+      return p;
+    };
+    const note = (text) => el("p", text, "app-help-text");
+    const table = (caption, headers, rows) => {
+      const wrap = el("div", undefined, "app-table-wrap");
+      const t = document.createElement("table");
+      t.append(el("caption", caption, "visually-hidden"));
+      const head = document.createElement("tr");
+      headers.forEach((h) => head.append(Object.assign(el("th", h), { scope: "col" })));
+      const thead = document.createElement("thead");
+      thead.append(head);
+      const tbody = document.createElement("tbody");
+      rows.forEach((row) => {
+        const tr = document.createElement("tr");
+        row.forEach((cell) => tr.append(el("td", cell)));
+        tbody.append(tr);
+      });
+      t.append(thead, tbody);
+      wrap.append(t);
+      return wrap;
+    };
+
+    // Mirrors scripts/tech.js: the root package is the repository itself, and
+    // direct dependencies are the ones the root depends on.
+    function dependencyRows(doc) {
+      const relationships = doc.relationships || [];
+      const roots = new Set(relationships.filter((r) => r.relationshipType === "DESCRIBES").map((r) => r.relatedSpdxElement));
+      const direct = new Set(
+        relationships.filter((r) => r.relationshipType === "DEPENDS_ON" && roots.has(r.spdxElementId)).map((r) => r.relatedSpdxElement)
+      );
+      return (doc.packages || [])
+        .filter((pkg) => !roots.has(pkg.SPDXID))
+        .map((pkg) => {
+          const purl = (pkg.externalRefs || []).find((ref) => ref.referenceType === "purl");
+          const eco = purl && /^pkg:([^/]+)\//.exec(purl.referenceLocator);
+          const license = pkg.licenseConcluded || pkg.licenseDeclared;
+          return [
+            pkg.name,
+            pkg.versionInfo || "Not provided",
+            direct.has(pkg.SPDXID) ? "Direct" : "Transitive",
+            eco ? ECOSYSTEMS[eco[1]] || eco[1] : "Not provided",
+            license && license !== "NOASSERTION" && license !== "NONE" ? license : "Not provided",
+          ];
+        })
+        .sort((a, b) => (a[2] === b[2] ? a[0].localeCompare(b[0]) : a[2] === "Direct" ? -1 : 1));
+    }
+
+    function renderLanguages(entry) {
+      const frag = document.createDocumentFragment();
+      frag.append(el("h3", "Languages"));
+      const langs = entry.languages;
+      const data = langs && (langs.status === "success" ? langs : langs.lastSuccess);
+      if (data && data.percentages) {
+        frag.append(
+          table("Languages used in the repository", ["Language", "Usage"], Object.entries(data.percentages).map(([name, pct]) => [name, `${pct.toFixed(1)}%`]))
+        );
+        frag.append(note(`Calculated from the code in the repository, as reported by GitHub${langs.status === "success" ? "" : ". The latest update failed, so this is the last successful result"}.`));
+      } else if (langs && langs.status === "none-detected") {
+        frag.append(el("p", "GitHub detected no programming languages in this repository."));
+      } else {
+        frag.append(el("p", "Unable to retrieve language information."));
+      }
+      if (entry.repository) {
+        const link = el("a", entry.repository);
+        link.href = entry.url || `https://github.com/${entry.repository}`;
+        link.target = "_blank";
+        link.rel = "noreferrer";
+        frag.append(labelled("Repository", link));
+      }
+      if (data && data.primary) frag.append(labelled("Primary language", data.primary));
+      if (entry.license) frag.append(labelled("License", entry.license));
+      if (entry.pushedAt && formatDate(entry.pushedAt)) frag.append(labelled("Last updated", formatDate(entry.pushedAt)));
+      return frag;
+    }
+
+    async function renderDependencies(entry) {
+      const frag = document.createDocumentFragment();
+      frag.append(el("h3", "Dependencies"));
+      const deps = entry.dependencies;
+      if (!deps || deps.status !== "success") {
+        frag.append(el("p", deps ? "Unable to retrieve dependency information." : "Not available"));
+      } else {
+        const total = document.createElement("p");
+        total.append(el("strong", `${deps.total} ${deps.total === 1 ? "dependency" : "dependencies"}`));
+        frag.append(total);
+        if (deps.total === 0) {
+          frag.append(el("p", "GitHub's dependency graph found no software dependencies for this application."));
+        } else {
+          frag.append(el("p", `${deps.direct} direct · ${deps.transitive} transitive`));
+        }
+        if (deps.sbom && deps.sbom.generated && formatDate(deps.sbom.generated)) {
+          frag.append(note(`SBOM generated ${formatDate(deps.sbom.generated)}.`));
+        }
+        if (deps.total > 0 && deps.sbom && deps.sbom.path) {
+          try {
+            const response = await fetch(`${base}${deps.sbom.path}`);
+            if (!response.ok) throw new Error(`SBOM fetch failed: ${response.status}`);
+            frag.append(table("Software dependencies", ["Dependency", "Version", "Relationship", "Ecosystem", "License"], dependencyRows(await response.json())));
+          } catch (error) {
+            console.error(error);
+            frag.append(el("p", "Unable to retrieve the dependency list."));
+          }
+        }
+      }
+
+      frag.append(el("h4", "Bundled components"));
+      const bundled = entry.bundled;
+      if (bundled && bundled.status === "success" && bundled.components.length) {
+        frag.append(note("Libraries and assets copied into this application's repository. GitHub's dependency graph does not detect these."));
+        frag.append(
+          table("Bundled components", ["Component", "Version", "License"], bundled.components.map((c) => [c.name, c.version || "Not provided", c.license || "Not provided"]))
+        );
+      } else if (bundled && bundled.status === "none-detected") {
+        frag.append(el("p", "None detected."));
+      } else {
+        frag.append(el("p", bundled ? "Unable to retrieve bundled components." : "Not available"));
+      }
+      return frag;
+    }
+
+    function renderSbom(entry, appId) {
+      const frag = document.createDocumentFragment();
+      frag.append(el("h3", "Software bill of materials"));
+      const sbom = entry.dependencies && entry.dependencies.status === "success" ? entry.dependencies.sbom : null;
+      if (!sbom) {
+        frag.append(el("p", "Not available"));
+        return frag;
+      }
+      frag.append(
+        el("p", "This application's software bill of materials (SBOM) is a machine-readable inventory of its software components and dependencies.")
+      );
+      frag.append(labelled("Format", sbom.format));
+      frag.append(labelled("Version", sbom.version));
+      if (sbom.generated && formatDate(sbom.generated)) frag.append(labelled("Generated", formatDate(sbom.generated)));
+      frag.append(labelled("Packages", String(sbom.packages)));
+      frag.append(labelled("Source", sbom.source));
+      const link = el("a", "SBOM file (SPDX JSON)");
+      link.href = `${base}${sbom.path}`;
+      link.target = "_blank";
+      link.rel = "noreferrer";
+      const p = document.createElement("p");
+      p.append(link);
+      frag.append(p);
+      return frag;
+    }
+
+    function renderAi(entry) {
+      const frag = document.createDocumentFragment();
+      frag.append(el("h3", "AI"));
+      const ai = entry.ai;
+      if (ai && ai.status === "documented" && ai.used === true) {
+        frag.append(labelled("Uses AI", "Yes"));
+        if (ai.description) frag.append(el("p", ai.description));
+        if (ai.provider) frag.append(labelled("Provider", ai.provider));
+        if (ai.features && ai.features.length) {
+          const label = document.createElement("p");
+          label.append(el("strong", "Features:"));
+          frag.append(label);
+          const list = document.createElement("ul");
+          ai.features.forEach((feature) => list.append(el("li", feature)));
+          frag.append(list);
+        }
+      } else if (ai && ai.status === "documented" && ai.used === false) {
+        frag.append(labelled("Uses AI", "No"));
+        frag.append(el("p", "This application does not currently use AI as part of the deployed service."));
+      } else if (ai && ai.status === "unavailable") {
+        frag.append(labelled("AI use", "Unable to retrieve"));
+      } else {
+        frag.append(labelled("AI use", "Not documented"));
+        frag.append(el("p", "AI usage has not yet been documented for this application."));
+      }
+      frag.append(note("AI here means AI functionality in the deployed application, not tools used to build it."));
+      return frag;
+    }
+
+    async function resolveAppId() {
+      const header = document.querySelector("marin-app-header");
+      const direct =
+        section.dataset.techAppId || (header ? normalizedAttribute(header, "app-id") : "") || document.body.dataset.appId || "";
+      if (direct) return direct;
+      const response = await fetch(CATALOG_URL);
+      if (!response.ok) throw new Error(`catalog fetch failed: ${response.status}`);
+      const current = window.location.href;
+      const match = (await response.json()).find((item) => {
+        const href = safeLinkUrl(item?.url);
+        return href && current.startsWith(href);
+      });
+      return match ? match.id : "";
+    }
+
+    async function loadTech() {
+      if (loaded) return;
+      status.textContent = "Loading technology information...";
+      try {
+        const [appId, response] = await Promise.all([resolveAppId(), fetch(isLocal ? `${base}data/tech.json` : TECH_URL, { cache: "no-store" })]);
+        loaded = true;
+        if (response.status === 404) {
+          status.textContent = "Technology information hasn't been collected yet.";
+          return;
+        }
+        if (!response.ok) throw new Error(`tech fetch failed: ${response.status}`);
+        const data = await response.json();
+        const entry = appId && data && data.apps ? data.apps[appId] : null;
+        if (!entry) {
+          status.textContent = "Technology information isn't available for this application yet.";
+          return;
+        }
+        content.replaceChildren(renderLanguages(entry), await renderDependencies(entry), renderSbom(entry, appId), renderAi(entry));
+        status.textContent = data.generatedAt && formatDate(data.generatedAt) ? `Data collected ${formatDate(data.generatedAt)}.` : "";
+      } catch (error) {
+        loaded = true;
+        console.error(error);
+        status.textContent = "Unable to retrieve technology information right now.";
+      }
+    }
+
+    if (!section.hidden) loadTech();
+
+    new MutationObserver(() => {
+      if (!section.hidden) loadTech();
     }).observe(section, { attributes: true, attributeFilter: ["hidden"] });
   });
 
