@@ -6,7 +6,7 @@
     return;
   }
 
-  const SHELL_VERSION = "1.8.0";
+  const SHELL_VERSION = "1.9.0";
   const MARIN_UI_VERSION = "1.19.0";
   const MARINOS_URL = "https://marincountygov.github.io/marin-os/";
   const MARINOS_STATUS_URL = `${MARINOS_URL}#status`;
@@ -1956,6 +1956,31 @@
       return frag;
     }
 
+    function renderServices(entry) {
+      const frag = document.createDocumentFragment();
+      frag.append(el("h3", "Services used"));
+      const sv = entry.services;
+      if (sv && sv.status === "documented" && sv.items.length) {
+        frag.append(
+          table(
+            "Outside services this application uses",
+            ["Service", "Purpose", "Called from", "Receives visitor data"],
+            sv.items.map((s) => [s.name, s.purpose, s.runs === "browser" ? "Visitor's browser" : "Build only", s.visitorData ? "Yes" : "No"])
+          )
+        );
+      } else if (sv && sv.status === "documented") {
+        frag.append(el("p", "This application does not use outside services of its own."));
+      } else if (sv && sv.status === "unavailable") {
+        frag.append(el("p", "Unable to retrieve services."));
+      } else {
+        frag.append(el("p", "Not documented"));
+      }
+      frag.append(
+        note("Every MarinOS application also reads MarinOS's shared data files and, for its Updates section, GitHub's public API for recent changes.")
+      );
+      return frag;
+    }
+
     function renderAi(entry) {
       const frag = document.createDocumentFragment();
       frag.append(el("h3", "AI"));
@@ -2017,7 +2042,7 @@
           status.textContent = "Technology information isn't available for this application yet.";
           return;
         }
-        content.replaceChildren(renderLanguages(entry), await renderDependencies(entry), renderSbom(entry, appId), renderAi(entry));
+        content.replaceChildren(renderLanguages(entry), await renderDependencies(entry), renderSbom(entry, appId), renderServices(entry), renderAi(entry));
         status.textContent = data.generatedAt && formatDate(data.generatedAt) ? `Data collected ${formatDate(data.generatedAt)}.` : "";
       } catch (error) {
         loaded = true;
