@@ -6,7 +6,7 @@
     return;
   }
 
-  const SHELL_VERSION = "1.9.0";
+  const SHELL_VERSION = "1.10.0";
   const MARIN_UI_VERSION = "1.19.0";
   const MARINOS_URL = "https://marincountygov.github.io/marin-os/";
   const MARINOS_STATUS_URL = `${MARINOS_URL}#status`;
@@ -1323,10 +1323,15 @@
 
     function showTabFromHash() {
       const hash = window.location.hash.slice(1);
-      const activeName = tabNames.includes(hash) ? hash : tabNames[0];
+      // A hash that names an element inside a tab section opens that section
+      // and scrolls to the element (for example #tech-marin-ui).
+      const target = hash && !tabNames.includes(hash) ? document.getElementById(hash) : null;
+      const owner = target ? target.closest("[data-tab-section]") : null;
+      const activeName = tabNames.includes(hash) ? hash : owner ? owner.dataset.tabSection : tabNames[0];
       tabSections.forEach((section) => {
         section.hidden = section.dataset.tabSection !== activeName;
       });
+      if (owner) target.scrollIntoView();
       if (tabNav) {
         tabNav.querySelectorAll('a[href^="#"]').forEach((link) => {
           if (link.getAttribute("href") === `#${activeName}`) link.setAttribute("aria-current", "page");
@@ -1793,6 +1798,16 @@
     const isLocal = ["localhost", "127.0.0.1"].includes(window.location.hostname);
     const base = isLocal ? "http://localhost:8935/" : MARINOS_URL;
     const ECOSYSTEMS = { npm: "npm", githubactions: "GitHub Actions", pypi: "PyPI", github: "GitHub" };
+    // MarinOS nests several apps' Tech details on one page, so the block's
+    // headings start at data-tech-heading-level (default 3) instead of fixed h3.
+    const level = Math.min(5, Math.max(2, Number(section.dataset.techHeadingLevel) || 3));
+    const heading = (text, extra = 0) => el(`h${level + extra}`, text);
+    // SPDX id -> readable name ("MIT" -> "MIT License"), as reported by GitHub
+    // when the data was collected; unknown ids are shown as they are.
+    let licenseNames = {};
+    const licenseLabel = (id) => licenseNames[id] || id;
+    // Marin App Shell and Marin UI have their own Tech details on MarinOS.
+    let componentLinks = {};
     let loaded = false;
 
     const formatDate = (iso) => {
@@ -1824,7 +1839,12 @@
       const tbody = document.createElement("tbody");
       rows.forEach((row) => {
         const tr = document.createElement("tr");
-        row.forEach((cell) => tr.append(el("td", cell)));
+        row.forEach((cell) => {
+          const td = document.createElement("td");
+          if (cell instanceof Node) td.append(cell);
+          else td.textContent = cell;
+          tr.append(td);
+        });
         tbody.append(tr);
       });
       t.append(thead, tbody);
@@ -1851,7 +1871,7 @@
             pkg.versionInfo || "Not provided",
             direct.has(pkg.SPDXID) ? "Direct" : "Transitive",
             eco ? ECOSYSTEMS[eco[1]] || eco[1] : "Not provided",
-            license && license !== "NOASSERTION" && license !== "NONE" ? license : "Not provided",
+            license && license !== "NOASSERTION" && license !== "NONE" ? licenseLabel(license) : "Not provided",
           ];
         })
         .sort((a, b) => (a[2] === b[2] ? a[0].localeCompare(b[0]) : a[2] === "Direct" ? -1 : 1));
@@ -1859,7 +1879,7 @@
 
     function renderLanguages(entry) {
       const frag = document.createDocumentFragment();
-      frag.append(el("h3", "Languages"));
+      frag.append(heading("Languages"));
       const langs = entry.languages;
       const data = langs && (langs.status === "success" ? langs : langs.lastSuccess);
       if (data && data.percentages) {
@@ -1880,14 +1900,14 @@
         frag.append(labelled("Repository", link));
       }
       if (data && data.primary) frag.append(labelled("Primary language", data.primary));
-      if (entry.license) frag.append(labelled("License", entry.license));
+      if (entry.license) frag.append(labelled("License", licenseLabel(entry.license)));
       if (entry.pushedAt && formatDate(entry.pushedAt)) frag.append(labelled("Last updated", formatDate(entry.pushedAt)));
       return frag;
     }
 
     async function renderDependencies(entry) {
       const frag = document.createDocumentFragment();
-      frag.append(el("h3", "Dependencies"));
+      frag.append(heading("Dependencies"));
       const deps = entry.dependencies;
       if (!deps || deps.status !== "success") {
         frag.append(el("p", deps ? "Unable to retrieve dependency information." : "Not available"));
@@ -1915,12 +1935,19 @@
         }
       }
 
-      frag.append(el("h4", "Bundled components"));
+      frag.append(heading("Bundled components", 1));
       const bundled = entry.bundled;
       if (bundled && bundled.status === "success" && bundled.components.length) {
         frag.append(note("Libraries and assets copied into this application's repository. GitHub's dependency graph does not detect these."));
         frag.append(
-          table("Bundled components", ["Component", "Version", "License"], bundled.components.map((c) => [c.name, c.version || "Not provided", c.license || "Not provided"]))
+          table("Bundled components", ["Component", "Version", "License"], bundled.components.map((c) => {
+            let name = c.name;
+            if (componentLinks[c.name]) {
+              name = el("a", c.name);
+              name.href = componentLinks[c.name];
+            }
+            return [name, c.version || "Not provided", c.license || "Not provided"];
+          }))
         );
       } else if (bundled && bundled.status === "none-detected") {
         frag.append(el("p", "None detected."));
@@ -1932,7 +1959,7 @@
 
     function renderSbom(entry, appId) {
       const frag = document.createDocumentFragment();
-      frag.append(el("h3", "Software bill of materials"));
+      frag.append(heading("Software bill of materials"));
       const sbom = entry.dependencies && entry.dependencies.status === "success" ? entry.dependencies.sbom : null;
       if (!sbom) {
         frag.append(el("p", "Not available"));
@@ -1958,7 +1985,7 @@
 
     function renderServices(entry) {
       const frag = document.createDocumentFragment();
-      frag.append(el("h3", "Services used"));
+      frag.append(heading("Services used"));
       const sv = entry.services;
       if (sv && sv.status === "documented" && sv.items.length) {
         frag.append(
@@ -1983,7 +2010,7 @@
 
     function renderAi(entry) {
       const frag = document.createDocumentFragment();
-      frag.append(el("h3", "AI"));
+      frag.append(heading("AI"));
       const ai = entry.ai;
       if (ai && ai.status === "documented" && ai.used === true) {
         frag.append(labelled("Uses AI", "Yes"));
@@ -2037,6 +2064,11 @@
         }
         if (!response.ok) throw new Error(`tech fetch failed: ${response.status}`);
         const data = await response.json();
+        licenseNames = (data && data.licenseNames) || {};
+        componentLinks = {};
+        Object.entries((data && data.apps) || {}).forEach(([id, item]) => {
+          if (item && item.kind === "component" && item.name) componentLinks[item.name] = `${base}#tech-${id}`;
+        });
         const entry = appId && data && data.apps ? data.apps[appId] : null;
         if (!entry) {
           status.textContent = "Technology information isn't available for this application yet.";
