@@ -1339,6 +1339,29 @@ document.addEventListener("DOMContentLoaded", () => {
     renderBarChart("places", elements.statsPlacesCanvas, placeCounts);
   }
 
+  /** Chart.js draws its own text and grid, so give it the page's colors — its
+   * default dark grey text is nearly invisible in dark mode. Charts are rebuilt
+   * when the color scheme changes (existing charts keep their old colors). */
+  function applyChartTheme() {
+    if (typeof Chart === "undefined") return;
+    Chart.defaults.color = getComputedStyle(document.querySelector("#latest")).color;
+    const card = document.querySelector("#stats-grid .app-card");
+    if (card) Chart.defaults.borderColor = getComputedStyle(card).borderTopColor;
+  }
+
+  /** PNG exports get the card's background, so light text in dark mode stays
+   * readable on a white page or slide. */
+  function chartImage(canvas) {
+    const out = document.createElement("canvas");
+    out.width = canvas.width;
+    out.height = canvas.height;
+    const context = out.getContext("2d");
+    context.fillStyle = getComputedStyle(canvas.closest(".app-card")).backgroundColor;
+    context.fillRect(0, 0, out.width, out.height);
+    context.drawImage(canvas, 0, 0);
+    return out;
+  }
+
   /** Canvas charts have no text content of their own — a screen reader
    * sees an empty image unless given something to say. Rebuilt from
    * data-chart-title (the static heading, set once in index.html) plus a
@@ -1373,6 +1396,7 @@ document.addEventListener("DOMContentLoaded", () => {
       state.statsCharts[key].update();
       return;
     }
+    applyChartTheme();
     state.statsCharts[key] = new Chart(canvas, {
       type: "line",
       data,
@@ -1401,6 +1425,7 @@ document.addEventListener("DOMContentLoaded", () => {
       state.statsCharts[key].update();
       return;
     }
+    applyChartTheme();
     state.statsCharts[key] = new Chart(canvas, {
       type: "bar",
       data,
@@ -1826,7 +1851,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const chart = state.statsCharts[key];
     if (!chart) return;
     const title = chart.canvas.dataset.chartTitle || "Chart";
-    chart.canvas.toBlob((blob) => {
+    chartImage(chart.canvas).toBlob((blob) => {
       if (blob) triggerDownload(blob, `Marin Mentions - ${title} - ${filenameDate()}.png`);
     });
   }
@@ -1905,7 +1930,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return (
           `<b>${escapeHtml(title)}</b>` +
           (summary ? `<br>${escapeHtml(summary)}` : "") +
-          `<br><img src="${canvas.toDataURL("image/png")}" alt="${escapeHtml(title)}" width="${canvas.clientWidth}" height="${canvas.clientHeight}">`
+          `<br><img src="${chartImage(canvas).toDataURL("image/png")}" alt="${escapeHtml(title)}" width="${canvas.clientWidth}" height="${canvas.clientHeight}">`
         );
       });
     return (
@@ -1935,6 +1960,21 @@ document.addEventListener("DOMContentLoaded", () => {
       announce("Couldn't copy automatically — select the text below and copy it manually.");
     }
   }
+
+  // Rebuild charts when the color scheme changes so their text and grid follow it.
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", () => {
+    Object.values(state.statsCharts).forEach((chart) => chart?.destroy());
+    state.statsCharts = {};
+    renderFeed();
+  });
+
+  // A link styled as a button should also answer the Space key, as a button does.
+  elements.rssFeedLink?.addEventListener("keydown", (event) => {
+    if (event.key === " " && elements.rssFeedLink.hasAttribute("href")) {
+      event.preventDefault();
+      elements.rssFeedLink.click();
+    }
+  });
 
   elements.copyEmailButton?.addEventListener("click", copyDigestToClipboard);
   elements.copyLinkButton?.addEventListener("click", copyCurrentLink);

@@ -1626,7 +1626,7 @@ th[aria-sort="descending"] .sort-button::after {
   stroke-linejoin: round;
 }
 
-/* Marin App Shell 1.10.0: component integration only.
+/* Marin App Shell 1.10.1: component integration only.
    General visual rules come from the locked, unmodified Marin UI input. */
 marin-os-banner,
 marin-app-header,
@@ -1851,6 +1851,34 @@ marin-app-footer {
 @media (prefers-color-scheme: dark) {
   :root {
     --app-bg-soft: #151b22;
+  }
+}
+
+/* App Shell 1.10.1 compatibility addition. Marin UI 1.19.0 leaves form control
+   borders on Pico's #cfd5e2 (about 1.4:1) in light mode and #5b6876 (2.7:1 on a
+   card) in dark mode, short of the 3:1 WCAG 1.4.11 asks for the edge of a text
+   input, date input, select, checkbox or radio. Marin UI 1.23.0 fixes this with
+   --app-control-border; the shell stays pinned to 1.19.0, so it carries the same
+   token and mapping until the pinned baseline is refreshed. Keep in step with
+   marin-ui's shared/app-brand.css. */
+:root {
+  --app-control-border: #737d8c;
+}
+
+/* Pico sets its form border color on :root:not([data-theme=dark]) (and, in dark
+   mode, :root:not([data-theme])), which outranks a plain :root rule, so these
+   repeat Pico's selectors to win by source order. */
+:root:not([data-theme=dark]) {
+  --pico-form-element-border-color: var(--app-control-border);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --app-control-border: #7a8896;
+  }
+
+  :root:not([data-theme]) {
+    --pico-form-element-border-color: var(--app-control-border);
   }
 }
 
