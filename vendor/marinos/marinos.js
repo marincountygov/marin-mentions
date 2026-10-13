@@ -6,8 +6,8 @@
     return;
   }
 
-  const SHELL_VERSION = "1.10.1";
-  const MARIN_UI_VERSION = "1.19.0";
+  const SHELL_VERSION = "1.11.0";
+  const MARIN_UI_VERSION = "1.24.0";
   const MARINOS_URL = "https://marincountygov.github.io/marin-os/";
   const MARINOS_STATUS_URL = `${MARINOS_URL}#status`;
   const CATALOG_URL = `${MARINOS_URL}catalog.json`;
@@ -819,6 +819,31 @@
       }
       this.replaceChildren(link);
       this.dataset.rendered = "true";
+      this.watchFooter(link);
+    }
+
+    // The button is fixed to the bottom corner, so when the page is scrolled until the
+    // footer appears it would sit on top of footer links. Hide it then (only on pages
+    // that scroll, so a short page keeps its button). It stays in the tab order and
+    // shows itself on keyboard focus, so it is never unreachable.
+    watchFooter(link) {
+      let queued = false;
+      const update = () => {
+        queued = false;
+        const footer = document.querySelector("marin-app-footer .app-footer");
+        const scrolls = document.documentElement.scrollHeight > window.innerHeight + 1;
+        const over = Boolean(footer) && scrolls && footer.getBoundingClientRect().top < window.innerHeight;
+        link.toggleAttribute("data-over-footer", over);
+      };
+      const schedule = () => {
+        if (queued) return;
+        queued = true;
+        window.requestAnimationFrame(update);
+      };
+      window.addEventListener("scroll", schedule, { passive: true });
+      window.addEventListener("resize", schedule);
+      if (typeof ResizeObserver === "function") new ResizeObserver(schedule).observe(document.body);
+      update();
     }
   }
 
