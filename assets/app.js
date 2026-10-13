@@ -15,6 +15,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // type tabs — swaps the mention list for the charts in place, rather
     // than being its own page-level tab.
     statsView: false,
+    // Reports view: the report builder, toggled by #reports-toggle beside Stats. Like Stats it
+    // replaces the mention list in place, and the sidebar filters choose its coverage.
+    reportsView: false,
     time: "24h",
     selectedSources: new Set(),
     sourceSortKey: "name",
@@ -41,6 +44,8 @@ document.addEventListener("DOMContentLoaded", () => {
     contentTabs: document.querySelector("#content-tabs"),
     contentTabRow: document.querySelector("#content-tab-row"),
     statsToggle: document.querySelector("#stats-toggle"),
+    reportsToggle: document.querySelector("#reports-toggle"),
+    reportsPanel: document.querySelector("#reports-panel"),
     statsGrid: document.querySelector("#stats-grid"),
     statsKpis: document.querySelector("#stats-kpis"),
     statsKpiArticles: document.querySelector("#stats-kpi-articles"),
@@ -170,6 +175,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (state.contentType !== "all") params.set("type", state.contentType);
     if (state.time !== "24h") params.set("time", state.time);
     if (state.statsView) params.set("view", "stats");
+    if (state.reportsView) params.set("view", "reports");
 
     const query = params.toString();
     const url = `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`;
@@ -245,6 +251,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (params.has("type")) state.contentType = params.get("type");
     if (params.has("time")) state.time = params.get("time");
     if (params.get("view") === "stats") state.statsView = true;
+    if (params.get("view") === "reports") state.reportsView = true;
 
     if (elements.searchInput) elements.searchInput.value = state.search;
     if (elements.timeSelect) elements.timeSelect.value = state.time;
@@ -252,6 +259,47 @@ document.addEventListener("DOMContentLoaded", () => {
       tab.setAttribute("aria-selected", String(tab.dataset.contentType === state.contentType));
     });
   }
+
+  // What the Reports builder (assets/reports/ui.js) may ask of this app. It never touches
+  // `state` directly, so the two stay separate.
+  const reportsHost = {
+    announce,
+    monitorNames: () => Object.fromEntries((state.data?.monitors || []).map((m) => [m.id, m.name])),
+    // Items that pass the sidebar filters (monitors, sources, search), ignoring the Time filter
+    // and the content-type tab, and whose Pacific-time day falls in the report period.
+    // County's own items are listed separately as releases.
+    candidates: (period, type = "news-video") =>
+      (state.data?.items || [])
+        .filter((item) => !state.officialSourceIds.has(item.sourceId))
+        .filter((item) => (type === "all" ? true : type === "news-video" ? item.sourceType !== "social" : item.sourceType === type))
+        .filter((item) => passesFilters(item, { skipContentType: true, skipTime: true }))
+        .filter((item) => window.ReportsCore.inPeriod(window.ReportsCore.pacificDate(item.publishedAt), period))
+        .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt)),
+    releases: (period) =>
+      (state.data?.items || [])
+        .filter((item) => state.officialSourceIds.has(item.sourceId) && item.sourceType === "news")
+        .filter((item) => window.ReportsCore.inPeriod(window.ReportsCore.pacificDate(item.publishedAt), period))
+        .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt)),
+    // The items selected with the checkboxes in the list, with the release each was matched to.
+    clipped: () =>
+      Array.from(state.clippedItems.entries())
+        .map(([id, clip]) => ({
+          item: state.data.items.find((item) => item.id === id),
+          release: clip.releaseId ? state.data.items.find((item) => item.id === clip.releaseId) || null : null,
+        }))
+        .filter((entry) => entry.item),
+    // Fallback when the browser's own clipboard call is unavailable: select hidden content and
+    // copy it, as the rest of Marin Mentions does; show the manual-copy box if that fails.
+    copyRich: (html, text) => {
+      try {
+        if (copyRichTextToClipboard(html)) return true;
+      } catch (error) {
+        console.error(error);
+      }
+      showCopyFallback(text);
+      return false;
+    },
+  };
 
   async function loadData({ isRefresh = false } = {}) {
     announce(isRefresh ? "Refreshing…" : "Loading media monitor data…");
@@ -264,6 +312,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!isRefresh) applyStateFromUrl();
       updateRssFeedLink();
       renderAll();
+      window.ReportsUI?.init(reportsHost);
+      window.ReportsUI?.refresh();
       announce(isRefresh ? "Refreshed." : "Loaded.");
     } catch (error) {
       console.error(error);
@@ -444,7 +494,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // instead of collapsing to whatever's currently selected in that facet.
   function passesFilters(
     item,
-    { skipMonitor = false, skipFeedSource = false, skipContentType = false, timeRange = null } = {}
+    { skipMonitor = false, skipFeedSource = false, skipContentType = false, skipTime = false, timeRange = null } = {}
   ) {
     if (
       !skipMonitor &&
@@ -491,7 +541,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (timeRange) {
       const publishedMs = new Date(item.publishedAt).getTime();
       if (publishedMs < timeRange.start || publishedMs > timeRange.end) return false;
-    } else if (state.time !== "all") {
+    } else if (!skipTime && state.time !== "all") {
       const windowMs = TIME_WINDOWS_MS[state.time];
       if (Date.now() - new Date(item.publishedAt).getTime() > windowMs) return false;
     }
@@ -799,30 +849,43 @@ document.addEventListener("DOMContentLoaded", () => {
    * siblings. aria-selected is only valid on tab/option/row/gridcell-type
    * roles; putting it on a roleless button would be invalid ARIA. */
   function syncStatsView() {
-    if (elements.feed) elements.feed.hidden = state.statsView;
-    if (elements.selectAllField) elements.selectAllField.hidden = state.statsView;
+    // Stats and Reports each replace the mention list in place. Only one is on at a time.
+    const replacesList = state.statsView || state.reportsView;
+    if (elements.feed) elements.feed.hidden = replacesList;
+    if (elements.selectAllField) elements.selectAllField.hidden = replacesList;
     if (elements.statsGrid) elements.statsGrid.hidden = !state.statsView;
     if (elements.statsKpis) elements.statsKpis.hidden = !state.statsView;
+    if (elements.reportsPanel) elements.reportsPanel.hidden = !state.reportsView;
     if (elements.statsToggle) elements.statsToggle.setAttribute("aria-pressed", String(state.statsView));
+    if (elements.reportsToggle) elements.reportsToggle.setAttribute("aria-pressed", String(state.reportsView));
+    // Reports builds its own date range, so the sidebar's Time filter does not apply there.
+    if (elements.timeSelect) elements.timeSelect.disabled = state.reportsView;
+    // The "Showing: ..." line and the Copy / Link / CSV / RSS buttons describe the list, so
+    // they step aside while the report builder is open.
+    document.querySelectorAll(".mm-results-summary, .mm-results-buttons, #rss-feed-status").forEach((node) => {
+      node.hidden = state.reportsView;
+    });
     // Stats isn't a content type — while it's active, none of All/News/
     // Video/Social should read as selected too; restore the real
     // selection (state.contentType) once Stats is toggled back off.
     elements.contentTabs?.querySelectorAll("[data-content-type]").forEach((tab) => {
       tab.setAttribute(
         "aria-selected",
-        state.statsView ? "false" : String(tab.dataset.contentType === state.contentType)
+        replacesList ? "false" : String(tab.dataset.contentType === state.contentType)
       );
     });
     // The digest copy (format picker + "Copy") and the CSV download only
     // make sense for the mention list — on Stats, "Copy link" still works
     // (see copyCurrentLink(), which includes view=stats in the URL) and
     // the Stats "Copy" button takes over for copying the charts themselves.
-    if (elements.copyEmailButton) elements.copyEmailButton.hidden = state.statsView;
-    if (elements.copyFormatField) elements.copyFormatField.hidden = state.statsView;
-    if (elements.downloadDataButton) elements.downloadDataButton.hidden = state.statsView;
-    if (elements.rssFeedLink) elements.rssFeedLink.hidden = state.statsView;
+    if (elements.copyEmailButton) elements.copyEmailButton.hidden = replacesList;
+    if (elements.copyFormatField) elements.copyFormatField.hidden = replacesList;
+    if (elements.downloadDataButton) elements.downloadDataButton.hidden = replacesList;
+    if (elements.rssFeedLink) elements.rssFeedLink.hidden = replacesList;
     if (elements.copyStatsButton) elements.copyStatsButton.hidden = !state.statsView;
     if (elements.downloadAllPngButton) elements.downloadAllPngButton.hidden = !state.statsView;
+    // Keep the report's coverage list in step with the sidebar filters.
+    window.ReportsUI?.refresh();
   }
 
   function statusInfo(source) {
@@ -1087,8 +1150,9 @@ document.addEventListener("DOMContentLoaded", () => {
    * underneath it. */
   function goToLatestFilteredBy(applyFilter) {
     window.location.hash = "latest";
-    if (state.statsView) {
+    if (state.statsView || state.reportsView) {
       state.statsView = false;
+      state.reportsView = false;
       syncStatsView();
     }
     applyFilter();
@@ -2057,9 +2121,20 @@ document.addEventListener("DOMContentLoaded", () => {
   // Listens on the row, not the tablist: the Stats toggle sits beside the
   // tabs, outside role="tablist" (a tablist may only contain tabs).
   elements.contentTabRow?.addEventListener("click", (event) => {
+    const reportsButton = event.target.closest("#reports-toggle");
+    if (reportsButton) {
+      state.reportsView = !state.reportsView;
+      if (state.reportsView) state.statsView = false;
+      syncUrlFromState();
+      renderFeed();
+      if (state.reportsView) window.ReportsUI?.focusStart();
+      return;
+    }
+
     const statsButton = event.target.closest("#stats-toggle");
     if (statsButton) {
       state.statsView = !state.statsView;
+      if (state.statsView) state.reportsView = false;
       syncUrlFromState(); // so Copy Link's window.location.href includes view=stats
       // Re-render (not just syncStatsView()) so the "Showing: ..." line
       // drops/re-adds the content-type tab name — Stats ignores that
@@ -2078,6 +2153,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!button) return;
     state.contentType = button.dataset.contentType;
     state.statsView = false;
+    state.reportsView = false;
     elements.contentTabs.querySelectorAll("[data-content-type]").forEach((tab) => {
       tab.setAttribute("aria-selected", String(tab === button));
     });

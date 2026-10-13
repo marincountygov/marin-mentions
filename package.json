@@ -12,7 +12,7 @@
     "build": "node build/index.js",
     "dev": "node build/index.js --out=data.json --previous=data.json",
     "report:bluesky": "node build/bluesky-report.js",
-    "test": "node --test tests/match.test.js",
+    "test": "node --test tests/match.test.js tests/reports.test.js",
     "dev:watch": "while true; do npm run dev; sleep 600; done"
   },
   "keywords": ["media-monitoring", "rss", "google-news", "bay-area", "marin"],
