@@ -374,6 +374,8 @@ document.addEventListener("DOMContentLoaded", () => {
         )
         .join("");
 
+    openGroupsWithSelections(elements.monitorChips);
+
     elements.monitorChips.querySelectorAll("input[data-monitor-id]").forEach((checkbox) => {
       checkbox.addEventListener("change", () => {
         const id = checkbox.dataset.monitorId;
@@ -423,6 +425,8 @@ document.addEventListener("DOMContentLoaded", () => {
         </details>`;
         })
         .join("");
+
+    openGroupsWithSelections(elements.feedSourceFilter);
 
     elements.feedSourceFilter.querySelectorAll("input[data-feed-source-id]").forEach((checkbox) => {
       checkbox.addEventListener("change", () => {
@@ -502,6 +506,32 @@ document.addEventListener("DOMContentLoaded", () => {
     return passesFilters(item);
   }
 
+  /** A filter group that holds a selection opens on its own, so a shared link
+   * or restored filter doesn't hide what's applied. Called only when a group
+   * list is (re)built, so it never reopens a group the person just closed. */
+  function openGroupsWithSelections(root) {
+    root?.querySelectorAll("details.mm-facet-group").forEach((details) => {
+      if (details.querySelector("input:checked")) details.open = true;
+    });
+  }
+
+  /** "(2 selected)" next to a group's name, so a collapsed group still shows
+   * that it's narrowing the list. */
+  function updateSelectedBadges() {
+    [elements.monitorChips, elements.feedSourceFilter].forEach((root) => {
+      root?.querySelectorAll("details.mm-facet-group").forEach((details) => {
+        const selected = details.querySelectorAll("input:checked").length;
+        let badge = details.querySelector(".mm-selected-count");
+        if (!badge) {
+          badge = document.createElement("span");
+          badge.className = "app-help-text mm-selected-count";
+          details.querySelector("summary")?.append(" ", badge);
+        }
+        badge.textContent = selected ? `(${selected} selected)` : "";
+      });
+    });
+  }
+
   function updateFacetCounts() {
     if (!state.data) return;
 
@@ -545,6 +575,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const el = elements.feedSourceFilter?.querySelector(`[data-content-type-count="${key}"]`);
       if (el) el.textContent = `(${count})`;
     });
+    updateSelectedBadges();
   }
 
   // Google's public favicon service — free, no key, works across every
