@@ -16,4 +16,12 @@ function loadMonitors() {
   return raw.monitors || [];
 }
 
-module.exports = { loadSources, loadMonitors };
+// Optional: context rules for loose sources (see config/context.yaml). A missing
+// file means no extra rules.
+function loadContext() {
+  const file = path.join(CONFIG_DIR, "context.yaml");
+  if (!fs.existsSync(file)) return null;
+  return yaml.load(fs.readFileSync(file, "utf8")) || null;
+}
+
+module.exports = { loadSources, loadMonitors, loadContext };

@@ -4,10 +4,10 @@
 const fs = require("fs");
 const path = require("path");
 
-const { loadSources, loadMonitors } = require("./config");
+const { loadSources, loadMonitors, loadContext } = require("./config");
 const { fetchSource, refreshIntervalFor } = require("./connectors");
 const { normalizeItem, hostnameOf } = require("./normalize");
-const { matchItems } = require("./match");
+const { matchItems, buildContextRules } = require("./match");
 const { dedupeItems } = require("./dedupe");
 const { buildFeeds } = require("./feeds");
 
@@ -209,7 +209,7 @@ async function buildOnce({ previousSnapshotPath, outPath, env = process.env }) {
   // source's items bypass matchItems()'s phrase-matching requirement (see
   // that function's own comment for why).
   const officialSourceIds = new Set(sources.filter((source) => source.official).map((source) => source.id));
-  const matched = matchItems(allItems, monitors, officialSourceIds);
+  const matched = matchItems(allItems, monitors, officialSourceIds, buildContextRules(loadContext()));
   const deduped = dedupeItems(matched);
 
   const cutoff = now - PRUNE_DAYS * 24 * 60 * 60 * 1000;

@@ -57,6 +57,42 @@ function labelFor(entry) {
   return Array.isArray(entry) ? entry.map(stripWordPrefix).join(" + ") : stripWordPrefix(entry);
 }
 
+/** Turn config/context.yaml into the lookups applyMonitors() needs. Returns null
+ * when there is no config, which means no extra rules. */
+function buildContextRules(config) {
+  if (!config) return null;
+  const lower = (list) => new Set((list || []).map((v) => String(v).toLowerCase()));
+  return {
+    sourceMethods: new Set(config.sourceMethods || []),
+    contextTerms: config.context || [],
+    ambiguousTerms: new Set((config.ambiguousTerms || []).map((t) => normalizeForMatch(stripWordPrefix(t)))),
+    ambiguousGroups: new Set(config.ambiguousGroups || []),
+    trustedAuthors: lower(config.trustedAuthors),
+    blockedAuthors: lower(config.blockedAuthors),
+  };
+}
+
+function hasLocalContext(rules, haystack) {
+  return rules.contextTerms.some((term) => singleTermMatches(term, haystack));
+}
+
+/** Does this item skip some matches because of the context rules? Returns
+ * "blocked" (drop the item), "open" (no extra requirement), or "strict"
+ * (ambiguous terms and groups need context the item does not have). */
+function contextModeFor(item, rules, haystack) {
+  if (!rules || !rules.sourceMethods.has(item.sourceMethod)) return "open";
+  const handle = String(item.handle || item._authorHandle || "").toLowerCase();
+  if (handle && rules.blockedAuthors.has(handle)) return "blocked";
+  if (handle && rules.trustedAuthors.has(handle)) return "open";
+  return hasLocalContext(rules, haystack) ? "open" : "strict";
+}
+
+function isAmbiguousHit(entry, monitor, rules) {
+  if (rules.ambiguousGroups.has(monitor.group)) return true;
+  // Only a plain single term can be ambiguous; a compound entry has its own context.
+  return typeof entry === "string" && rules.ambiguousTerms.has(normalizeForMatch(stripWordPrefix(entry)));
+}
+
 /**
  * Apply every configured monitor to one normalized item, mutating
  * item.matchedTerms / item.matchedMonitors. Matching order per monitor:
@@ -64,8 +100,14 @@ function labelFor(entry) {
  * A monitor matches if ANY include entry is found and NO exclude entry is
  * found.
  */
-function applyMonitors(item, monitors) {
+function applyMonitors(item, monitors, contextRules = null) {
   const haystack = normalizeForMatch(textFieldsOf(item));
+  const mode = contextModeFor(item, contextRules, haystack);
+  if (mode === "blocked") {
+    item.matchedTerms = [];
+    item.matchedMonitors = [];
+    return false;
+  }
   const matchedTerms = new Set();
   const matchedMonitors = [];
 
@@ -79,7 +121,8 @@ function applyMonitors(item, monitors) {
     const excluded = (monitor.exclude || []).some((entry) => entryMatches(entry, haystack));
     if (excluded) continue;
 
-    const hits = (monitor.include || []).filter((entry) => entryMatches(entry, haystack));
+    let hits = (monitor.include || []).filter((entry) => entryMatches(entry, haystack));
+    if (mode === "strict") hits = hits.filter((entry) => !isAmbiguousHit(entry, monitor, contextRules));
     if (hits.length === 0) continue;
 
     matchedMonitors.push(monitor.id);
@@ -105,8 +148,8 @@ function applyMonitors(item, monitors) {
  * discarded, since none of their titles happened to say "Marin" or
  * "Parks"). Defaults to an empty Set so any caller that doesn't pass this
  * keeps today's exact behavior. */
-function matchItems(items, monitors, officialSourceIds = new Set()) {
-  return items.filter((item) => applyMonitors(item, monitors) || officialSourceIds.has(item.sourceId));
+function matchItems(items, monitors, officialSourceIds = new Set(), contextRules = null) {
+  return items.filter((item) => applyMonitors(item, monitors, contextRules) || officialSourceIds.has(item.sourceId));
 }
 
-module.exports = { matchItems, applyMonitors, normalizeForMatch };
+module.exports = { matchItems, applyMonitors, normalizeForMatch, buildContextRules, hasLocalContext };

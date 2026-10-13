@@ -1,0 +1,89 @@
+# Context rules for loose, high-volume sources (currently Bluesky).
+#
+# Bluesky's search returns any post containing a word, so a monitored place
+# name pulls in every other Inverness (Scotland), Almonte (Spain), Novato
+# (Portuguese for "rookie"), Olema (Estonian for "to be"), and so on. In the
+# data this was most of what Bluesky returned. These rules narrow that down
+# without changing what the other sources do.
+#
+# How it works (see build/match.js):
+#   1. A post from a blocked author is dropped.
+#   2. A post from a trusted author, or one that mentions anything in
+#      `context` below, is matched exactly as before.
+#   3. Any other post still matches, but only through terms that are not in
+#      `ambiguousTerms` and monitors that are not in `ambiguousGroups`.
+# A compound include entry such as [word:Marin, Fallon] already carries its
+# own context and is never treated as ambiguous.
+#
+# Matching is case-insensitive. A "word:" prefix matches a whole word only
+# (so "word:CA" does not match "can"). Run `npm run report:bluesky` to see
+# which terms are noisy before changing this file.
+
+# Which sources these rules apply to (the item's sourceMethod).
+sourceMethods: [bluesky]
+
+# A post that mentions any of these is clearly about this area.
+context:
+  - word:Marin
+  - Marin County
+  - West Marin
+  - Bay Area
+  - North Bay
+  - San Francisco
+  - SF Bay
+  - word:SF
+  - word:CA
+  - California
+  - Sonoma
+  - Napa
+  - Point Reyes
+  - Mount Tam
+  - Mt. Tam
+  - Golden Gate
+  - Richardson Bay
+  - Tomales Bay
+  - word:County
+  - word:101
+  - "#Marin"
+  - "#MarinCounty"
+  - "#BayArea"
+  - "#NorthBay"
+
+# Place and group names that also mean something else elsewhere. These only
+# count when the post has context (or comes from a trusted author).
+ambiguousTerms:
+  - Almonte
+  - Inverness
+  - Las Gallinas
+  - Lagunitas
+  - Nicasio
+  - Novato
+  - Oak Manor
+  - Olema
+  - Rush Creek
+  - San Geronimo
+  - word:MAPE
+
+# Every term of a monitor in these groups is treated as ambiguous. People's
+# names are common (Derek Johnson, Jason Weber), so a bare name needs context.
+ambiguousGroups:
+  - People
+
+# Local accounts whose posts skip the context requirement (they still have
+# to match a monitor). Bluesky handles.
+trustedAuthors:
+  - 511.org
+  - localnewsmatters.bsky.social
+  - thearknewspaper.com
+  - westmarinfeed.bsky.social
+
+# Accounts whose posts are never kept: non-local feeds and bots that kept
+# matching. Review now and then with `npm run report:bluesky`.
+blockedAuthors:
+  - bravewordsrecords.bsky.social
+  - celtic-francophone.bsky.social
+  - leganesactivo.com
+  - mapeunion.bsky.social
+  - myjobscotland.gov.uk
+  - pumpr-app.bsky.social
+  - sociologiadiver.bsky.social

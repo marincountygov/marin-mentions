@@ -1,6 +1,7 @@
 "use strict";
 
 const { fetchJson } = require("../http");
+const { loadContext } = require("../config");
 
 // api.bsky.app is the AppView host that actually serves unauthenticated
 // searchPosts right now (verified 2026-09-18 by direct request: 200 with
@@ -54,18 +55,40 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function searchUrl(term, cursor) {
+// Terms that also mean something in another language or place (Novato = "rookie"
+// in Portuguese, Olema = "to be" in Estonian, Las Gallinas = "the hens"). Each
+// search returns only PAGE_LIMIT posts, so for these terms ask Bluesky for English
+// posts only; otherwise most of the page is spent on posts the build then discards.
+// Posts with no language tag are not returned by a language search, which is an
+// accepted trade for terms that are mostly noise. Derived from
+// config/context.yaml's ambiguousTerms.
+function englishOnlyTerms() {
+  const context = loadContext();
+  return new Set((context?.ambiguousTerms || []).map((t) => String(t).replace(/^word:/, "").toLowerCase()));
+}
+
+// A post tagged only with other languages is dropped. A post with no language
+// tag is kept (many real posts, especially from news bots, have none).
+function isEnglishOrUntagged(post) {
+  const langs = post.record?.langs;
+  if (!Array.isArray(langs) || langs.length === 0) return true;
+  return langs.some((lang) => String(lang).toLowerCase().startsWith("en"));
+}
+
+function searchUrl(term, cursor, englishOnly) {
   const since = new Date(Date.now() - SINCE_DAYS * 24 * 60 * 60 * 1000).toISOString();
   const params = new URLSearchParams({ q: term, limit: String(PAGE_LIMIT), sort: "latest", since });
+  if (englishOnly) params.set("lang", "en");
   if (cursor) params.set("cursor", cursor);
   return `${SEARCH_URL}?${params.toString()}`;
 }
 
 async function searchInBatches(terms) {
+  const english = englishOnlyTerms();
   const entries = [];
   for (let i = 0; i < terms.length; i += CONCURRENCY) {
     const batch = terms.slice(i, i + CONCURRENCY);
-    const batchResults = await Promise.allSettled(batch.map((term) => fetchJson(searchUrl(term))));
+    const batchResults = await Promise.allSettled(batch.map((term) => fetchJson(searchUrl(term, undefined, english.has(term.toLowerCase())))));
     batchResults.forEach((result, index) => entries.push({ term: batch[index], result }));
     if (i + CONCURRENCY < terms.length) await sleep(BATCH_DELAY_MS);
   }
@@ -76,7 +99,7 @@ async function searchInBatches(terms) {
   for (const { term, result } of entries.slice()) {
     if (result.status !== "fulfilled" || !PAGINATE_TERMS.has(term) || !result.value.cursor) continue;
     try {
-      const page2 = await fetchJson(searchUrl(term, result.value.cursor));
+      const page2 = await fetchJson(searchUrl(term, result.value.cursor, english.has(term.toLowerCase())));
       entries.push({ term, result: { status: "fulfilled", value: page2 } });
     } catch {
       // A failed second page just means less recall for this one term —
@@ -127,6 +150,7 @@ async function fetchBlueskySource(source, { monitors }) {
   for (const result of results) {
     if (result.status !== "fulfilled") continue;
     for (const post of result.value.posts || []) {
+      if (!isEnglishOrUntagged(post)) continue;
       const handle = post.author?.handle;
       const rkey = post.uri?.split("/").pop();
       items.push({
@@ -153,4 +177,4 @@ async function fetchBlueskySource(source, { monitors }) {
   return { items };
 }
 
-module.exports = { fetchBlueskySource };
+module.exports = { fetchBlueskySource, isEnglishOrUntagged, englishOnlyTerms, searchUrl };

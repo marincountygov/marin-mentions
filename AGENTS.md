@@ -13,6 +13,8 @@ This departs from `marin-app-template`'s default (a static site with no build st
 - `build/connectors/*.js` — one file per source type (`rss`, `google-news`, `youtube`, `bluesky`, `reddit`, `nextdoor`). Each returns raw items; `build/normalize.js` converts them to the common `MediaItem` shape.
 - `build/match.js`, `build/dedupe.js` — monitor matching and dedup logic; see the comments there before changing matching semantics, dedup key priority, or story-grouping approach (grouping is deferred — not implemented).
 - `build/feeds.js` — generates static RSS 2.0 files (one per monitor, one per content type matching the UI's tabs, plus a combined `all.xml`) from the same matched/deduped/pruned items that become `data.json`. Written into `feeds/` next to wherever `data.json` lands (`dist/feeds/` in production, `feeds/` at repo root under `npm run dev`) — both are gitignored, same as `data.json`. There is no feed for a source filter, search text, or more than one monitor selected at once — that would mean a static file per combination, which doesn't scale; `assets/app.js`'s `updateRssFeedLink()` disables the RSS button for those instead of guessing.
+- `config/context.yaml` — local-context rules for Bluesky: which place and people names are ambiguous, what counts as local context, trusted and blocked accounts. See README's "Keeping Bluesky results relevant". Adding a noisy term needs no code change; add it to `ambiguousTerms`.
+- `build/bluesky-report.js` — read-only report on how noisy Bluesky is and what the rules remove (`npm run report:bluesky`).
 - `build/index.js` — orchestrator: loads config, decides which sources are due for refresh (`refreshIntervalMinutes` per source, checked against the previously published snapshot instead of a separate cache store), merges with the previous 60-day rolling window, writes `data.json`.
 - `assets/app.js` / `assets/app.css` — the console, Sources page, Monitors page, and Stats page, all driven by the one `data.json`. `vendor/marinos/marinos.js`'s hash-based tab logic (`data-tab-section`) handles which section shows.
 - `vendor/chart.min.js` - the app-specific Chart.js bundle used by Stats, outside the App Shell-managed files. Preserve its reviewed version and `vendor/CHART_LICENSE.md`; do not replace it as part of a shell update or load it from a CDN.
@@ -36,7 +38,7 @@ This departs from `marin-app-template`'s default (a static site with no build st
 
 ## Before finishing
 
-- Run `npm test` to verify shell hashes and companions, version metadata, load order, status-style ownership, Pages staging, and staged runtime asset completeness.
+- Run `npm test` (the match rules in `build/match.js` and the Bluesky language handling). After changing `config/context.yaml` or the monitors, also run `npm run report:bluesky` and read what the rules remove.
 - Run `npm run build` (or `npm run dev` for local iteration) and confirm it completes without throwing — a single source failing should never fail the whole build (each connector call is isolated in `build/index.js`).
 - If you touched `assets/app.js`, manually verify in a browser (or an equivalent DOM harness) that: the Latest tab renders cards, monitor chips/platform checkboxes/content tabs/search/time filter all narrow the list, and Sources + Monitors render from the same `data.json`.
 - Update README.md's "Verified sources" log if you added, removed, or re-verified a source.
