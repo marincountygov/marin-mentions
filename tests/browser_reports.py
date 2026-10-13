@@ -117,10 +117,16 @@ def run(base, context, page, problems):
     require("class=" not in clip["text/html"] and "style=" not in clip["text/html"], "Clipboard HTML has no classes or styles")
     require("<button" not in clip["text/html"].lower() and "Copy for Word" not in clip["text/html"], "Controls leaked into the clipboard")
     require("Marin Media Coverage and Outreach Report" in clip["text/plain"], "Plain text fallback")
-    page.get_by_role("button", name="Copy section: Opinion Pieces About County-Related Work / Priorities").click()
-    page.locator("[data-status-for=copy-sec-0], [data-status-for=copy-sec-1], [data-status-for=copy-sec-2]").filter(has_text="Section copied. Paste it into Word.").first.wait_for()
-    section_clip = page.evaluate("""async () => { const items = await navigator.clipboard.read(); return await (await items[0].getType('text/html')).text(); }""")
-    require(section_clip.lstrip().startswith("<h2>Opinion") and "<h1>" not in section_clip, f"Single section copy: {section_clip[:80]}")
+    require(page.get_by_text("Copy one section").count() == 0, "The Copy one section list should be gone")
+    require(page.get_by_text("PDF is not available").count() == 0, "No PDF note")
+    require(page.get_by_text("open through Google News").count() == 0, "No Google News notice")
+    page.mouse.move(0, 0)  # leave the button and drop focus, so hover and focus colors do not count
+    page.evaluate("document.activeElement.blur()")
+    page.wait_for_timeout(300)
+    colors = page.evaluate("""() => ['Copy for Word', 'Download HTML', 'Download report file'].map((label) => {
+        const b = [...document.querySelectorAll('#reports-root button')].find((x) => x.textContent === label);
+        const cs = getComputedStyle(b); return cs.backgroundColor + '|' + cs.color; })""")
+    require(len(set(colors)) == 1, f"Copy for Word should match the other buttons: {colors}")
 
     # Downloads: HTML and the report file.
     with page.expect_download() as info:
@@ -162,7 +168,19 @@ def run(base, context, page, problems):
     # A saved draft is offered after a reload.
     page.goto(base + "?view=reports&time=all")
     page.wait_for_selector("#reports-root h3")
-    require(page.get_by_role("button", name="Continue draft").count() == 1, "Draft was not saved")
+    require(page.get_by_role("button", name="Continue your saved draft").count() == 1, "Draft was not saved")
+    require(page.get_by_role("button", name="Continue your saved draft").inner_text() == "Continue", "Continue button text")
+    require(page.get_by_role("button", name="Discard your saved draft").inner_text() == "Discard", "Discard button text")
+    cont = page.get_by_role("button", name="Continue your saved draft").bounding_box()
+    disc = page.get_by_role("button", name="Discard your saved draft").bounding_box()
+    gap = max(disc["y"] - (cont["y"] + cont["height"]), disc["x"] - (cont["x"] + cont["width"]))
+    require(gap >= 6, f"Continue and Discard need space between them: {gap}")
+    require(page.get_by_text("Create reports using media coverage").count() == 0, "Start text should be gone")
+
+    # Pressing Reports while in Reports stays in Reports.
+    page.click("#reports-toggle")
+    require(page.get_attribute("#reports-toggle", "aria-pressed") == "true" and page.is_visible("#reports-panel"), "Reports toggled itself off")
+    require("view=reports" in page.url, "URL lost the Reports view")
 
     # Leaving Reports brings back the list, and Stats still works.
     page.click("#content-tabs [data-content-type=all]")

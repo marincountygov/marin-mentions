@@ -29,12 +29,12 @@ How to make a report (the four steps follow the buttons at the top of Reports):
 1. **Details.** Choose **Media coverage report** (modeled on the County media coverage and outreach report) or **Custom report**. Set the title, the reporting period (7, 14 or 30 days, this month, last month, or custom dates), and an optional description and closing note. Days are Pacific time.
 2. **Coverage.** The filters on the left (search, monitors, sources) choose which coverage is listed. The Time filter is turned off here because the report dates are used. County news releases found in the period can be added as releases with one button. Tick the coverage you want; it waits in "Not yet placed". "Add the items I selected in the list" brings in anything you ticked on the main list, along with the release you matched it to. You can also add releases and coverage by hand for anything Marin Mentions did not collect.
 3. **Organize.** Place coverage in sections, put it in order, rename or hide sections, add sections, and edit headlines, publications and links. Coverage can be attached to a release, and a release older than the period still belongs in "Recent Coverage Resulting From Older News Releases". Everything has Move up and Move down buttons, so nothing needs dragging. You decide every classification; nothing is guessed.
-4. **Report.** The report appears as a plain document. **Copy for Word** copies it, or **Copy section** copies one section; then paste into Word. **Download HTML** saves a standalone page. **Download report file** saves the report as JSON.
+4. **Report.** The report appears as a plain document. **Copy for Word** copies it; then paste into Word. **Download HTML** saves a standalone page. **Download report file** saves the report as JSON.
 
 **Saving.** Your work is kept as a draft in this browser on this device only, and it can be continued from the start screen. To keep a report or move it, use **Download report file**, and **Open a saved report** reads it back. A saved report holds a copy of each article's headline, publication, date and link, so it still opens after the article leaves the 60-day data window.
 
 **Notes and limits.**
-- Many items were found through Google News and carry a Google link, not the publisher's. The Report step says how many; use Edit on the Organize step to paste the publisher's link.
+- Many items were found through Google News and carry a Google link, not the publisher's. Use Edit on the Organize step to paste the publisher's link.
 - PDF is not supported yet. The report is rendered from data as semantic HTML, so a PDF could be added later.
 - There is no database, sign-in or server for Reports.
 - Release suggestions use the County's own sources (the `official: true` sources). Releases older than the data window need to be added by hand.

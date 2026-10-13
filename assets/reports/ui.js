@@ -110,20 +110,32 @@
   // --- draft ---
 
   let saveTimer = 0;
+  function writeDraft() {
+    if (!ui.report) return;
+    try {
+      window.localStorage.setItem(DRAFT_KEY, JSON.stringify({ savedAt: new Date().toISOString(), report: ui.report }));
+      ui.saveWarning = '';
+    } catch (error) {
+      ui.saveWarning = 'This browser would not save a draft. Download the report file to keep your work.';
+      const el = ui.root && ui.root.querySelector('[data-save-warning]');
+      if (el) el.textContent = ui.saveWarning;
+    }
+  }
+
   function saveDraft() {
     window.clearTimeout(saveTimer);
-    saveTimer = window.setTimeout(() => {
-      if (!ui.report) return;
-      try {
-        window.localStorage.setItem(DRAFT_KEY, JSON.stringify({ savedAt: new Date().toISOString(), report: ui.report }));
-        ui.saveWarning = '';
-      } catch (error) {
-        ui.saveWarning = 'This browser would not save a draft. Download the report file to keep your work.';
-        const el = ui.root && ui.root.querySelector('[data-save-warning]');
-        if (el) el.textContent = ui.saveWarning;
-      }
-    }, 300);
+    saveTimer = window.setTimeout(() => { saveTimer = 0; writeDraft(); }, 300);
   }
+
+  // Write a pending draft right away, for example when the page is closed or reloaded.
+  function flushDraft() {
+    if (!saveTimer) return;
+    window.clearTimeout(saveTimer);
+    saveTimer = 0;
+    writeDraft();
+  }
+  window.addEventListener('pagehide', flushDraft);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushDraft(); });
 
   function loadDraft() {
     try {
@@ -280,7 +292,6 @@
   function startScreen() {
     const root = h('div', {});
     root.append(h('h3', { id: 'rp-heading', tabindex: '-1', 'data-key': 'stage-heading', text: 'Create a report' }));
-    root.append(h('p', { text: 'Create reports using media coverage tracked by Marin Mentions.' }));
     if (ui.errors.length) {
       root.append(h('div', { class: 'app-error', role: 'alert' }, [h('p', { text: 'That file could not be opened:' }),
         h('ul', {}, ui.errors.map((e) => h('li', { text: e })))]));
@@ -304,8 +315,10 @@
       const box = h('div', { class: 'app-card' }, [h('h4', { text: 'Continue your saved draft' }),
         h('p', { text: draft.report.title + ' (saved ' + saved.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ')' }),
         h('p', { class: 'app-help-text', text: 'Drafts are kept only in this browser on this device.' })]);
-      box.append(button('Continue draft', 'continue-draft', () => { ui.report = draft.report; ui.stage = 'organize'; render('stage-heading'); }));
-      box.append(button('Discard draft', 'discard-draft', () => { clearDraft(); render('create-media-coverage'); }));
+      box.append(h('div', { class: 'mm-rp-actions' }, [
+        button('Continue', 'continue-draft', () => { ui.report = draft.report; ui.stage = 'organize'; render('stage-heading'); }, { 'aria-label': 'Continue your saved draft' }),
+        button('Discard', 'discard-draft', () => { clearDraft(); render('create-media-coverage'); }, { 'aria-label': 'Discard your saved draft' }),
+      ]));
       root.append(box);
     }
     root.append(importControl());
@@ -654,33 +667,12 @@
     const root = h('div', {});
     root.append(h('h3', { id: 'rp-heading', tabindex: '-1', 'data-key': 'stage-heading', text: 'Your report' }));
     root.append(h('div', { class: 'mm-rp-actions' }, [
-      button('Copy for Word', 'copy-report', () => copyReport('copy-report'), { class: 'mm-rp-primary mm-copy-button' }),
+      button('Copy for Word', 'copy-report', () => copyReport('copy-report')),
       button('Download HTML', 'download-html', () => { download(fileName('html'), 'text/html', Render.standaloneHtml(r)); say('copy-report', 'Downloaded the report as an HTML file.'); }),
       button('Download report file', 'download-json', () => { download(fileName('json'), 'application/json', Core.toJson(r)); say('copy-report', 'Downloaded the report file. Use it later with "Open a saved report".'); }),
       button('Close report', 'close-report', () => { ui.report = null; ui.errors = []; render('stage-heading'); }),
     ]));
     root.append(status('copy-report'));
-    if (r.sections.some((s) => s.enabled)) {
-      const copyList = h('ul', { class: 'mm-rp-copylist', 'aria-label': 'Copy one section' });
-      r.sections.filter((s) => s.enabled).forEach((s, i) => {
-        copyList.append(h('li', {}, button('Copy section', 'copy-sec-' + i, () => copyReport('copy-sec-' + i, s.id), { 'aria-label': 'Copy section: ' + s.title })));
-        copyList.lastChild.prepend(h('span', { text: s.title + ' ' }));
-        copyList.lastChild.append(status('copy-sec-' + i));
-      });
-      root.append(h('h4', { text: 'Copy one section' }), copyList);
-    }
-    // Items found through Google News carry a Google redirect link, not the publisher's page.
-    let googleLinks = 0;
-    const countLink = (item) => { if (/^https?:\/\/news\.google\.com\//i.test(item.url || '')) googleLinks += 1; };
-    r.sections.filter((s) => s.enabled).forEach((s) => s.items.forEach((item) => {
-      countLink(item);
-      if (item.kind === 'release') item.coverage.forEach(countLink);
-    }));
-    if (googleLinks) {
-      root.append(h('p', { class: 'app-help-text', role: 'note', text: googleLinks + ' link' + (googleLinks === 1 ? '' : 's') +
-        ' in this report open through Google News. To use the publisher\'s own page instead, choose Edit on the Organize step and paste that address.' }));
-    }
-    root.append(h('p', { class: 'app-help-text', text: 'PDF is not available yet. Copy into Word, or download the HTML file.' }));
     root.append(h('p', { class: 'app-help-text', 'data-save-warning': true, text: ui.saveWarning }));
     const doc = h('div', { class: 'mm-rp-doc', id: 'report-document' });
     doc.innerHTML = Render.renderReport(r); // every value is escaped by the renderer

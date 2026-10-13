@@ -737,12 +737,6 @@ th[aria-sort="descending"] .mm-sort-button::after {
   margin: 0.75rem 0;
 }
 
-.mm-rp-primary {
-  background: var(--app-brand);
-  color: #ffffff;
-  font-weight: 700;
-}
-
 .mm-rp-status {
   min-height: 1.25rem;
   margin: 0.25rem 0 0.75rem;
@@ -766,8 +760,7 @@ th[aria-sort="descending"] .mm-sort-button::after {
 }
 
 .mm-rp-items,
-.mm-rp-nested,
-.mm-rp-copylist {
+.mm-rp-nested {
   margin: 0.5rem 0;
   padding: 0;
   list-style: none;
@@ -804,12 +797,6 @@ th[aria-sort="descending"] .mm-sort-button::after {
 
 .mm-rp-nested {
   margin-left: 1rem;
-}
-
-.mm-rp-copylist li {
-  margin: 0 0 0.25rem;
-  padding: 0;
-  list-style: none;
 }
 
 .mm-rp-section__top {
