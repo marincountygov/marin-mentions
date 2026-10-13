@@ -10,6 +10,9 @@
     <link rel="stylesheet" href="assets/app.css">
     <script src="vendor/marinos/marinos.js" defer></script>
     <script src="vendor/chart.min.js"></script>
+    <script src="assets/reports/core.js" defer></script>
+    <script src="assets/reports/render.js" defer></script>
+    <script src="assets/reports/ui.js" defer></script>
     <script src="assets/app.js" defer></script>
   </head>
   <body>
@@ -74,6 +77,7 @@
               </div>
               <!-- Not inside the tablist: Stats is a view toggle, not a content-type tab, and a
                    tablist may only contain tabs (ARIA required children). -->
+              <button type="button" id="reports-toggle" class="mm-tab" aria-pressed="false">Reports</button>
               <button type="button" id="stats-toggle" class="mm-tab" aria-pressed="false">Stats</button>
             </div>
 
@@ -171,6 +175,10 @@
                 <button type="button" class="secondary mm-copy-button mm-chart-download" data-chart-download="socialAccounts"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>PNG</button>
               </div>
             </div>
+
+            <div id="reports-panel" class="mm-reports" hidden>
+              <div id="reports-root"></div>
+            </div>
           </div>
         </form>
       </section>
@@ -213,6 +221,7 @@
           <p>Check the box next to any mention to save it, or use <strong>Select all</strong> to save everything currently in the list. Once you check a box, a dropdown appears so you can pick which official County announcement that mention is about. If you've saved one or more mentions, the <strong>Copy</strong> button copies only those &mdash; otherwise it copies everything you're currently viewing. The dropdown next to Copy lets you choose how the copied text is organized: by news story, or grouped under each County announcement. The <strong>CSV</strong> button downloads the same list as a spreadsheet file. Saved mentions aren't kept after you close or reload the page.</p>
 
           <h3>Charts</h3>
+          <p>Click the <strong>Reports</strong> button to build a report from the coverage Marin Mentions has found. Pick a date range, choose the coverage you want, put it in sections, then press <strong>Copy for Word</strong> and paste it into a Word document. You can also save the report as a file and open it again later. Reports you are working on are kept in your browser only.</p>
           <p>Click the <strong>Stats</strong> button to see charts instead of the list &mdash; a summary row of key numbers, how many mentions came in over time, which topics and places came up most often (including which topics are trending compared to the period right before), a <strong>News</strong> section (top outlets and reporters) and a <strong>Social</strong> section (top Bluesky and Reddit accounts). The charts match whatever you're currently filtering by. Each chart has its own <strong>PNG</strong> button to save it as an image; <strong>All PNG</strong> saves every chart at once; <strong>Copy</strong> puts every chart on your clipboard so you can paste them into an email or chat message. (The summary row and the Trending Topics table aren't charts, so they're not included in PNG/Copy &mdash; copy that table's numbers by hand if you need them elsewhere.)</p>
 
           <h3>Things to know</h3>
