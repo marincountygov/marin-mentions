@@ -302,7 +302,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   async function loadData({ isRefresh = false } = {}) {
-    announce(isRefresh ? "Refreshing…" : "Loading media monitor data…");
+    announce(isRefresh ? "Refreshing…" : "Loading Marin Mentions…");
     try {
       const response = await fetch(`data.json?t=${Date.now()}`);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
