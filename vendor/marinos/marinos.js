@@ -6,7 +6,7 @@
     return;
   }
 
-  const SHELL_VERSION = "1.12.1";
+  const SHELL_VERSION = "1.12.2";
   const MARIN_UI_VERSION = "1.25.0";
   const MARINOS_URL = "https://marincountygov.github.io/marin-os/";
   const MARINOS_STATUS_URL = `${MARINOS_URL}#status`;
@@ -53,6 +53,15 @@
   function normalizedAttribute(element, name, fallback = "") {
     const value = element.getAttribute(name)?.trim();
     return value || fallback;
+  }
+
+  // The one wording for any "still loading" message: "Loading {app name}…". Apps and the
+  // shell's own sections use the same text, so a visitor sees the same message everywhere.
+  function loadingMessage() {
+    const info = document.querySelector("marin-app-info");
+    const name = (info && normalizedAttribute(info, "app-name")) ||
+      (document.querySelector(".app-title__link")?.textContent || "").trim() || "this application";
+    return `Loading ${name}\u2026`;
   }
 
   function parseTokenList(value, fallback) {
@@ -555,7 +564,7 @@
           status.setAttribute("role", "status");
           status.setAttribute("aria-live", "polite");
           status.setAttribute("aria-atomic", "true");
-          status.innerHTML = "Loading security information&hellip;";
+          status.textContent = loadingMessage();
           const content = document.createElement("div");
           content.dataset.securityContent = "";
 
@@ -603,7 +612,7 @@
           status.setAttribute("role", "status");
           status.setAttribute("aria-live", "polite");
           status.setAttribute("aria-atomic", "true");
-          status.innerHTML = "Loading accessibility score&hellip;";
+          status.textContent = loadingMessage();
           const content = document.createElement("div");
           content.dataset.accessibilityContent = "";
           // The score is read live from marin-os's data/lighthouse.json,
@@ -668,7 +677,7 @@
           status.setAttribute("role", "status");
           status.setAttribute("aria-live", "polite");
           status.setAttribute("aria-atomic", "true");
-          status.innerHTML = "Loading technology information&hellip;";
+          status.textContent = loadingMessage();
           const content = document.createElement("div");
           content.dataset.techContent = "";
           // Read live from marin-os's data/tech.json by catalog id (app-id
@@ -686,7 +695,8 @@
           status.setAttribute("role", "status");
           status.setAttribute("aria-live", "polite");
           status.setAttribute("aria-atomic", "true");
-          status.innerHTML = repo ? "Loading recent commits&hellip;" : "Updates are not configured for this application.";
+          if (repo) status.textContent = loadingMessage();
+          else status.textContent = "Updates are not configured for this application.";
           const list = document.createElement("div");
           list.dataset.updatesList = "";
           if (repo) section.dataset.updatesRepo = repo;
@@ -1418,7 +1428,7 @@
 
     async function loadUpdates() {
       if (loaded) return;
-      if (status) status.textContent = "Loading latest commits...";
+      if (status) status.textContent = loadingMessage();
       list.innerHTML = "";
       try {
         // Fetch more than we display: merge-PR commits are filtered out
@@ -1608,7 +1618,7 @@
 
     async function loadSecurity() {
       if (loaded) return;
-      status.textContent = "Loading security information...";
+      status.textContent = loadingMessage();
       try {
         const response = await fetch(jsonPath, { cache: "no-store" });
         if (response.status === 404) {
@@ -1784,7 +1794,7 @@
 
     async function loadScore() {
       if (loaded) return;
-      status.textContent = "Loading accessibility score...";
+      status.textContent = loadingMessage();
       try {
         const [appId, response] = await Promise.all([resolveAppId(), fetch(scoresUrl, { cache: "no-store" })]);
         loaded = true;
@@ -2077,7 +2087,7 @@
 
     async function loadTech() {
       if (loaded) return;
-      status.textContent = "Loading technology information...";
+      status.textContent = loadingMessage();
       try {
         const [appId, response] = await Promise.all([resolveAppId(), fetch(isLocal ? `${base}data/tech.json` : TECH_URL, { cache: "no-store" })]);
         loaded = true;
@@ -2125,6 +2135,7 @@
     version: SHELL_VERSION,
     marinUiVersion: MARIN_UI_VERSION,
     components: Object.freeze(componentDefinitions.map(([name]) => name)),
+    loadingMessage,
   });
   document.dispatchEvent(
     new CustomEvent("marinos:shell-ready", {

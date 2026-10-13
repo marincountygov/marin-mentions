@@ -41,7 +41,7 @@ How to make a report (the four steps follow the buttons at the top of Reports):
 
 **How it works.** The report is plain data (`assets/reports/core.js`) and everything shown or copied is rendered from it (`assets/reports/render.js`), so the preview, Copy for Word, the HTML file and any later format cannot drift apart. `assets/reports/ui.js` is the builder. Copy tries the browser's rich clipboard first (clean HTML plus plain text) and falls back to the same hidden-selection copy the rest of the app uses. Run `npm test` for the data and rendering tests, and `python3 tests/browser_reports.py` (needs Playwright and a `data.json`) for the whole workflow in a browser.
 
-**Testing in Word.** The tests check the markup, not Word. Paste a finished report into Word on Windows and Mac and check that the headings, tables with borders, links, lists and paragraphs come through and that Word's own styles can restyle it. Note the result in the pull request.
+**Testing in Word.** The tests check the markup, not Word. A finished report was pasted into Word and passed in October 2026: headings, tables with borders, links, lists and paragraphs came through and Word's own styles could restyle it. Repeat the paste after changing `assets/reports/render.js`.
 
 ## Architecture
 
