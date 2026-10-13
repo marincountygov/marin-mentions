@@ -1742,7 +1742,7 @@ th[aria-sort="descending"] .sort-button::after {
   stroke-linejoin: round;
 }
 
-/* Marin App Shell 1.11.1: component integration only.
+/* Marin App Shell 1.12.0: component integration only.
    General visual rules come from the locked, unmodified Marin UI input. */
 marin-os-banner,
 marin-app-header,
@@ -1871,4 +1871,23 @@ marin-app-footer {
   .app-feedback {
     transition: none;
   }
+}
+
+/* App Shell 1.12.0 compatibility addition. Marin UI 1.25.0 gives the MarinOS banner the same
+   background and text colors as the footer (a surface bar with muted text and a line under
+   it, in light and dark mode) instead of solid black. The shell stays pinned to 1.24.0, so it
+   carries the same rules until the pinned baseline is refreshed. Keep in step with
+   marin-ui's shared/app-brand.css. */
+.marinos-banner {
+  border-bottom: 1px solid var(--app-border);
+  background: var(--app-surface);
+  color: var(--app-muted);
+}
+
+.marinos-menu__toggle {
+  color: inherit;
+}
+
+.marinos-menu__toggle:hover {
+  color: var(--app-accent);
 }
