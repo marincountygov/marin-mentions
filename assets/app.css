@@ -178,6 +178,15 @@ th[aria-sort="descending"] .mm-sort-button::after {
   margin: 0;
 }
 
+/* Checkboxes are 24 px square (WCAG 2.5.8 target size), larger than Pico's default of about 18 px. */
+.search-facet-list input[type="checkbox"],
+.mm-card__select input[type="checkbox"],
+.mm-select-all input[type="checkbox"] {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: none;
+}
+
 .search-facet-count {
   color: var(--app-muted);
   font-size: 0.8rem;
