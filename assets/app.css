@@ -25,6 +25,10 @@
   align-items: start;
 }
 
+.search-results {
+  min-width: 0;
+}
+
 .search-sidebar {
   position: sticky;
   top: 1rem;
@@ -288,7 +292,7 @@ th[aria-sort="descending"] .mm-sort-button::after {
 
 @media (max-width: 850px) {
   .search-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .search-sidebar {
@@ -585,7 +589,7 @@ th[aria-sort="descending"] .mm-sort-button::after {
 
 .mm-stats-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
   margin: 1rem 0;
 }
