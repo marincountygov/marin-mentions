@@ -2123,11 +2123,13 @@ document.addEventListener("DOMContentLoaded", () => {
   elements.contentTabRow?.addEventListener("click", (event) => {
     const reportsButton = event.target.closest("#reports-toggle");
     if (reportsButton) {
-      state.reportsView = !state.reportsView;
-      if (state.reportsView) state.statsView = false;
+      // Unlike Stats, this is not a toggle: pressing Reports while already in Reports stays there.
+      const wasOn = state.reportsView;
+      state.reportsView = true;
+      state.statsView = false;
       syncUrlFromState();
       renderFeed();
-      if (state.reportsView) window.ReportsUI?.focusStart();
+      if (!wasOn) window.ReportsUI?.focusStart();
       return;
     }
 
