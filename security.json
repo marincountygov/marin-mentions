@@ -27,7 +27,7 @@
       "style-src": ["'self'"],
       "img-src": ["'self'", "https:"],
       "font-src": ["'self'"],
-      "connect-src": ["'self'", "https://api.github.com"],
+      "connect-src": ["'self'", "https://marincountygov.github.io/marin-os/catalog.json", "https://marincountygov.github.io/marin-os/data/lighthouse.json", "https://marincountygov.github.io/marin-os/data/tech.json", "https://api.github.com"],
       "object-src": ["'none'"],
       "base-uri": ["'self'"],
       "form-action": ["'self'"]
@@ -40,7 +40,7 @@
     "collectsSensitiveData": false,
     "storesPersonalInformation": false,
     "acceptsUserSubmittedContent": false,
-    "externalDataSources": ["GitHub API", "Google News RSS", "YouTube Data API"]
+    "externalDataSources": ["GitHub API", "MarinOS catalog, accessibility score, and tech data", "Google News RSS", "YouTube Data API"]
   },
   "dependencies": {
     "lockfileRequired": false,
