@@ -9,7 +9,7 @@ project:
   status: live
 
 platform:
-  shell: 1.11.1
+  shell: 1.12.0
 
 deployment:
   target: github-pages
