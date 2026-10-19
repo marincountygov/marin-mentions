@@ -39,7 +39,7 @@ def run(base, page):
     require(page.get_attribute("#filter-toggle", "aria-label") == "Filters, 1 active", page.get_attribute("#filter-toggle", "aria-label"))  # the time range is not the default
     require(page.evaluate("document.querySelector('#filters .search-side').firstElementChild.id") == "filter-toggle", "The button is first in the filter column")
     require(page.is_visible("#filter-panel") and page.get_attribute("#filter-toggle", "aria-expanded") == "true", "Filters start open on wide screens")
-    require(page.is_visible("#filter-toggle .mm-filters-icon-open") and not page.is_visible("#filter-toggle .mm-filters-icon-closed"), "Open filters show the panel-right-open icon")
+    require(page.is_visible("#filter-toggle [data-filter-icon=open]") and not page.is_visible("#filter-toggle [data-filter-icon=closed]"), "Open filters show the panel-right-open icon")
     require(abs(page.evaluate("document.getElementById('filter-toggle').getBoundingClientRect().right - document.getElementById('filter-panel').getBoundingClientRect().right")) < 1,
             "Open, the button sits at the right edge of the filter column")
     require(page.locator("#filter-toggle").evaluate(LOOK) == page.locator("#media-feed .copy-button").first.evaluate(LOOK),
@@ -54,7 +54,7 @@ def run(base, page):
     page.keyboard.press("Enter")
     require(not page.is_visible("#filter-panel") and page.get_attribute("#filter-toggle", "aria-expanded") == "false", "Enter hides the filters")
     require(page.is_visible("#filter-toggle") and page.evaluate("document.activeElement.id") == "filter-toggle", "The button stays and keeps focus")
-    require(page.is_visible("#filter-toggle .mm-filters-icon-closed") and not page.is_visible("#filter-toggle .mm-filters-icon-open"), "Hidden filters show the panel-left-open icon")
+    require(page.is_visible("#filter-toggle [data-filter-icon=closed]") and not page.is_visible("#filter-toggle [data-filter-icon=open]"), "Hidden filters show the panel-left-open icon")
     require(page.evaluate("document.getElementById('filter-toggle').getBoundingClientRect().left") < 40, "Hidden, the button sits at the left edge")
     require(mentions(page) == shown and page.inner_text("#active-filters") == summary, "Hiding the filters does not change what is shown")
     require(page.evaluate("document.querySelector('#filters .search-results').offsetWidth") > width_open, "The results use the freed width")
