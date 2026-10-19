@@ -155,6 +155,10 @@ Reddit's anonymous feed endpoints rate-limit hard and immediately (confirmed liv
 
 Disabled, with no activation path. Nextdoor has no public, self-serve API for searching or reading neighborhood post content — its published developer surfaces (Creator/Ads API, Local Deals API) cover advertising and business listings, not keyword monitoring of resident posts. `build/connectors/nextdoor.js` is a stub that throws a clear error if ever called. Activating this connector for real would require a partner/approval relationship with Nextdoor granting content read access; there's no self-serve path to check periodically.
 
+## Hiding the filters
+
+The filter panel on Latest (and the one on Sources) can be hidden with the white icon button at the top of the left column. Hiding it does not change what is shown; the "Showing:" line still lists the active filters, and the button's name says how many are active. On wide screens the panel starts open and your choice is remembered in this browser; on narrow screens it starts closed.
+
 ## Verified sources
 
 Every `rss`-type source in `config/sources.yaml` was checked with a direct HTTP request (`curl -A "Mozilla/5.0 ..." <url>`) on **2026-09-17**: confirmed HTTP 200, valid RSS/Atom, and item `pubDate`s from the same day. Sources that returned 401/403/404 to that same direct request are **not** listed as `rss` — they use a `google-news` fallback entry instead, per the plan's "never scrape, always fall back to Google News" rule. Each has a `note:` in `sources.yaml` recording what was observed.

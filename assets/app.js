@@ -825,6 +825,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     syncSelectAllCheckbox(items);
     updateFacetCounts();
+    updateFilterToggleNames();
     // Sync visibility first: Chart.js sizes a canvas at creation time, so
     // if a shared link opens straight into Stats (view=stats), the grid
     // needs to already be visible before renderStats() creates the charts
@@ -940,6 +941,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // every checkbox click would collapse any <details> group you had
         // open, since renderSourceFilter() redraws it from scratch.
         renderSourceTableRows();
+        updateFilterToggleNames();
       });
     });
   }
@@ -2209,6 +2211,71 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   elements.resetButton?.addEventListener("click", resetFilters);
+
+  // --- Collapsible filter panels ---
+  // An icon-only button at the top of each filter column hides or shows that panel (same pattern as marin-reach).
+  // Hiding keeps every filter applied and leaves the "Showing:" line in place. Wide screens start open and remember the
+  // choice in this browser (per panel); narrow screens start closed. Anything sized by the results measures itself again
+  // (Chart.js resizes its canvases on its own).
+  const narrowQuery = window.matchMedia("(max-width: 850px)");
+  const filterToggles = Array.from(document.querySelectorAll("[data-filter-toggle]"));
+
+  function savedFilterPref(key) {
+    try {
+      return window.localStorage.getItem(`mentions.filters.${key}`);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function setFilterPanel(button, open, remember) {
+    const layout = button.closest(".search-layout");
+    const panel = document.getElementById(button.getAttribute("aria-controls"));
+    if (!layout || !panel) return;
+    panel.dataset.open = String(open);
+    layout.dataset.filters = open ? "open" : "closed";
+    button.setAttribute("aria-expanded", String(open));
+    // SVG elements have no `hidden` property, so the attribute is toggled directly.
+    button.querySelector(".mm-filters-icon-open")?.toggleAttribute("hidden", !open);
+    button.querySelector(".mm-filters-icon-closed")?.toggleAttribute("hidden", open);
+    if (remember && !narrowQuery.matches) {
+      try {
+        window.localStorage.setItem(`mentions.filters.${button.dataset.filterToggle}`, open ? "open" : "closed");
+      } catch (error) {
+        // The choice is just not remembered.
+      }
+    }
+  }
+
+  function applyDefaultFilterPanels() {
+    filterToggles.forEach((button) => {
+      setFilterPanel(button, !narrowQuery.matches && savedFilterPref(button.dataset.filterToggle) !== "closed", false);
+    });
+  }
+
+  // The button has no visible text, so the number of active filters lives in its name.
+  function updateFilterToggleNames() {
+    filterToggles.forEach((button) => {
+      const count =
+        button.dataset.filterToggle === "sources"
+          ? state.selectedSources.size
+          : state.selectedMonitors.size + state.selectedFeedSources.size + (state.search ? 1 : 0) + (state.time !== "24h" ? 1 : 0);
+      const name = count ? `Filters, ${count} active` : "Filters";
+      button.setAttribute("aria-label", name);
+      button.title = name;
+    });
+  }
+
+  filterToggles.forEach((button) => {
+    button.addEventListener("click", () => {
+      const panel = document.getElementById(button.getAttribute("aria-controls"));
+      setFilterPanel(button, panel.dataset.open !== "true", true);
+    });
+  });
+  (narrowQuery.addEventListener ? narrowQuery.addEventListener.bind(narrowQuery, "change") : narrowQuery.addListener.bind(narrowQuery))(
+    applyDefaultFilterPanels,
+  );
+  applyDefaultFilterPanels();
 
   elements.selectAllCheckbox?.addEventListener("change", () => {
     const items = state.lastFilteredItems || [];

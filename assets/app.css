@@ -29,10 +29,60 @@
   min-width: 0;
 }
 
-.search-sidebar {
+.search-side {
   position: sticky;
   top: 1rem;
   align-self: start;
+}
+
+/* The Filters button: icon only, white, at the top of the filter column (same look as the card icon buttons).
+   Open, it sits at the right edge of the column; hidden, the column shrinks to just the button. */
+.mm-filter-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  border: 1px solid var(--app-border);
+  border-radius: var(--pico-border-radius);
+  background: var(--app-surface);
+  color: var(--app-muted);
+  cursor: pointer;
+}
+
+.mm-filter-toggle:hover {
+  border-color: var(--app-accent);
+  background: color-mix(in srgb, var(--app-accent) 8%, var(--app-surface));
+}
+
+.mm-filter-toggle svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.mm-filters-icon-open[hidden],
+.mm-filters-icon-closed[hidden] {
+  display: none;
+}
+
+.search-layout[data-filters="open"] .mm-filter-toggle {
+  margin-left: auto;
+}
+
+.search-sidebar[data-open="false"] {
+  display: none;
+}
+
+.search-layout[data-filters="closed"] {
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 1rem;
 }
 
 .search-input-field {
@@ -304,9 +354,19 @@ th[aria-sort="descending"] .mm-sort-button::after {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .search-sidebar {
+  .search-side {
     position: static;
-    order: -1;
+  }
+
+  .search-layout[data-filters="open"] .mm-filter-toggle {
+    margin-left: 0;
+  }
+
+  .search-layout[data-filters="closed"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .search-sidebar {
     padding: 1rem;
     border: 1px solid var(--app-border);
     border-radius: var(--pico-border-radius);
