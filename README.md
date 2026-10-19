@@ -102,7 +102,8 @@ The trade-off: there's no true "fetch it right now" refresh, and if the schedule
 `build/connectors/google-news.js` queries `https://news.google.com/rss/search?q=...`. Two important, non-obvious things about it:
 
 1. **Google News item links are not the canonical article URL.** They're a redirect page (`news.google.com/rss/articles/...`) that resolves to the real article only via client-side JavaScript in a browser — there's no static HTTP redirect to follow server-side (confirmed by testing: the URL 302-redirects to itself with a different query string, and the landing page is an Angular SPA with no static fallback link in the HTML). Clicking the link in a browser works fine; resolving it from a Node script does not, short of running a headless browser in CI, which was judged not worth the complexity for this. As a result, deduplication and canonical linking for Google News items rely on the `<source url="...">` element Google News includes with each item (the real publisher domain) plus the headline, not the URL.
-2. Google News appends `" - <Outlet Name>"` to every title; `build/normalize.js` strips it, since the outlet is already shown as a separate source badge.
+2. **A query returns at most 100 items, ranked by relevance, not strictly newest first** (checked 2026-10-19: `site:sfchronicle.com when:60d` returned 100 items spanning only 6 days, and a `when:1d` query still returned items from two weeks earlier). A broad query can therefore push out a story that matters. Prefer narrower queries (an outlet plus `Marin`, or a specific phrase), and rely on the 60-day merge in `build/index.js` to keep what earlier runs found. Syndicated copies (Yahoo reposting the Chronicle) are not found by the outlet's own query, and the "Marin County" phrase search misses a headline that says only "Marin", so `google-news-yahoo-marin` searches Yahoo for "Marin" directly. A copy with the same headline on the same day is merged into one item by `build/dedupe.js`, so the story shows once.
+3. Google News appends `" - <Outlet Name>"` to every title; `build/normalize.js` strips it, since the outlet is already shown as a separate source badge.
 
 ### YouTube
 
@@ -163,6 +164,8 @@ Every `rss`-type source in `config/sources.yaml` was checked with a direct HTTP 
 **Blocked/no usable feed → Google News fallback (11):** Bay Area Reporter (403), KTVU FOX 2 (404, no discoverable endpoint), CBS News Bay Area/KPIX (404), East Bay Times (403), Mercury News (403), Marin Independent Journal (403), Marin Post (401), Press Democrat (403), North Bay Business Journal (redirects into Press Democrat, 403), Sonoma Index-Tribune (403), Sonoma County Gazette (403). These are mostly two chains — MediaNews Group and Sonoma Media Investments — that block generic bot/scraper traffic even for their own RSS endpoints.
 
 **Considered and dropped, not faked:** Mill Valley Herald (DNS failure — doesn't appear to exist as an active outlet under that name) and The Six Fifty (no longer a standalone feed; merged into Palo Alto Online's "The 650" section — covered via a scoped Google News query instead of inventing a direct feed that doesn't exist).
+
+Marin Magazine's feed (`marinmagazine.com/feed/`) works from the build but returned a Cloudflare 403 to a direct request from a developer machine on 2026-10-19, so a check from a laptop can look blocked when the build is fine; look at the source on `/sources` instead. Scheduled builds on GitHub run every few hours in practice (gaps of up to about six hours were seen on 2026-10-19), so a story published that morning can be a build or two away.
 
 Re-verify this list periodically — outlets change RSS providers/URLs without notice; see `AGENTS.md` for the check command.
 

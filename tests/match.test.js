@@ -92,3 +92,16 @@ test("Bluesky language handling", () => {
   assert.match(searchUrl("Inverness", undefined, true), /[?&]lang=en(&|$)/);
   assert.doesNotMatch(searchUrl("Sausalito", undefined, false), /lang=/);
 });
+
+// The real monitors file: a headline that calls the Civic Center "Frank Lloyd Wright landmark".
+test("a Marin headline about a Frank Lloyd Wright landmark reaches the Civic Center monitor", () => {
+  const { loadMonitors } = require("../build/config");
+  const real = loadMonitors();
+  const ids = (title) => {
+    const item = { text: title, sourceMethod: "google-news", matchedTerms: [], matchedMonitors: [] };
+    applyMonitors(item, real, buildContextRules({}));
+    return item.matchedMonitors;
+  };
+  assert.ok(ids("New Marin exhibit brings eco-friendly fashion to Frank Lloyd Wright landmark").includes("civic-center"));
+  assert.ok(!ids("A new Frank Lloyd Wright exhibit opens in Phoenix").includes("civic-center"));
+});
