@@ -688,6 +688,21 @@ sources:
     query: '"Marin Civic Center" OR "Marin County Civic Center" when:60d'
     enabled: true
 
+  - id: google-news-yahoo-marin
+    name: "Google News: Yahoo (Marin)"
+    type: google-news
+    region: marin
+    query: site:yahoo.com Marin -site:sports.yahoo.com when:14d
+    enabled: true
+    note: >-
+      Yahoo reposts regional stories (for example a San Francisco Chronicle
+      article), and its headlines often say "Marin" without "County", so the
+      "Marin County" phrase search above misses them. Yahoo Sports is excluded
+      because it adds mostly high school scores. Google News returns at most
+      100 items per query, ranked by relevance rather than strictly newest
+      first, so this window is short and the build merges it with the 60-day
+      history.
+
   - id: patch-marin
     name: Patch.com (Marin)
     type: google-news

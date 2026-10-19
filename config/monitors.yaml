@@ -543,6 +543,11 @@ monitors:
       - Marin County Civic Center
       - [Marin, civic center]
       - [Marin, county, offices]
+      # The Civic Center is Frank Lloyd Wright's Marin building, and a headline
+      # often says "Frank Lloyd Wright landmark" without naming it. Added
+      # 2026-10-19 after "New Marin exhibit brings eco-friendly fashion to Frank
+      # Lloyd Wright landmark" (SF Chronicle, Yahoo) matched only General.
+      - [Frank Lloyd Wright, word:Marin]
 
   - id: marin-center
     name: Marin Center
