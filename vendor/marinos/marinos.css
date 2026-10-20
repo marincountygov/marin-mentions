@@ -955,6 +955,97 @@ th[aria-sort="descending"] .sort-button::after {
   display: block;
 }
 
+/* Filter layout and the collapsible filter panel. A filter column beside a list of results (the pattern in
+   marin-docs' search/shared/search-layout.css, which this now owns the layout shell of; the field and facet
+   styles stay with the app). A button[data-filter-toggle] at the top of the column hides and shows the panel
+   (app-shell.js sets data-filters on .search-layout and data-open on the panel). Open, the button sits at the
+   column's right edge; hidden, the column shrinks to just the button. Narrow screens stack the column above the
+   results and start hidden. Only this bundle's tokens are used, so it looks the same in every app. */
+.search-layout {
+  display: grid;
+  grid-template-columns: 15.5rem minmax(0, 1fr);
+  gap: 2rem;
+  align-items: start;
+}
+
+.search-side {
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+}
+
+.search-results {
+  min-width: 0;
+}
+
+.filter-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  border: 1px solid var(--app-border);
+  border-radius: var(--pico-border-radius);
+  background: var(--app-surface);
+  color: var(--app-muted);
+  cursor: pointer;
+}
+
+.filter-toggle:hover {
+  border-color: var(--app-accent);
+  background: color-mix(in srgb, var(--app-accent) 8%, var(--app-surface));
+}
+
+.filter-toggle:focus-visible {
+  outline: 2px solid var(--app-accent);
+  outline-offset: 1px;
+}
+
+.filter-toggle svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* SVG elements have no hidden property in script, so app-shell.js toggles the attribute and this honors it. */
+.filter-toggle svg[hidden] {
+  display: none;
+}
+
+.search-layout[data-filters="open"] .filter-toggle {
+  margin-left: auto;
+}
+
+.search-sidebar[data-open="false"] {
+  display: none;
+}
+
+.search-layout[data-filters="closed"] {
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 1rem;
+}
+
+@media (max-width: 850px) {
+  .search-layout,
+  .search-layout[data-filters="closed"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .search-side {
+    position: static;
+  }
+
+  .search-layout[data-filters="open"] .filter-toggle {
+    margin-left: 0;
+  }
+}
+
 /* The Updates feature (app-shell.js's loadUpdates()) renders its
    per-entry copy button with a visible "Copy" label, which doesn't fit
    the plain .copy-button class above — a fixed-size, icon-only 24x24
@@ -1746,7 +1837,7 @@ th[aria-sort="descending"] .sort-button::after {
   stroke-linejoin: round;
 }
 
-/* Marin App Shell 1.12.2: component integration only.
+/* Marin App Shell 1.14.0: component integration only.
    General visual rules come from the locked, unmodified Marin UI input. */
 marin-os-banner,
 marin-app-header,
