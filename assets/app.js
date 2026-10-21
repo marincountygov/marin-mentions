@@ -220,7 +220,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (href) {
       elements.rssFeedLink.href = href;
       elements.rssFeedLink.removeAttribute("aria-disabled");
-      elements.rssFeedLink.removeAttribute("title");
+      elements.rssFeedLink.title = "RSS feed";
       if (elements.rssFeedStatus) elements.rssFeedStatus.textContent = "";
     } else {
       elements.rssFeedLink.removeAttribute("href");
@@ -863,7 +863,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (elements.timeSelect) elements.timeSelect.disabled = state.reportsView;
     // The "Showing: ..." line and the Copy / Link / CSV / RSS buttons describe the list, so
     // they step aside while the report builder is open.
-    document.querySelectorAll(".mm-results-summary, .mm-results-buttons, #rss-feed-status").forEach((node) => {
+    document.querySelectorAll(".mm-results-summary, #results-toolbar .action-group, #rss-feed-status").forEach((node) => {
       node.hidden = state.reportsView;
     });
     // Stats isn't a content type — while it's active, none of All/News/
@@ -990,7 +990,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <td>${statusMarkup}${source.statusDetail ? ` <span class="app-help-text">(${escapeHtml(source.statusDetail)})</span>` : ""}</td>
                 <td>${escapeHtml(lastChecked)}</td>
                 <td>${source.itemCount || 0}</td>
-                <td><button type="button" class="secondary" data-goto-feed-source="${escapeHtml(source.id)}">Filter</button></td>
+                <td><button type="button" class="action-button" data-goto-feed-source="${escapeHtml(source.id)}" aria-label="Filter by ${escapeHtml(source.name)}" title="Filter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 20a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341L21.74 4.67A1 1 0 0 0 21 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14z"/></svg></button></td>
               </tr>`;
             })
             .join("")}
@@ -1088,7 +1088,7 @@ document.addEventListener("DOMContentLoaded", () => {
    * format used by the main toolbar's digest Copy button. */
   function renderCopyButtons(item, heading) {
     return (
-      `<div class="mm-card__copy-actions">` +
+      `<div class="mm-card__copy-actions"><div class="action-group" role="group" aria-label="Actions: ${escapeHtml(heading)}">` +
       // data-copy-item (not data-copy-value/data-copy-html) — this button
       // is wired up by its own dedicated listener below, via
       // copyItemContentsToClipboard(), rather than vendor/marinos/marinos.js's
@@ -1108,7 +1108,7 @@ document.addEventListener("DOMContentLoaded", () => {
       `<svg class="copy-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>` +
       `<svg class="copy-check-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>` +
       `</button>` +
-      `</div>`
+      `</div></div>`
     );
   }
 

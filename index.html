@@ -32,16 +32,15 @@
       <div id="app-status-message" class="visually-hidden" role="status" aria-live="polite"></div>
 
       <section id="latest" class="app-page-heading" data-tab-section="latest">
-        <h2>Latest</h2>
+        <h2 class="visually-hidden">Latest</h2>
 
         <form id="filters" class="search-layout" aria-label="Filter mentions">
           <div class="search-side">
             <button type="button" id="filter-toggle" class="filter-toggle" data-filter-toggle="latest" aria-controls="filter-panel"></button>
-          <aside id="filter-panel" class="search-sidebar" aria-label="Filters" data-open="false">
-            <div class="search-input-field">
-              <label for="filter-search">Search</label>
-              <input type="search" id="filter-search" name="search" data-search-input placeholder="Search titles and text&hellip;" autocomplete="off">
-              <button type="button" class="secondary mm-reset" id="reset-filters-button">Reset</button>
+          <aside id="filter-panel" class="search-sidebar" aria-labelledby="filter-panel-title" data-open="false">
+            <div class="search-panel-header">
+              <h2 class="search-panel-title" id="filter-panel-title">Filter Mentions</h2>
+              <button type="button" class="action-button" id="reset-filters-button" aria-label="Reset filters" title="Reset filters"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button>
             </div>
 
             <div class="search-input-field">
@@ -89,20 +88,28 @@
               <p class="app-help-text" id="active-filters" aria-live="polite"></p>
             </div>
 
-            <div class="mm-results-buttons">
-              <button type="button" class="secondary mm-copy-button" id="copy-stats-button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>Copy</button>
-              <button type="button" class="secondary mm-copy-button" id="download-all-png-button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>All PNG</button>
-              <span id="copy-format-field">
+            <div class="action-toolbar" id="results-toolbar">
+              <div class="action-group" role="group" aria-label="Chart actions">
+                <button type="button" class="action-button" id="copy-stats-button" hidden aria-label="Copy" title="Copy"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button>
+                <button type="button" class="action-button" id="download-all-png-button" hidden aria-label="Download all charts as PNG" title="Download all charts as PNG"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg></button>
+              </div>
+              <div class="action-group" role="group" aria-label="Copy, share and export">
+                <span id="copy-format-field">
                 <label class="visually-hidden" for="copy-format-select">Copy format</label>
                 <select id="copy-format-select" class="mm-copy-format">
                   <option value="news-releases">News + releases</option>
                   <option value="releases-news">Releases + news</option>
                 </select>
               </span>
-              <button type="button" class="secondary mm-copy-button" id="copy-email-button"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>Copy</button>
-              <button type="button" class="secondary mm-copy-button" id="copy-link-button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Link</button>
-              <button type="button" class="secondary mm-copy-button" id="download-data-button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>CSV</button>
-              <a role="button" class="secondary mm-copy-button" id="rss-feed-link" target="_blank" rel="noreferrer" aria-label="RSS feed (opens in a new tab)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>RSS</a>
+                <button type="button" class="action-button" id="copy-email-button" aria-label="Copy" title="Copy"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button>
+                <button type="button" class="action-button" id="copy-link-button" aria-label="Copy link" title="Copy link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
+                <button type="button" class="action-button" id="download-data-button" aria-label="Download CSV" title="Download CSV"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg></button>
+                <a role="button" class="action-button" id="rss-feed-link" target="_blank" rel="noreferrer" aria-label="RSS feed (opens in a new tab)" title="RSS feed"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg></a>
+              </div>
+              <div class="action-search" role="search" aria-label="Search mentions">
+                <label class="visually-hidden" for="filter-search">Search mentions</label>
+                <input type="search" id="filter-search" name="search" data-search-input placeholder="Search titles and text&hellip;" autocomplete="off">
+              </div>
             </div>
             <p class="app-help-text" id="rss-feed-status" role="status"></p>
 
@@ -139,12 +146,12 @@
               <div class="app-card">
                 <h3>Mentions over time</h3>
                 <canvas id="stats-timeline-chart" role="img" data-chart-title="Mentions over time" aria-label="Mentions over time"></canvas>
-                <button type="button" class="secondary mm-copy-button mm-chart-download" data-chart-download="timeline"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>PNG</button>
+                <button type="button" class="action-button mm-chart-download" data-chart-download="timeline" aria-label="Download timeline chart as PNG" title="Download timeline chart as PNG"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg></button>
               </div>
               <div class="app-card">
                 <h3>Top monitors</h3>
                 <canvas id="stats-monitors-chart" role="img" data-chart-title="Top monitors" aria-label="Top monitors"></canvas>
-                <button type="button" class="secondary mm-copy-button mm-chart-download" data-chart-download="monitors"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>PNG</button>
+                <button type="button" class="action-button mm-chart-download" data-chart-download="monitors" aria-label="Download monitors chart as PNG" title="Download monitors chart as PNG"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg></button>
               </div>
               <div class="app-card">
                 <h3>Trending topics</h3>
@@ -154,20 +161,20 @@
               <div class="app-card">
                 <h3>Coverage by town &amp; district</h3>
                 <canvas id="stats-places-chart" role="img" data-chart-title="Coverage by town and district" aria-label="Coverage by town and district"></canvas>
-                <button type="button" class="secondary mm-copy-button mm-chart-download" data-chart-download="places"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>PNG</button>
+                <button type="button" class="action-button mm-chart-download" data-chart-download="places" aria-label="Download places chart as PNG" title="Download places chart as PNG"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg></button>
               </div>
 
               <h2 class="mm-stats-section-heading">News</h2>
               <div class="app-card">
                 <h3>Top sources</h3>
                 <canvas id="stats-sources-chart" role="img" data-chart-title="Top sources" aria-label="Top sources"></canvas>
-                <button type="button" class="secondary mm-copy-button mm-chart-download" data-chart-download="sources"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>PNG</button>
+                <button type="button" class="action-button mm-chart-download" data-chart-download="sources" aria-label="Download sources chart as PNG" title="Download sources chart as PNG"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg></button>
               </div>
               <div class="app-card">
                 <h3>Top journalists</h3>
                 <p class="app-help-text">News bylines only (not social posts) — based on whatever authorship each feed itself provides. Google News strips authorship, so its stories won't appear here either.</p>
                 <canvas id="stats-authors-chart" role="img" data-chart-title="Top journalists" aria-label="Top journalists"></canvas>
-                <button type="button" class="secondary mm-copy-button mm-chart-download" data-chart-download="authors"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>PNG</button>
+                <button type="button" class="action-button mm-chart-download" data-chart-download="authors" aria-label="Download authors chart as PNG" title="Download authors chart as PNG"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg></button>
               </div>
 
               <h2 class="mm-stats-section-heading">Social</h2>
@@ -175,7 +182,7 @@
                 <h3>Top social accounts</h3>
                 <p class="app-help-text">Bluesky and Reddit combined, ranked by number of posts.</p>
                 <canvas id="stats-social-chart" role="img" data-chart-title="Top social accounts" aria-label="Top social accounts"></canvas>
-                <button type="button" class="secondary mm-copy-button mm-chart-download" data-chart-download="socialAccounts"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>PNG</button>
+                <button type="button" class="action-button mm-chart-download" data-chart-download="socialAccounts" aria-label="Download socialAccounts chart as PNG" title="Download socialAccounts chart as PNG"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg></button>
               </div>
             </div>
 

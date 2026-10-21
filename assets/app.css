@@ -101,12 +101,6 @@ th[aria-sort="descending"] .mm-sort-button::after {
   }
 }
 
-.mm-reset {
-  width: auto;
-  margin: 0.5rem 0 0;
-  white-space: nowrap;
-}
-
 .search-facet-group {
   margin: 0 0 1.5rem;
   padding: 0;
@@ -196,48 +190,6 @@ th[aria-sort="descending"] .mm-sort-button::after {
    ..." text around it. */
 .mm-mention-counts {
   font-weight: 400;
-}
-
-.mm-results-buttons {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin: 0 0 1rem;
-}
-
-.mm-copy-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  width: auto;
-  white-space: nowrap;
-}
-
-/* The RSS link is an <a role="button"> that's sometimes not a real link at
-   all (no href for a filter combination with no matching static feed —
-   see updateRssFeedLink() in app.js). role=button plus no href already
-   makes it inert and untabbable; this just makes that state visible. */
-.mm-copy-button[aria-disabled="true"] {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Sits inline between the two copy buttons in .mm-results-buttons — override
-   Pico's default block-level 100%-width <select> so it doesn't stretch to
-   fill the flex row. */
-.mm-copy-format {
-  width: auto;
-  margin: 0;
-}
-
-.mm-copy-button svg {
-  width: 1rem;
-  height: 1rem;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
 }
 
 .mm-copy-fallback {
@@ -531,16 +483,6 @@ th[aria-sort="descending"] .mm-sort-button::after {
   margin-top: 0.25rem;
 }
 
-.mm-card__copy-actions .copy-button {
-  border-color: var(--app-border);
-  background: var(--app-surface);
-}
-
-.mm-card__copy-actions .copy-button:hover {
-  border-color: var(--app-accent);
-  background: color-mix(in srgb, var(--app-accent) 8%, var(--app-surface));
-}
-
 /* Shown only once a card is clipped (see .mm-card__select) — attributes it
    to the official County release it's reporting on. */
 .mm-card__release {
@@ -596,7 +538,7 @@ th[aria-sort="descending"] .mm-sort-button::after {
 }
 
 .mm-chart-download {
-  display: block;
+  display: flex;
   margin: 0.75rem auto 0;
 }
 
