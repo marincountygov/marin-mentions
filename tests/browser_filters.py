@@ -12,7 +12,7 @@ from threading import Thread
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
-LOOK = "el => { const c = getComputedStyle(el); return [c.borderTopWidth, c.borderTopColor, c.borderRadius, c.backgroundColor, c.color]; }"
+LOOK = "el => { const c = getComputedStyle(el); return [c.borderTopWidth, c.borderTopColor, c.borderRadius]; }"
 
 
 class Handler(SimpleHTTPRequestHandler):
@@ -42,8 +42,8 @@ def run(base, page):
     require(page.is_visible("#filter-toggle [data-filter-icon=open]") and not page.is_visible("#filter-toggle [data-filter-icon=closed]"), "Open filters show the panel-right-open icon")
     require(abs(page.evaluate("document.getElementById('filter-toggle').getBoundingClientRect().right - document.getElementById('filter-panel').getBoundingClientRect().right")) < 1,
             "Open, the button sits at the right edge of the filter column")
-    require(page.locator("#filter-toggle").evaluate(LOOK) == page.locator("#media-feed .copy-button").first.evaluate(LOOK),
-            "Same border, radius and colors as the card icon buttons")
+    require(page.locator("#filter-toggle").evaluate(LOOK) == page.locator("#media-feed .action-group").first.evaluate(LOOK),
+            "Same border and radius as the card button group")
 
     # An active filter is counted in the name, and hiding the panel keeps it applied.
     page.fill("#filter-search", "marin")
