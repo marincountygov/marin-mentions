@@ -6,8 +6,8 @@
     return;
   }
 
-  const SHELL_VERSION = "1.17.0";
-  const MARIN_UI_VERSION = "1.29.0";
+  const SHELL_VERSION = "1.17.2";
+  const MARIN_UI_VERSION = "1.29.1";
   const MARINOS_URL = "https://marincountygov.github.io/marin-os/";
   const MARINOS_STATUS_URL = `${MARINOS_URL}#status`;
   const CATALOG_URL = `${MARINOS_URL}catalog.json`;
@@ -423,7 +423,7 @@
 
       const menuToggle = document.createElement("button");
       menuToggle.type = "button";
-      menuToggle.className = "app-menu-toggle secondary";
+      menuToggle.className = "app-menu-toggle";
       menuToggle.id = "menu-toggle";
       menuToggle.setAttribute("aria-expanded", "false");
       menuToggle.setAttribute("aria-controls", "app-nav");
