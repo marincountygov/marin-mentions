@@ -1,4 +1,4 @@
-# Marin App Shell 1.15.0
+# Marin App Shell 1.16.0
 
 Pinned Marin UI baseline: 1.28.1.
 
@@ -34,4 +34,4 @@ geometry, so icon rendering requires no extra runtime request.
 
 `manifest.json` records release/file hashes and managed companion assets.
 `brand-source.json` records the reviewed input provenance. Set the app's
-`platform.shell` to `1.15.0` and validate before publishing.
+`platform.shell` to `1.16.0` and validate before publishing.
