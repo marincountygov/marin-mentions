@@ -1837,7 +1837,7 @@ th[aria-sort="descending"] .sort-button::after {
   stroke-linejoin: round;
 }
 
-/* Marin App Shell 1.15.0: component integration only.
+/* Marin App Shell 1.16.0: component integration only.
    General visual rules come from the locked, unmodified Marin UI input. */
 marin-os-banner,
 marin-app-header,
@@ -2190,6 +2190,27 @@ a.action-button[role="button"][hidden] {
 
 .action-group > .copy-button.is-copied {
   color: var(--app-success);
+}
+
+/* A spaced group: separate bordered buttons with a gap and a 44 px target, for controls pressed often or on touch
+   (a Previous and Next pair). Use it instead of a joined group when people with limited fine motor control, or
+   wide fingers, could press the wrong one. */
+.action-group.action-group--spaced {
+  gap: 0.75rem;
+  border: 0;
+  border-radius: 0;
+}
+
+.action-group.action-group--spaced > .action-button,
+.action-group.action-group--spaced > :not([hidden]) ~ .action-button:not([hidden]) {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  border: 1px solid var(--app-border);
+  border-radius: var(--pico-border-radius);
+}
+
+.action-group.action-group--spaced > .action-button:hover {
+  border-color: var(--app-accent);
 }
 
 /* A select that belongs to the group (a format picker beside Copy) is borderless and as tall as the buttons. */
