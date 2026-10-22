@@ -1848,7 +1848,7 @@ th[aria-sort="descending"] .sort-button::after {
   stroke-linejoin: round;
 }
 
-/* Marin App Shell 1.17.2: component integration only.
+/* Marin App Shell 1.18.0: component integration only.
    General visual rules come from the locked, unmodified Marin UI input. */
 marin-os-banner,
 marin-app-header,
@@ -2103,7 +2103,7 @@ a.action-button[role="button"][hidden] {
 
 .action-button[aria-pressed="true"] {
   background: color-mix(in srgb, var(--app-accent) 14%, var(--app-surface));
-  color: var(--app-accent);
+  color: var(--app-accent-on-tint);
 }
 
 .action-button[aria-disabled="true"],
@@ -2150,6 +2150,7 @@ a.action-button[role="button"][hidden] {
 
 .action-group > .action-button:hover {
   background: color-mix(in srgb, var(--app-accent) 8%, var(--app-surface));
+  color: var(--app-accent-on-tint);
 }
 
 .action-group > .action-button:focus-visible {
@@ -2188,7 +2189,7 @@ a.action-button[role="button"][hidden] {
 .action-group > .copy-button:hover {
   border-color: transparent;
   background: color-mix(in srgb, var(--app-accent) 8%, var(--app-surface));
-  color: var(--app-accent);
+  color: var(--app-accent-on-tint);
 }
 
 .action-group > :not([hidden]) ~ .copy-button:hover {
@@ -2375,7 +2376,7 @@ a.action-button[role="button"][hidden] {
 
 .chip-button[aria-pressed="true"] {
   background: color-mix(in srgb, var(--app-accent) 14%, var(--app-surface));
-  color: var(--app-accent);
+  color: var(--app-accent-on-tint);
   font-weight: 700;
 }
 
@@ -2431,4 +2432,18 @@ th[aria-sort="ascending"] .sort-button::after {
 
 th[aria-sort="descending"] .sort-button::after {
   content: " \25bc";
+}
+
+/* A visually hidden form control stays 1 px. Pico makes every input as wide as its row and at least 44 px tall, with a
+   selector too specific for .visually-hidden to win, so a hidden file input made the page wider than the window. */
+input.visually-hidden,
+select.visually-hidden,
+textarea.visually-hidden {
+  width: 1px !important;
+  height: 1px !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  border: 0 !important;
 }
