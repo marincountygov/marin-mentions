@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "name": "Marin App Shell",
-  "shellVersion": "1.16.0",
-  "marinUiVersion": "1.28.1",
+  "shellVersion": "1.17.0",
+  "marinUiVersion": "1.29.0",
   "installPath": "vendor/marinos",
   "fontPathContract": [
     "../fonts/Jost-wght.ttf",
@@ -23,6 +23,26 @@
     }
   },
   "companionIcons": {
+    "vendor/icons/lucide/arrow-down.svg": {
+      "source": "icons/lucide/arrow-down.svg",
+      "bytes": 211,
+      "sha256": "58e4dfb3b5f8c5433cb6ed6a8f0a550d59166f45258d246306a739dedce80a23"
+    },
+    "vendor/icons/lucide/arrow-left.svg": {
+      "source": "icons/lucide/arrow-left.svg",
+      "bytes": 211,
+      "sha256": "88ad704cdc8f192672ec83ab4d17954378f3b24570fc2c837662a8f5107827ee"
+    },
+    "vendor/icons/lucide/arrow-right.svg": {
+      "source": "icons/lucide/arrow-right.svg",
+      "bytes": 210,
+      "sha256": "cea0fdfd96475b27b50279da02e887bdf95f17354f41944cc567f61eb4815060"
+    },
+    "vendor/icons/lucide/arrow-up.svg": {
+      "source": "icons/lucide/arrow-up.svg",
+      "bytes": 210,
+      "sha256": "d394b6a5b8e2fd10ea403e4cf153b8126d9c241ebf4bf292f62c60efcd61d83a"
+    },
     "vendor/icons/lucide/check.svg": {
       "source": "icons/lucide/check.svg",
       "bytes": 192,
@@ -33,15 +53,100 @@
       "bytes": 189,
       "sha256": "197fa79b777d0e08a13d82005615716e9219b2cca04c0beff78d49593816fea2"
     },
+    "vendor/icons/lucide/chevron-left.svg": {
+      "source": "icons/lucide/chevron-left.svg",
+      "bytes": 191,
+      "sha256": "dc7c29df20e2deb2e6da89f0baa12ccfa048e3e8119a5f55aa35621bfc65aa44"
+    },
+    "vendor/icons/lucide/chevron-right.svg": {
+      "source": "icons/lucide/chevron-right.svg",
+      "bytes": 190,
+      "sha256": "25097f0d049f4b24b4ba7880bbcd6853a65165c16021d3ee6f8123380aac4f80"
+    },
+    "vendor/icons/lucide/chevrons-left.svg": {
+      "source": "icons/lucide/chevrons-left.svg",
+      "bytes": 217,
+      "sha256": "2bc7f8c78dd25b903d450b44dd85a0b4de2caad2d17978ae865289857adeec99"
+    },
+    "vendor/icons/lucide/chevrons-right.svg": {
+      "source": "icons/lucide/chevrons-right.svg",
+      "bytes": 216,
+      "sha256": "619daccd5fe51bbcade061d91e0b556d5fdb5bb68fcebb5d3169978c454af826"
+    },
+    "vendor/icons/lucide/clock.svg": {
+      "source": "icons/lucide/clock.svg",
+      "bytes": 220,
+      "sha256": "4389f09977d77ccf58ec74f15f9b7653e64dd6ed9fd3633f65176ae305d2b72a"
+    },
+    "vendor/icons/lucide/compass.svg": {
+      "source": "icons/lucide/compass.svg",
+      "bytes": 300,
+      "sha256": "4a10e352a2d1dfbc9258527c2e000f9f81125a3ebb06cff6c65b58c3036dc463"
+    },
     "vendor/icons/lucide/copy.svg": {
       "source": "icons/lucide/copy.svg",
       "bytes": 288,
       "sha256": "a843b3977ad6be55232c4cc4fa618f26c3d25f6901fdf2a5d1bde008583d9a27"
     },
+    "vendor/icons/lucide/download.svg": {
+      "source": "icons/lucide/download.svg",
+      "bytes": 263,
+      "sha256": "0c816664b80cbf0c8631b7846fc976a7fb0912ec733414b54b55888227bc8c8d"
+    },
+    "vendor/icons/lucide/ellipsis.svg": {
+      "source": "icons/lucide/ellipsis.svg",
+      "bytes": 257,
+      "sha256": "a2c861746ee7c4edbf9b0bb830803326e95105d75e6697a41a92d8907d29675b"
+    },
+    "vendor/icons/lucide/eye.svg": {
+      "source": "icons/lucide/eye.svg",
+      "bytes": 309,
+      "sha256": "e7f955781129913a36177e6d8aa480bdd3a09edddad557fc4823e3223667fdb1"
+    },
+    "vendor/icons/lucide/eye-off.svg": {
+      "source": "icons/lucide/eye-off.svg",
+      "bytes": 445,
+      "sha256": "204e20f8706747d5ba1b9ee647f1ebc932d743ef29e135c6d58d76919148262f"
+    },
+    "vendor/icons/lucide/folder-open.svg": {
+      "source": "icons/lucide/folder-open.svg",
+      "bytes": 354,
+      "sha256": "25b89e7d272203d68e9696d8f6ef028494a512215f318ec30a2419df79c54bab"
+    },
+    "vendor/icons/lucide/funnel.svg": {
+      "source": "icons/lucide/funnel.svg",
+      "bytes": 323,
+      "sha256": "3d0c8e3746c018989197aebe2d2e4ae870b0f3c2f222d1e1bd51bfef7e585565"
+    },
+    "vendor/icons/lucide/grip-vertical.svg": {
+      "source": "icons/lucide/grip-vertical.svg",
+      "bytes": 346,
+      "sha256": "ce1f3c929499feac034eb3440b5facae8f34a4d96194f8502d2093ca1478d783"
+    },
     "vendor/icons/lucide/layout-grid.svg": {
       "source": "icons/lucide/layout-grid.svg",
       "bytes": 357,
       "sha256": "5f36d680531e3bccbf369b01d25b23eaa705d35f4a22dc92dd7cd708c0de767d"
+    },
+    "vendor/icons/lucide/link.svg": {
+      "source": "icons/lucide/link.svg",
+      "bytes": 308,
+      "sha256": "360530d4c9102572268c30bc47a0f04f4d5b771447e5c80d46c2f5bae87e25c9"
+    },
+    "vendor/icons/lucide/map-pin.svg": {
+      "source": "icons/lucide/map-pin.svg",
+      "bytes": 308,
+      "sha256": "7740442cf526bc74554c8ac470910e5db960cd9932b8996ec200c8f3ea94c4b8"
+    },
+    "vendor/icons/lucide/maximize.svg": {
+      "source": "icons/lucide/maximize.svg",
+      "bytes": 307,
+      "sha256": "c276c0bcb8eadf76cdfb21ca0c10821ff4c9999ea314a986f3566c63571fc8c7"
+    },
+    "vendor/icons/lucide/minimize.svg": {
+      "source": "icons/lucide/minimize.svg",
+      "bytes": 307,
+      "sha256": "3338ee385eb1886375fa00a5ac14b1d193d7b63d251f4590bbcd32765aca7838"
     },
     "vendor/icons/lucide/panel-left-open.svg": {
       "source": "icons/lucide/panel-left-open.svg",
@@ -53,6 +158,86 @@
       "bytes": 260,
       "sha256": "ff2042f14195626562a3ad096a7ea1b2a6c1b0dacf7690c9544165c053a4c5d2"
     },
+    "vendor/icons/lucide/pencil.svg": {
+      "source": "icons/lucide/pencil.svg",
+      "bytes": 326,
+      "sha256": "3963a694e004883059a5d1f4c15ecf34e624a21f32de5fa1eca970b6e7d13b2e"
+    },
+    "vendor/icons/lucide/plus.svg": {
+      "source": "icons/lucide/plus.svg",
+      "bytes": 205,
+      "sha256": "2b9a2e22b4c367eea96a8757ac9a358e59a5b05a435c0e12a30b27ae77ba26b4"
+    },
+    "vendor/icons/lucide/printer.svg": {
+      "source": "icons/lucide/printer.svg",
+      "bytes": 351,
+      "sha256": "80460092f712b21a23705ab140d12a6c0369e1dc3b8dec392e7ea4dcc25da5d9"
+    },
+    "vendor/icons/lucide/redo-2.svg": {
+      "source": "icons/lucide/redo-2.svg",
+      "bytes": 257,
+      "sha256": "2c76ce042adff37dac04baa6f21aa8bcd83c1377fb6690ba3cb4bd3bb95b2a73"
+    },
+    "vendor/icons/lucide/refresh-cw.svg": {
+      "source": "icons/lucide/refresh-cw.svg",
+      "bytes": 333,
+      "sha256": "432be206c20a5e00e9b2279d19e276926d1216228492a381f6c76353a21071cd"
+    },
+    "vendor/icons/lucide/rotate-ccw.svg": {
+      "source": "icons/lucide/rotate-ccw.svg",
+      "bytes": 246,
+      "sha256": "e774de36a2ad7603dbad24eff55eeb063242091cfd5b97ab52f4272900044333"
+    },
+    "vendor/icons/lucide/rss.svg": {
+      "source": "icons/lucide/rss.svg",
+      "bytes": 260,
+      "sha256": "6e735f31960b19f3ae9d0251134ae20931dc8de4e463f927cf6c96b9bf8b82cd"
+    },
+    "vendor/icons/lucide/search.svg": {
+      "source": "icons/lucide/search.svg",
+      "bytes": 224,
+      "sha256": "9c112688b8bca75f10fdabb8e782e6985f1f87e5fe11d11a7777a84dae236307"
+    },
+    "vendor/icons/lucide/settings.svg": {
+      "source": "icons/lucide/settings.svg",
+      "bytes": 535,
+      "sha256": "149f1c3e4604b060806a08972f71f7f3533ca78f29082da566fe564563562ea4"
+    },
+    "vendor/icons/lucide/share.svg": {
+      "source": "icons/lucide/share.svg",
+      "bytes": 263,
+      "sha256": "effe8d3abac0e51b366454227a1a5d7b7412d5fbda44b9ea0f05da2ec5a50392"
+    },
+    "vendor/icons/lucide/signpost.svg": {
+      "source": "icons/lucide/signpost.svg",
+      "bytes": 405,
+      "sha256": "38095f314c94a72694a2fb5beb25032361d2a098622ff01caa6a92a336f34615"
+    },
+    "vendor/icons/lucide/sticky-note.svg": {
+      "source": "icons/lucide/sticky-note.svg",
+      "bytes": 325,
+      "sha256": "758aad2702d2faec7d2a5b6444c6065993619099abfeb9e4df122d9f43f6064f"
+    },
+    "vendor/icons/lucide/trash.svg": {
+      "source": "icons/lucide/trash.svg",
+      "bytes": 326,
+      "sha256": "1091b891624c020e8d251b1aa7c10d897101f40e2aa4e5b0db3b9aaeb2a9e96e"
+    },
+    "vendor/icons/lucide/undo-2.svg": {
+      "source": "icons/lucide/undo-2.svg",
+      "bytes": 258,
+      "sha256": "2f9a6c591b9d7b325204524c5050f238ef075aeda621e89c8161530ec1bc36af"
+    },
+    "vendor/icons/lucide/upload.svg": {
+      "source": "icons/lucide/upload.svg",
+      "bytes": 263,
+      "sha256": "1e75f7a28df955cd01de72b9f3335cf8bada83462a647fd33ccd33fab6ecd01c"
+    },
+    "vendor/icons/lucide/x.svg": {
+      "source": "icons/lucide/x.svg",
+      "bytes": 209,
+      "sha256": "6d5f55b5752650c744c7044b2575a2319fed52a7294db62206680f95fbdabd43"
+    },
     "vendor/icons/lucide/LICENSE": {
       "source": "icons/lucide/LICENSE",
       "bytes": 3208,
@@ -62,15 +247,31 @@
   "files": {
     "README.md": {
       "bytes": 1607,
-      "sha256": "ec513b0f2276487774b695dcf31d43a5d5f136871c16788648e19cd95f239e79"
+      "sha256": "2547be18ea9a246d787611d34d86cafea0e4f1af683677fc2670328554cc774c"
     },
     "brand-source.json": {
-      "bytes": 2765,
-      "sha256": "47b6cceeba1954db007900b6e65f4c9feef35283eecf552ca22ec1f50def4ce6"
+      "bytes": 10297,
+      "sha256": "e6661a8182bcdbcbd1f551fe23f78c1f48d76f3b14dd2062db7f6cdc4a654c64"
     },
     "icons/lucide/LICENSE": {
       "bytes": 3208,
       "sha256": "b495047bd93a9b06913511076f504daba17d5bbeb3e0650f3bb53a4220329c57"
+    },
+    "icons/lucide/arrow-down.svg": {
+      "bytes": 211,
+      "sha256": "58e4dfb3b5f8c5433cb6ed6a8f0a550d59166f45258d246306a739dedce80a23"
+    },
+    "icons/lucide/arrow-left.svg": {
+      "bytes": 211,
+      "sha256": "88ad704cdc8f192672ec83ab4d17954378f3b24570fc2c837662a8f5107827ee"
+    },
+    "icons/lucide/arrow-right.svg": {
+      "bytes": 210,
+      "sha256": "cea0fdfd96475b27b50279da02e887bdf95f17354f41944cc567f61eb4815060"
+    },
+    "icons/lucide/arrow-up.svg": {
+      "bytes": 210,
+      "sha256": "d394b6a5b8e2fd10ea403e4cf153b8126d9c241ebf4bf292f62c60efcd61d83a"
     },
     "icons/lucide/check.svg": {
       "bytes": 192,
@@ -80,13 +281,81 @@
       "bytes": 189,
       "sha256": "197fa79b777d0e08a13d82005615716e9219b2cca04c0beff78d49593816fea2"
     },
+    "icons/lucide/chevron-left.svg": {
+      "bytes": 191,
+      "sha256": "dc7c29df20e2deb2e6da89f0baa12ccfa048e3e8119a5f55aa35621bfc65aa44"
+    },
+    "icons/lucide/chevron-right.svg": {
+      "bytes": 190,
+      "sha256": "25097f0d049f4b24b4ba7880bbcd6853a65165c16021d3ee6f8123380aac4f80"
+    },
+    "icons/lucide/chevrons-left.svg": {
+      "bytes": 217,
+      "sha256": "2bc7f8c78dd25b903d450b44dd85a0b4de2caad2d17978ae865289857adeec99"
+    },
+    "icons/lucide/chevrons-right.svg": {
+      "bytes": 216,
+      "sha256": "619daccd5fe51bbcade061d91e0b556d5fdb5bb68fcebb5d3169978c454af826"
+    },
+    "icons/lucide/clock.svg": {
+      "bytes": 220,
+      "sha256": "4389f09977d77ccf58ec74f15f9b7653e64dd6ed9fd3633f65176ae305d2b72a"
+    },
+    "icons/lucide/compass.svg": {
+      "bytes": 300,
+      "sha256": "4a10e352a2d1dfbc9258527c2e000f9f81125a3ebb06cff6c65b58c3036dc463"
+    },
     "icons/lucide/copy.svg": {
       "bytes": 288,
       "sha256": "a843b3977ad6be55232c4cc4fa618f26c3d25f6901fdf2a5d1bde008583d9a27"
     },
+    "icons/lucide/download.svg": {
+      "bytes": 263,
+      "sha256": "0c816664b80cbf0c8631b7846fc976a7fb0912ec733414b54b55888227bc8c8d"
+    },
+    "icons/lucide/ellipsis.svg": {
+      "bytes": 257,
+      "sha256": "a2c861746ee7c4edbf9b0bb830803326e95105d75e6697a41a92d8907d29675b"
+    },
+    "icons/lucide/eye-off.svg": {
+      "bytes": 445,
+      "sha256": "204e20f8706747d5ba1b9ee647f1ebc932d743ef29e135c6d58d76919148262f"
+    },
+    "icons/lucide/eye.svg": {
+      "bytes": 309,
+      "sha256": "e7f955781129913a36177e6d8aa480bdd3a09edddad557fc4823e3223667fdb1"
+    },
+    "icons/lucide/folder-open.svg": {
+      "bytes": 354,
+      "sha256": "25b89e7d272203d68e9696d8f6ef028494a512215f318ec30a2419df79c54bab"
+    },
+    "icons/lucide/funnel.svg": {
+      "bytes": 323,
+      "sha256": "3d0c8e3746c018989197aebe2d2e4ae870b0f3c2f222d1e1bd51bfef7e585565"
+    },
+    "icons/lucide/grip-vertical.svg": {
+      "bytes": 346,
+      "sha256": "ce1f3c929499feac034eb3440b5facae8f34a4d96194f8502d2093ca1478d783"
+    },
     "icons/lucide/layout-grid.svg": {
       "bytes": 357,
       "sha256": "5f36d680531e3bccbf369b01d25b23eaa705d35f4a22dc92dd7cd708c0de767d"
+    },
+    "icons/lucide/link.svg": {
+      "bytes": 308,
+      "sha256": "360530d4c9102572268c30bc47a0f04f4d5b771447e5c80d46c2f5bae87e25c9"
+    },
+    "icons/lucide/map-pin.svg": {
+      "bytes": 308,
+      "sha256": "7740442cf526bc74554c8ac470910e5db960cd9932b8996ec200c8f3ea94c4b8"
+    },
+    "icons/lucide/maximize.svg": {
+      "bytes": 307,
+      "sha256": "c276c0bcb8eadf76cdfb21ca0c10821ff4c9999ea314a986f3566c63571fc8c7"
+    },
+    "icons/lucide/minimize.svg": {
+      "bytes": 307,
+      "sha256": "3338ee385eb1886375fa00a5ac14b1d193d7b63d251f4590bbcd32765aca7838"
     },
     "icons/lucide/panel-left-open.svg": {
       "bytes": 258,
@@ -95,6 +364,70 @@
     "icons/lucide/panel-right-open.svg": {
       "bytes": 260,
       "sha256": "ff2042f14195626562a3ad096a7ea1b2a6c1b0dacf7690c9544165c053a4c5d2"
+    },
+    "icons/lucide/pencil.svg": {
+      "bytes": 326,
+      "sha256": "3963a694e004883059a5d1f4c15ecf34e624a21f32de5fa1eca970b6e7d13b2e"
+    },
+    "icons/lucide/plus.svg": {
+      "bytes": 205,
+      "sha256": "2b9a2e22b4c367eea96a8757ac9a358e59a5b05a435c0e12a30b27ae77ba26b4"
+    },
+    "icons/lucide/printer.svg": {
+      "bytes": 351,
+      "sha256": "80460092f712b21a23705ab140d12a6c0369e1dc3b8dec392e7ea4dcc25da5d9"
+    },
+    "icons/lucide/redo-2.svg": {
+      "bytes": 257,
+      "sha256": "2c76ce042adff37dac04baa6f21aa8bcd83c1377fb6690ba3cb4bd3bb95b2a73"
+    },
+    "icons/lucide/refresh-cw.svg": {
+      "bytes": 333,
+      "sha256": "432be206c20a5e00e9b2279d19e276926d1216228492a381f6c76353a21071cd"
+    },
+    "icons/lucide/rotate-ccw.svg": {
+      "bytes": 246,
+      "sha256": "e774de36a2ad7603dbad24eff55eeb063242091cfd5b97ab52f4272900044333"
+    },
+    "icons/lucide/rss.svg": {
+      "bytes": 260,
+      "sha256": "6e735f31960b19f3ae9d0251134ae20931dc8de4e463f927cf6c96b9bf8b82cd"
+    },
+    "icons/lucide/search.svg": {
+      "bytes": 224,
+      "sha256": "9c112688b8bca75f10fdabb8e782e6985f1f87e5fe11d11a7777a84dae236307"
+    },
+    "icons/lucide/settings.svg": {
+      "bytes": 535,
+      "sha256": "149f1c3e4604b060806a08972f71f7f3533ca78f29082da566fe564563562ea4"
+    },
+    "icons/lucide/share.svg": {
+      "bytes": 263,
+      "sha256": "effe8d3abac0e51b366454227a1a5d7b7412d5fbda44b9ea0f05da2ec5a50392"
+    },
+    "icons/lucide/signpost.svg": {
+      "bytes": 405,
+      "sha256": "38095f314c94a72694a2fb5beb25032361d2a098622ff01caa6a92a336f34615"
+    },
+    "icons/lucide/sticky-note.svg": {
+      "bytes": 325,
+      "sha256": "758aad2702d2faec7d2a5b6444c6065993619099abfeb9e4df122d9f43f6064f"
+    },
+    "icons/lucide/trash.svg": {
+      "bytes": 326,
+      "sha256": "1091b891624c020e8d251b1aa7c10d897101f40e2aa4e5b0db3b9aaeb2a9e96e"
+    },
+    "icons/lucide/undo-2.svg": {
+      "bytes": 258,
+      "sha256": "2f9a6c591b9d7b325204524c5050f238ef075aeda621e89c8161530ec1bc36af"
+    },
+    "icons/lucide/upload.svg": {
+      "bytes": 263,
+      "sha256": "1e75f7a28df955cd01de72b9f3335cf8bada83462a647fd33ccd33fab6ecd01c"
+    },
+    "icons/lucide/x.svg": {
+      "bytes": 209,
+      "sha256": "6d5f55b5752650c744c7044b2575a2319fed52a7294db62206680f95fbdabd43"
     },
     "licenses/LUCIDE_LICENSE.txt": {
       "bytes": 3208,
@@ -109,12 +442,12 @@
       "sha256": "01cd5ffb3a528c219a86e49a814c6c53bd8a69b9a3c305dd237074ba1c811af7"
     },
     "marinos.css": {
-      "bytes": 132619,
-      "sha256": "d70c005b0cb2471869bcfd422e25fa156bd05ccdd749b3bd25c72c8f4315dbca"
+      "bytes": 136087,
+      "sha256": "562527ce2b9e3f5c4e6beec7fd4d186e34fa3ab9c8f51a02c958a753ff1b1a29"
     },
     "marinos.js": {
-      "bytes": 98467,
-      "sha256": "86dd9dc7d5ba573b9c48b516b881460d5a14c8575047433d26e6e49233330473"
+      "bytes": 105380,
+      "sha256": "cce8e2a0b5124d4e8052111da86164f425ec2b1fa79c5dead3521dabe8316030"
     }
   }
 }

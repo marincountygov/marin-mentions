@@ -956,12 +956,12 @@ document.addEventListener("DOMContentLoaded", () => {
       <table>
         <thead>
           <tr>
-            <th><button type="button" class="mm-sort-button" data-sort-key="name">Source</button></th>
-            <th><button type="button" class="mm-sort-button" data-sort-key="region">Geography</button></th>
-            <th><button type="button" class="mm-sort-button" data-sort-key="method">Ingestion</button></th>
-            <th><button type="button" class="mm-sort-button" data-sort-key="status">Status</button></th>
-            <th><button type="button" class="mm-sort-button" data-sort-key="lastchecked">Last checked</button></th>
-            <th><button type="button" class="mm-sort-button" data-sort-key="items">Items</button></th>
+            <th><button type="button" class="sort-button" data-sort-key="name">Source</button></th>
+            <th><button type="button" class="sort-button" data-sort-key="region">Geography</button></th>
+            <th><button type="button" class="sort-button" data-sort-key="method">Ingestion</button></th>
+            <th><button type="button" class="sort-button" data-sort-key="status">Status</button></th>
+            <th><button type="button" class="sort-button" data-sort-key="lastchecked">Last checked</button></th>
+            <th><button type="button" class="sort-button" data-sort-key="items">Items</button></th>
             <th>Filter</th>
           </tr>
         </thead>
@@ -1024,7 +1024,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return state.sourceSortDirection === "ascending" ? result : -result;
     });
     tbody.append(...rows);
-    table.querySelectorAll(".mm-sort-button").forEach((button) => {
+    table.querySelectorAll(".sort-button").forEach((button) => {
       button.closest("th")?.setAttribute(
         "aria-sort",
         button.dataset.sortKey === state.sourceSortKey ? state.sourceSortDirection : "none"
@@ -1034,7 +1034,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function wireSourceTableSort(table) {
     if (!table) return;
-    table.querySelectorAll(".mm-sort-button").forEach((button) => {
+    table.querySelectorAll(".sort-button").forEach((button) => {
       button.addEventListener("click", () => {
         const key = button.dataset.sortKey;
         state.sourceSortDirection =
@@ -1072,7 +1072,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return `<div class="mm-terms">${matchedMonitorIds
       .map((id) => {
         const monitor = state.data.monitors.find((m) => m.id === id);
-        return `<button type="button" class="mm-term mm-term--button" data-filter-monitor="${escapeHtml(id)}">${escapeHtml(monitor?.name || id)}</button>`;
+        return `<button type="button" class="mm-term mm-term--button" data-button-kind="content" data-filter-monitor="${escapeHtml(id)}">${escapeHtml(monitor?.name || id)}</button>`;
       })
       .join("")}</div>`;
   }
@@ -1174,7 +1174,7 @@ document.addEventListener("DOMContentLoaded", () => {
           .map(
             (monitor) => `
           <article class="app-card">
-            <h4><button type="button" class="mm-monitor-name" data-goto-monitor="${escapeHtml(monitor.id)}">${escapeHtml(monitor.name)}</button></h4>
+            <h4><button type="button" class="mm-monitor-name" data-button-kind="content" data-goto-monitor="${escapeHtml(monitor.id)}">${escapeHtml(monitor.name)}</button></h4>
             <p class="app-help-text">Include</p>
             ${renderTermList(monitor.include)}
             ${monitor.exclude.length ? `<p class="app-help-text">Exclude</p>${renderTermList(monitor.exclude)}` : ""}
@@ -1325,7 +1325,7 @@ document.addEventListener("DOMContentLoaded", () => {
         comparisonMarkup = `<span class="mm-trend" data-direction="${direction}">${arrow} ${Math.abs(change).toFixed(1)}%</span>`;
       }
       return `<tr>
-        <td><button type="button" class="mm-monitor-name" data-goto-monitor="${escapeHtml(id)}">${escapeHtml(monitorNameFor(id))}</button></td>
+        <td><button type="button" class="mm-monitor-name" data-button-kind="content" data-goto-monitor="${escapeHtml(id)}">${escapeHtml(monitorNameFor(id))}</button></td>
         <td>${count}</td>
         <td>${percentOfTotal}%</td>
         <td>${comparisonMarkup}</td>

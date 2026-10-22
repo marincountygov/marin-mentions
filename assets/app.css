@@ -31,38 +31,11 @@
   width: 100%;
 }
 
-/* Sortable table headers: a real <button> for keyboard/AT support, styled
-   to read as plain header text rather than a visible button. */
-.mm-sort-button {
-  width: auto;
-  margin: 0;
-  padding: 0;
-  border: none;
-  background: none;
-  font: inherit;
-  font-weight: 700;
-  color: inherit;
-  cursor: pointer;
-}
-
-.mm-sort-button:hover,
-.mm-sort-button:focus-visible {
-  text-decoration: underline;
-}
-
 #sources-table-wrap button[data-goto-feed-source] {
   width: auto;
   margin: 0;
   padding: 0.25rem 0.75rem;
   white-space: nowrap;
-}
-
-th[aria-sort="ascending"] .mm-sort-button::after {
-  content: " \25b2";
-}
-
-th[aria-sort="descending"] .mm-sort-button::after {
-  content: " \25bc";
 }
 
 .mm-page-tabs {
@@ -258,36 +231,6 @@ th[aria-sort="descending"] .mm-sort-button::after {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
-}
-
-.mm-tab {
-  width: auto;
-  margin: 0;
-  background: none;
-  border: none;
-  padding: 0.375rem 0.75rem;
-  border-radius: var(--pico-border-radius);
-  color: var(--app-muted);
-  cursor: pointer;
-}
-
-/* [aria-selected] for the four real content-type tabs; [aria-pressed] for
-   #stats-toggle, a toggle button rather than a tab (see its comment in
-   index.html) — same active styling either way. */
-.mm-tab[aria-selected="true"],
-.mm-tab[aria-pressed="true"] {
-  background: var(--app-accent);
-  color: #ffffff;
-  font-weight: 700;
-}
-
-/* Dark mode's accent is a light blue (#8fcaff), where white text is 1.7:1;
-   dark text on it is 10.6:1. */
-@media (prefers-color-scheme: dark) {
-  .mm-tab[aria-selected="true"],
-  .mm-tab[aria-pressed="true"] {
-    color: #101418;
-  }
 }
 
 .mm-card {
@@ -601,14 +544,14 @@ th[aria-sort="descending"] .mm-sort-button::after {
   list-style: none;
 }
 
-.mm-rp-stages .mm-tab[aria-current="step"] {
+.mm-rp-stages .tab-button[aria-current="step"] {
   background: var(--app-accent);
   color: #ffffff;
   font-weight: 700;
 }
 
 @media (prefers-color-scheme: dark) {
-  .mm-rp-stages .mm-tab[aria-current="step"] {
+  .mm-rp-stages .tab-button[aria-current="step"] {
     color: #101418;
   }
 }
