@@ -51,9 +51,24 @@
     if (ui.host && ui.host.announce) ui.host.announce(message);
   }
 
+  // A quiet action button. extra.icon (a bundled icon name) makes it icon-only, named by its label; extra.danger turns
+  // it red on hover; extra.primary makes it the one solid button of the stage.
   function button(label, key, handler, extra) {
-    const attrs = Object.assign({ type: 'button', class: 'secondary mm-copy-button', 'data-key': key }, extra || {});
-    const b = h('button', attrs, [label]);
+    const options = Object.assign({}, extra || {});
+    const icon = options.icon;
+    const danger = options.danger;
+    const primary = options.primary;
+    delete options.icon;
+    delete options.danger;
+    delete options.primary;
+    const classes = primary ? 'primary' : 'action-button' + (danger ? ' is-danger' : '');
+    const attrs = Object.assign({ type: 'button', class: classes, 'data-key': key }, options);
+    if (icon) {
+      attrs['data-icon'] = icon;
+      attrs.title = label;
+      if (!attrs['aria-label']) attrs['aria-label'] = label;
+    }
+    const b = h('button', attrs, icon ? [] : [label]);
     b.addEventListener('click', handler);
     return b;
   }
@@ -181,7 +196,7 @@
     });
     const error = h('p', { class: 'app-error', role: 'alert' });
     const submit = h('button', { type: 'submit', text: config.submitLabel || 'Save' });
-    const cancel = h('button', { type: 'button', class: 'secondary', text: 'Cancel' });
+    const cancel = h('button', { type: 'button', class: 'action-button', text: 'Cancel' });
     cancel.addEventListener('click', () => dialog.close());
     form.append(error, h('div', { class: 'mm-rp-actions' }, [submit, cancel]));
     form.addEventListener('submit', (event) => {
@@ -282,7 +297,7 @@
   function stageNav() {
     const list = h('ol', { class: 'mm-rp-stages', 'aria-label': 'Report steps' });
     STAGES.forEach((s, i) => {
-      const b = h('button', { type: 'button', class: 'mm-tab', 'data-key': 'stage-' + s.id, 'aria-current': ui.stage === s.id ? 'step' : false }, [(i + 1) + '. ' + s.label]);
+      const b = h('button', { type: 'button', class: 'tab-button', 'data-key': 'stage-' + s.id, 'aria-current': ui.stage === s.id ? 'step' : false }, [(i + 1) + '. ' + s.label]);
       b.addEventListener('click', () => { ui.stage = s.id; ui.flash = {}; render('stage-heading'); });
       list.append(h('li', {}, b));
     });
@@ -388,7 +403,7 @@
     root.append(h('p', { class: 'mm-rp-period' }, [h('strong', { text: 'Reporting period: ' }), Core.formatPeriod(r.period.start, r.period.end)]));
     root.append(field('Closing note (optional)', textarea(r.footer, (v) => quietChange(Core.updateDetails(ui.report, { footer: v })), 4),
       'Shown at the end of the report. Leave blank for none.'));
-    root.append(h('div', { class: 'mm-rp-actions' }, [button('Next: choose coverage', 'next-coverage', () => { ui.stage = 'coverage'; render('stage-heading'); })]));
+    root.append(h('div', { class: 'mm-rp-actions' }, [button('Next: choose coverage', 'next-coverage', () => { ui.stage = 'coverage'; render('stage-heading'); }, { primary: true })]));
     return root;
   }
 
@@ -504,7 +519,7 @@
       root.append(h('div', { class: 'mm-rp-scroll', tabindex: '0', role: 'region', 'aria-label': 'Coverage that matches' }, table));
       if (rows.length > shown.length) root.append(button('Show all ' + rows.length, 'show-all-rows', () => { ui.showAllRows = true; render('show-all-rows'); }));
     }
-    root.append(h('div', { class: 'mm-rp-actions' }, [button('Next: organize', 'next-organize', () => { ui.stage = 'organize'; render('stage-heading'); })]));
+    root.append(h('div', { class: 'mm-rp-actions' }, [button('Next: organize', 'next-organize', () => { ui.stage = 'organize'; render('stage-heading'); }, { primary: true })]));
     return root;
   }
 
@@ -537,10 +552,10 @@
     li.append(h('span', { class: 'mm-rp-item__text', text: itemLabel(item) || 'Untitled' }));
     const label = itemLabel(item) || 'item';
     const controls = h('span', { class: 'mm-rp-item__controls' });
-    controls.append(button('Edit', key + '-edit', () => editItem(item, key + '-edit'), { 'aria-label': 'Edit: ' + label }));
+    controls.append(button('Edit', key + '-edit', () => editItem(item, key + '-edit'), { 'aria-label': 'Edit: ' + label, icon: 'pencil' }));
     if (!opts.pool) {
-      controls.append(button('Move up', key + '-up', () => setReport(Core.moveItemBy(ui.report, item.uid, -1), key + '-up'), { 'aria-label': 'Move up: ' + label }));
-      controls.append(button('Move down', key + '-down', () => setReport(Core.moveItemBy(ui.report, item.uid, 1), key + '-down'), { 'aria-label': 'Move down: ' + label }));
+      controls.append(button('Move up', key + '-up', () => setReport(Core.moveItemBy(ui.report, item.uid, -1), key + '-up'), { 'aria-label': 'Move up: ' + label, icon: 'arrow-up' }));
+      controls.append(button('Move down', key + '-down', () => setReport(Core.moveItemBy(ui.report, item.uid, 1), key + '-down'), { 'aria-label': 'Move down: ' + label, icon: 'arrow-down' }));
     }
     if (item.kind === 'coverage') {
       const dest = selectOf(destinationOptions(ui.report), '', (value) => {
@@ -551,9 +566,9 @@
       });
       dest.setAttribute('aria-label', 'Move to a section: ' + label);
       controls.append(dest);
-      if (!opts.pool) controls.append(button('Take out of section', key + '-unplace', () => setReport(Core.unplaceItem(ui.report, item.uid), 'organize-heading'), { 'aria-label': 'Take out of section: ' + label }));
+      if (!opts.pool) controls.append(button('Take out of section', key + '-unplace', () => setReport(Core.unplaceItem(ui.report, item.uid), 'organize-heading'), { 'aria-label': 'Take out of section: ' + label, icon: 'x' }));
     }
-    controls.append(button('Remove', key + '-remove', () => setReport(Core.removeItem(ui.report, item.uid), 'organize-heading'), { 'aria-label': 'Remove: ' + label }));
+    controls.append(button('Remove', key + '-remove', () => setReport(Core.removeItem(ui.report, item.uid), 'organize-heading'), { 'aria-label': 'Remove: ' + label, icon: 'trash', danger: true }));
     li.append(controls);
     if (item.kind === 'release') {
       const inner = h('ul', { class: 'mm-rp-nested', 'aria-label': 'Coverage of ' + (item.title || 'this release') });
@@ -579,9 +594,9 @@
     top.append(h('div', { class: 'mm-rp-field' }, [h('label', {}, [show, ' Show in report'])]));
     wrap.append(top);
     wrap.append(h('div', { class: 'mm-rp-actions' }, [
-      button('Move section up', key + '-sup', () => setReport(Core.moveSectionBy(ui.report, section.id, -1), key + '-sup'), { 'aria-label': 'Move section up: ' + section.title, disabled: index === 0 }),
-      button('Move section down', key + '-sdown', () => setReport(Core.moveSectionBy(ui.report, section.id, 1), key + '-sdown'), { 'aria-label': 'Move section down: ' + section.title, disabled: index === total - 1 }),
-      button('Delete section', key + '-delete', () => setReport(Core.deleteSection(ui.report, section.id), 'organize-heading'), { 'aria-label': 'Delete section: ' + section.title }),
+      button('Move section up', key + '-sup', () => setReport(Core.moveSectionBy(ui.report, section.id, -1), key + '-sup'), { 'aria-label': 'Move section up: ' + section.title, icon: 'arrow-up', disabled: index === 0 }),
+      button('Move section down', key + '-sdown', () => setReport(Core.moveSectionBy(ui.report, section.id, 1), key + '-sdown'), { 'aria-label': 'Move section down: ' + section.title, icon: 'arrow-down', disabled: index === total - 1 }),
+      button('Delete section', key + '-delete', () => setReport(Core.deleteSection(ui.report, section.id), 'organize-heading'), { 'aria-label': 'Delete section: ' + section.title, icon: 'trash', danger: true }),
     ]));
     wrap.append(field(section.type === 'text' ? 'Text' : 'Text above the section (optional)', textarea(section.intro, (v) => quietChange(Core.updateSection(ui.report, section.id, { intro: v })), section.type === 'text' ? 5 : 2)));
     if (section.type !== 'text') {
