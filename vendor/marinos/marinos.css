@@ -470,6 +470,17 @@ input[type="radio"] {
 .app-menu-toggle {
   display: none;
   margin: 0;
+  border: 1px solid var(--app-control-border);
+  background: none;
+  color: var(--app-text);
+}
+
+.app-menu-toggle:hover,
+.app-menu-toggle:focus-visible,
+.app-menu-toggle[aria-expanded="true"] {
+  border-color: var(--app-accent);
+  background: none;
+  color: var(--app-accent);
 }
 
 .app-identity {
@@ -1837,7 +1848,7 @@ th[aria-sort="descending"] .sort-button::after {
   stroke-linejoin: round;
 }
 
-/* Marin App Shell 1.17.0: component integration only.
+/* Marin App Shell 1.17.2: component integration only.
    General visual rules come from the locked, unmodified Marin UI input. */
 marin-os-banner,
 marin-app-header,
@@ -2366,6 +2377,33 @@ a.action-button[role="button"][hidden] {
   background: color-mix(in srgb, var(--app-accent) 14%, var(--app-surface));
   color: var(--app-accent);
   font-weight: 700;
+}
+
+/* A row of filter chips. Put role="group" and an aria-label on it. Pico turns a role="group" into one joined,
+   full-width control, so this puts each chip back to its own size. */
+.chip-group,
+.chip-group[role="group"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  width: auto;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.chip-group > .chip-button {
+  flex: 0 0 auto;
+  width: auto;
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+}
+
+.chip-group > .chip-button:hover,
+.chip-group > .chip-button[aria-pressed="true"] {
+  border-color: var(--app-accent);
 }
 
 /* Sortable column headers: a button that reads as the header text. The th carries aria-sort; the arrow follows it. */
