@@ -105,3 +105,27 @@ test("a Marin headline about a Frank Lloyd Wright landmark reaches the Civic Cen
   assert.ok(ids("New Marin exhibit brings eco-friendly fashion to Frank Lloyd Wright landmark").includes("civic-center"));
   assert.ok(!ids("A new Frank Lloyd Wright exhibit opens in Phoenix").includes("civic-center"));
 });
+
+// Stories that matched by accident in production (2026-10-26). Each must now match nothing.
+test("look-alike words and other places no longer match the real monitors", () => {
+  const { loadMonitors } = require("../build/config");
+  const real = loadMonitors();
+  const ids = (text, sourceMethod = "google-news") => {
+    const item = { text, sourceMethod, matchedTerms: [], matchedMonitors: [] };
+    applyMonitors(item, real, buildContextRules({}));
+    return item.matchedMonitors;
+  };
+  // "Olema" inside "Coleman", and "Novato" inside "innovator"
+  assert.deepEqual(ids("Microsoft offers voluntary buyouts, Chief People Officer Amy Coleman wrote in a blog post"), []);
+  assert.deepEqual(ids("California aviation innovator Natilus wins government contract"), []);
+  // The real places still match, including as hashtags
+  assert.ok(ids("Road closed near Olema on Highway 1").includes("olema"));
+  assert.ok(ids("Council meets in Novato tonight").includes("novato"));
+  assert.ok(ids("Get ready for winter #NovatoMarinCounty", "bluesky").includes("novato"));
+  // Bank of Marin is a bank, not the County
+  assert.deepEqual(ids("Bank of Marin (BMRC) Q3 Earnings and Revenues Surpass Estimates"), []);
+  assert.deepEqual(ids("Bank of Marin Bancorp reports small business loan growth and higher earnings"), []);
+  // San Francisco's Civic Center is not Marin's
+  assert.deepEqual(ids("Marin to the SF Civic Center, no Karl", "youtube"), []);
+  assert.ok(ids("Events this week at the Marin County Civic Center").includes("civic-center"));
+});
