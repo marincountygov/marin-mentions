@@ -49,7 +49,7 @@
       const coverage = r.coverage.length
         ? '<ul>' + r.coverage.map((c) => '<li>' + link(c.url, c.headline || c.source || 'Untitled') + coverageNote(c) +
           (c.notes ? '<br>' + esc(c.notes) : '') + '</li>').join('') + '</ul>'
-        : 'No coverage added yet';
+        : '';
       return '<tr><td>' + esc(r.date ? Core.formatDate(r.date) : '') + '</td><td>' + esc(r.department) + '</td><td>' +
         link(r.url, r.title || 'Untitled release') + '</td><td>' + coverage + '</td></tr>';
     }).join('\n');
@@ -75,9 +75,34 @@
       (c.notes ? '<br>' + esc(c.notes) : '') + '</li>').join('\n') + '\n</ul>';
   }
 
+  function statRows(section, chart) {
+    const stats = section.stats;
+    if (!stats) return [];
+    if (chart.id === 'totals') {
+      return [['Mentions', stats.totals.mentions], ['Unique sources', stats.totals.sources], ['Social posts', stats.totals.social]];
+    }
+    return stats.tables[chart.id] || [];
+  }
+
+  function statsHtml(section) {
+    const shown = Core.STAT_CHARTS.filter((c) => (section.charts || []).indexOf(c.id) >= 0)
+      .map((c) => ({ chart: c, rows: statRows(section, c) })).filter((x) => x.rows.length);
+    if (!shown.length) return section.intro ? '' : '<p>None</p>';
+    const parts = [];
+    if (section.stats.basis) parts.push('<p><em>' + esc(section.stats.basis) + '</em></p>');
+    shown.forEach((x) => {
+      parts.push('<h3>' + esc(x.chart.label) + '</h3>');
+      parts.push(TABLE + '\n<thead><tr>' + th(x.chart.column) + th(x.chart.id === 'totals' ? 'Count' : 'Mentions') + '</tr></thead>\n<tbody>\n' +
+        x.rows.map((r) => '<tr><td>' + esc(r[0]) + '</td><td>' + esc(String(r[1])) + '</td></tr>').join('\n') + '\n</tbody>\n</table>');
+    });
+    return parts.join('\n');
+  }
+
   function sectionBody(section) {
     if (section.type === 'text') return '';
-    if (!section.items.length) return '<p>Nothing to report this period.</p>';
+    if (section.type === 'stats') return statsHtml(section);
+    // A section with its own typed text (intro) is not empty, so it gets no placeholder.
+    if (!section.items.length) return section.intro ? '' : '<p>None</p>';
     if (section.type === 'release-coverage') return releaseTable(section.items);
     if (section.type === 'manual-table') return rowTable(section.items);
     if (section.type === 'highlights') return highlightList(section.items);
@@ -123,8 +148,21 @@
     const out = [section.title.toUpperCase()];
     if (section.intro) out.push(section.intro);
     if (section.type === 'text') return out.join('\n');
+    if (section.type === 'stats') {
+      let any = false;
+      Core.STAT_CHARTS.filter((c) => (section.charts || []).indexOf(c.id) >= 0).forEach((c) => {
+        const rows = statRows(section, c);
+        if (!rows.length) return;
+        if (!any && section.stats.basis) out.push(section.stats.basis);
+        any = true;
+        out.push(c.label);
+        rows.forEach((r) => out.push('  ' + r[0] + ': ' + r[1]));
+      });
+      if (!any && !section.intro) out.push('None');
+      return out.join('\n');
+    }
     if (!section.items.length) {
-      out.push('Nothing to report this period.');
+      if (!section.intro) out.push('None');
       return out.join('\n');
     }
     section.items.forEach((item) => {

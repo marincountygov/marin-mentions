@@ -39,24 +39,40 @@ def run(base, context, page, problems):
     # Create the media coverage report; defaults follow the example report.
     page.get_by_role("button", name="Create media coverage report").click()
     require(page.input_value("#reports-root input[type=text] >> nth=0") == "Marin Media Coverage and Outreach Report", "Default title")
-    require("Wednesday, October 7, through Tuesday, October 13" in page.inner_text("#reports-root"), "Period line")
+    require(page.get_by_label("Start date").input_value() != "" and page.get_by_label("End date").input_value() != "", "Start and end dates")
     page.select_option("#reports-root select", "last-30")
-    require("Reporting period: Monday, September 14, through Tuesday, October 13" in page.inner_text("#reports-root").replace("\n", " ").replace("  ", " "), "Period after preset")
+    require("Reporting period:" not in page.inner_text("#reports-root"), "No repeated period line")
+    require(page.get_by_label("Notes (optional)").input_value() == "", "Notes start empty")
 
     # Coverage: releases and items follow the sidebar filters and the period.
     page.get_by_role("button", name="Next: choose coverage").click()
     require(page.locator("#reports-root h3").inner_text() == "Choose coverage", "Coverage stage")
-    release_buttons = page.get_by_role("button", name="Add as release")
-    require(release_buttons.count() > 0, "No County releases listed for the period")
-    first_release = release_buttons.first.get_attribute("aria-label").replace("Add as release: ", "")
-    release_buttons.first.click()
-    require(first_release in page.inner_text("[data-status-for=releases]") or True, "release flash")
-    boxes = page.locator("#reports-root table input[type=checkbox]")
+    # Releases tab: a card per release with a checkbox; checking one adds it to the report.
+    require(page.get_by_role("tab", name="Releases", exact=False).count() == 1, "Releases tab")
+    page.get_by_role("tab", name="Releases").click()
+    require(page.locator("#rp-cov-panel table").count() == 0, "Releases are cards, not a table")
+    release_boxes = page.locator("#rp-cov-panel li.mm-card input[type=checkbox]")
+    require(release_boxes.count() > 0, "No County releases listed for the period")
+    release_boxes.first.check()
+    require("In report" not in page.inner_text("#reports-root"), "No In report badge or message")
+    # Find coverage after a release switches to the Coverage tab, limited to that date.
+    page.get_by_role("button", name="Find coverage after:").first.click()
+    require(page.get_by_role("tab", name="Coverage").get_attribute("aria-selected") == "true", "Find coverage opens Coverage")
+    require("on or after" in page.inner_text("#reports-root"), "Release date shown in the Showing line")
+    page.get_by_role("button", name="Show coverage from all dates").click()
+    require("on or after" not in page.inner_text("#reports-root"), "Release date filter cleared")
+    # Coverage tab: cards, type tabs, tri-state select all.
+    require(page.get_by_role("tab", name="News and video").get_attribute("aria-selected") == "true", "Default type tab")
+    boxes = page.locator("#rp-cov-panel li.mm-card input[type=checkbox]")
     total = boxes.count()
-    require(total >= 4, f"Expected coverage rows, found {total}")
+    require(total >= 4, f"Expected coverage cards, found {total}")
     for i in range(3):
         boxes.nth(i).check()
-    require("3 selected" in page.inner_text("#reports-root"), "Selected count")
+    require("In report" not in page.inner_text("#reports-root").replace("Reports", ""), "No In report message")
+    require(page.evaluate("document.querySelector('#rp-select-all').indeterminate"), "Select all is partly checked")
+    page.get_by_label("Selected only").check()
+    require(page.locator("#rp-cov-panel li.mm-card").count() == 3, "Selected only shows the picked items")
+    page.get_by_label("Selected only").uncheck()
     page.get_by_role("button", name="Add coverage by hand").click()
     page.fill("dialog input[type=text] >> nth=0", "Offline radio interview")
     page.fill("dialog input[type=text] >> nth=1", "KWMR")
@@ -97,6 +113,22 @@ def run(base, context, page, problems):
     page.get_by_role("button", name="Add section").click()
     require("Key takeaways" in page.locator("section.mm-rp-section > h4").all_inner_texts(), "Custom section added")
 
+    # One Stats box: tick the stats to include; it moves like the other sections.
+    stats_card = page.locator("section[aria-labelledby=stats-title]")
+    require(stats_card.locator("> h4").inner_text() == "Stats", "Stats box title")
+    require(stats_card.locator("fieldset input[type=checkbox]").count() == 7, "A box for each stat")
+    require("Stats" not in page.locator("section.mm-rp-section > h4").all_inner_texts(), "No Stats section until one is ticked")
+    stats_card.get_by_label("Totals").check()
+    stats_card.get_by_label("Top news sources").check()
+    stats_card.get_by_label("Top monitors").check()
+    stats_card.get_by_label("Top monitors").uncheck()
+    require(page.locator("section[aria-labelledby=stats-title]").count() == 1, "Still one Stats box")
+    titles = page.locator("section.mm-rp-section > h4").all_inner_texts()
+    require(titles[0] == "Stats", f"Stats starts at the top: {titles}")
+    page.get_by_role("button", name="Move section down: Stats").click()
+    titles = page.locator("section.mm-rp-section > h4").all_inner_texts()
+    require(titles.index("Stats") == 1, f"Stats moves like other sections: {titles}")
+
     # Report: preview is a clean document.
     page.get_by_role("button", name="Next: report").click()
     doc = page.locator("#report-document")
@@ -106,6 +138,8 @@ def run(base, context, page, problems):
     require(doc.locator("button, input, select, textarea").count() == 0, "No controls inside the report")
     require("Coming up" not in doc.inner_text(), "Hidden section leaked into the report")
     require(doc.locator("a[href^='http']").count() >= 3, "Links preserved")
+    stat_headings = doc.locator("h3").all_inner_texts()
+    require(stat_headings[:1] == ["Totals"] and "Top news sources" in stat_headings and "Top monitors" not in stat_headings, f"Stats charts: {stat_headings}")
 
     # Copy for Word puts HTML and plain text on the clipboard, with a message under the button.
     page.get_by_role("button", name="Copy for Word").click()

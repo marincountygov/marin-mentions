@@ -40,7 +40,7 @@ test("the media coverage template has the five sections", () => {
   const r = fresh();
   assert.deepEqual(r.sections.map((s) => s.id), ["news-releases", "older-releases", "other-coverage", "opinion", "upcoming"]);
   assert.deepEqual(r.sections.map((s) => s.type), ["release-coverage", "release-coverage", "coverage-list", "coverage-list", "manual-table"]);
-  assert.match(r.footer, /PIO@marincounty\.gov/);
+  assert.equal(r.footer, "", "no closing note by default");
   assert.equal(fresh("custom").sections.length, 0);
   assert.equal(r.schemaVersion, "1.0");
 });
@@ -201,6 +201,8 @@ test("the renderer produces semantic, Word-friendly HTML", () => {
   r = Core.addToSection(r, "news-releases", release);
   r = Core.placeItem(r, a.uid, "news-releases", release.uid);
   r = Core.updateSection(r, "older-releases", { enabled: false });
+  r.footer = "Know of an upcoming news opportunity or great story to tell?\n\nPlease reach out to PIO@marincounty.gov with details.";
+  r.footerBold = true;
   const html = Render.renderReport(r);
   assert.match(html, /<h1>Marin Media Coverage and Outreach Report<\/h1>/);
   assert.match(html, /<p><em>Wednesday, September 30, through Tuesday, October 6<\/em><\/p>/);
@@ -215,9 +217,22 @@ test("the renderer produces semantic, Word-friendly HTML", () => {
   assert.match(html, /<p><strong>Know of an upcoming news opportunity/);
 });
 
+test("a section with its own text gets no 'nothing to report' line", () => {
+  const r = fresh();
+  r.sections.find((s) => s.id === "upcoming").intro = "Fair 2027 Theme";
+  const html = Render.renderReport(r, { onlySectionId: "upcoming" });
+  assert.ok(html.includes("Fair 2027 Theme"));
+  assert.ok(!html.includes("<p>None</p>"));
+  const text = Render.toPlainText(r);
+  const start = text.indexOf("Fair 2027 Theme");
+  assert.ok(start > -1);
+  const chunk = text.slice(start).split("\n\n")[0];
+  assert.ok(!/\nNone$/.test(chunk));
+});
+
 test("empty sections say so, and the manual table renders its rows", () => {
   let r = fresh();
-  assert.match(Render.renderReport(r), /<p>Nothing to report this period\.<\/p>/);
+  assert.match(Render.renderReport(r), /<p>None<\/p>/);
   r = Core.addToSection(r, "upcoming", Core.newRow({ when: "Oct 14", department: "DPW", topic: "Road work", description: "Lane closures", url: "https://marincounty.gov/dpw" }));
   const html = Render.renderReport(r, { onlySectionId: "upcoming" });
   assert.match(html, /<th scope="col">Tentative date<\/th>/);
@@ -237,6 +252,7 @@ test("plain text mirrors the report", () => {
   let r = fresh();
   r = Core.addUnplaced(r, Core.snapshotFromMention(mention({ id: "a" }), names));
   r = Core.placeItem(r, r.unplaced[0].uid, "other-coverage");
+  r.footer = "Please reach out to PIO@marincounty.gov with details.";
   const text = Render.toPlainText(r);
   assert.match(text, /^County of Marin\nMarin Media Coverage and Outreach Report\nWednesday, September 30, through Tuesday, October 6/);
   assert.match(text, /Oct 2, 2026 \| County approves winter plan \| Marin IJ \| https:\/\/example\.com\/a/);
@@ -265,4 +281,36 @@ test("custom reports use the same engine with text, highlights, and tables", () 
   assert.match(html, /Why it matters/);
   assert.match(html, /<p>Summary line\.<\/p>\n<p>Second paragraph\.<\/p>/);
   assert.ok(Core.validateReport(JSON.parse(Core.toJson(r))).ok);
+});
+
+test("a Stats section keeps its chosen charts and renders them as plain tables", () => {
+  let r = fresh();
+  r = Core.addSection(r, "stats", "Campaign numbers");
+  const id = r.sections[r.sections.length - 1].id;
+  assert.deepEqual(r.sections.at(-1).charts, ["totals", "timeline", "monitors", "sources"]);
+  r = Core.updateSection(r, id, {
+    charts: ["totals", "sources", "bogus"],
+    stats: {
+      basis: "Mentions from Oct 1 to Oct 7 · All monitors",
+      totals: { mentions: 12, sources: 5, social: 2 },
+      tables: { sources: [["KRON4 <b>", 7], ["Marin IJ", 3]], monitors: [["Topics", 9]] },
+    },
+  });
+  assert.deepEqual(Core.findSection(r, id).charts, ["totals", "sources"]);
+  const html = Render.renderReport(r, { onlySectionId: id });
+  assert.match(html, /<h3>Totals<\/h3>/);
+  assert.match(html, /<td>Mentions<\/td><td>12<\/td>/);
+  assert.match(html, /<td>KRON4 &lt;b&gt;<\/td><td>7<\/td>/);
+  assert.ok(!html.includes("Top monitors"), "unchecked charts stay out");
+  assert.ok(!/<(div|span|script|canvas)\b|class=|style=/.test(html));
+  assert.match(Render.toPlainText(r, { onlySectionId: id }), /Top news sources\n {2}KRON4 <b>: 7/);
+  const again = Core.parseJson(Core.toJson(r));
+  assert.ok(again.ok, again.errors.join());
+  assert.deepEqual(Core.findSection(again.report, id).stats.totals, { mentions: 12, sources: 5, social: 2 });
+});
+
+test("a Stats section with no numbers says so", () => {
+  const r = Core.addSection(fresh(), "stats", "");
+  const html = Render.renderReport(r, { onlySectionId: r.sections.at(-1).id });
+  assert.match(html, /<p>None<\/p>/);
 });

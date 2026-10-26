@@ -27,6 +27,9 @@
     flash: {}, // key of a control -> message shown next to it
     showAllRows: false,
     contentType: 'news-video',
+    coverageTab: 'coverage',
+    selectedOnly: false,
+    since: null, // { date, title }: only coverage on or after this release
     saveWarning: '',
     lastFocusKey: null,
   };
@@ -180,6 +183,22 @@
     saveDraft();
   }
 
+  // Stats sections hold a snapshot of the Mentions numbers, so take a fresh one when the report is
+  // organized or read, in case the dates or the sidebar filters changed since.
+  function refreshStats() {
+    if (!ui.report || !ui.host || !ui.host.stats) return;
+    let next = ui.report;
+    next.sections.forEach((sec) => { if (sec.type === 'stats') next = Core.updateSection(next, sec.id, { stats: ui.host.stats(next.period) }); });
+    if (next !== ui.report) { ui.report = next; saveDraft(); }
+  }
+
+  function enterStage(stage) {
+    ui.stage = stage;
+    ui.flash = {};
+    if (stage === 'organize' || stage === 'report') refreshStats();
+    render('stage-heading');
+  }
+
   // --- dialogs ---
 
   function openForm(config) {
@@ -298,7 +317,7 @@
     const list = h('ol', { class: 'mm-rp-stages', 'aria-label': 'Report steps' });
     STAGES.forEach((s, i) => {
       const b = h('button', { type: 'button', class: 'tab-button', 'data-key': 'stage-' + s.id, 'aria-current': ui.stage === s.id ? 'step' : false }, [(i + 1) + '. ' + s.label]);
-      b.addEventListener('click', () => { ui.stage = s.id; ui.flash = {}; render('stage-heading'); });
+      b.addEventListener('click', () => enterStage(s.id));
       list.append(h('li', {}, b));
     });
     return list;
@@ -400,8 +419,7 @@
     end.addEventListener('change', apply);
     root.append(h('div', { class: 'mm-rp-dates' }, [field('Start date', start), field('End date', end)]));
     root.append(status('period'));
-    root.append(h('p', { class: 'mm-rp-period' }, [h('strong', { text: 'Reporting period: ' }), Core.formatPeriod(r.period.start, r.period.end)]));
-    root.append(field('Closing note (optional)', textarea(r.footer, (v) => quietChange(Core.updateDetails(ui.report, { footer: v })), 4),
+    root.append(field('Notes (optional)', textarea(r.footer, (v) => quietChange(Core.updateDetails(ui.report, { footer: v })), 4),
       'Shown at the end of the report. Leave blank for none.'));
     root.append(h('div', { class: 'mm-rp-actions' }, [button('Next: choose coverage', 'next-coverage', () => { ui.stage = 'coverage'; render('stage-heading'); }, { primary: true })]));
     return root;
@@ -410,83 +428,163 @@
   // Coverage
   function inReport(itemId) { return Core.hasMentionsItem(ui.report, itemId); }
 
+  function typeLabel(type) { return type ? type.charAt(0).toUpperCase() + type.slice(1) : ''; }
+
+  // One list item in the same markup as the Mentions cards: checkbox, type badge, headline, date and source.
+  function mentionCard(item, snap, opts) {
+    const included = inReport(String(item.id));
+    const box = h('input', { type: 'checkbox', id: 'pick-' + item.id, 'data-key': 'pick-' + item.id });
+    box.checked = included;
+    box.addEventListener('change', () => opts.onToggle(box.checked));
+    const meta = h('div', { class: 'mm-card__meta' }, [h('span', { class: 'app-badge', text: typeLabel(snap.contentType) })]);
+    const body = h('div', { class: 'mm-card__body' }, [
+      meta,
+      h('h4', { class: 'mm-card__title' }, h('a', { href: snap.url || '#', target: '_blank', rel: 'noreferrer', text: snap.headline })),
+      h('p', { class: 'mm-card__byline' }, [h('time', { datetime: snap.date, text: Core.formatDate(snap.date) }), ' — ', h('span', { class: 'mm-card__source', text: snap.source })]),
+    ]);
+    if (opts.actions && opts.actions.length) body.append(h('div', { class: 'action-group', role: 'group', 'aria-label': 'Actions for ' + snap.headline }, opts.actions));
+    return h('li', { class: 'app-card mm-card' }, [
+      h('span', { class: 'mm-card__select' }, [h('label', { class: 'visually-hidden', for: 'pick-' + item.id, text: 'Select: ' + snap.headline + ', ' + Core.formatDate(snap.date) }), box]),
+      body,
+    ]);
+  }
+
   function coverageScreen() {
     const r = ui.report;
     const host = ui.host;
+    const names = host.monitorNames();
     const root = h('div', {});
     root.append(h('h3', { id: 'rp-heading', tabindex: '-1', 'data-key': 'stage-heading', text: 'Choose coverage' }));
-    root.append(h('p', {}, ['Showing items from ', h('strong', { text: Core.formatPeriod(r.period.start, r.period.end) }),
-      '. Use the search and filters on the left to narrow the list. The Time filter is not used here; the report dates are.']));
-    root.append(button('Change dates', 'change-dates', () => { ui.stage = 'details'; render('stage-heading'); }));
 
-    // County releases in the period
-    const releases = host.releases(r.period).filter((item) => !inReport(String(item.id)));
-    root.append(h('h4', { text: 'County news releases in this period' }));
-    if (!releases.length) root.append(h('p', { class: 'app-help-text', text: 'No new County releases found for these dates, or all have been added.' }));
-    else {
-      const table = h('table', {}, [h('thead', {}, h('tr', {}, ['Date', 'Release', 'Source', 'Add'].map((t) => h('th', { scope: 'col', text: t })))), h('tbody')]);
-      releases.slice(0, 40).forEach((item) => {
-        const snap = Core.snapshotFromMention(item, host.monitorNames());
-        const add = button('Add as release', 'add-release-' + item.id, () => {
-          const release = Core.newRelease({ origin: 'mentions', itemId: String(item.id), date: snap.date, department: snap.source, title: snap.headline, url: snap.url });
-          const target = Core.releaseSectionFor(ui.report, snap.date);
-          if (!target) { say('releases', 'Add a "News releases with coverage" section in Organize first.'); return; }
-          setReport(Core.addToSection(ui.report, target.id, release), 'add-release-next');
-          say('releases', 'Added "' + snap.headline + '" to ' + target.title + '.');
-        }, { 'aria-label': 'Add as release: ' + snap.headline });
-        table.lastChild.append(h('tr', {}, [h('td', { text: Core.formatDate(snap.date) }), h('td', { text: snap.headline }), h('td', { text: snap.source }), h('td', {}, add)]));
+    const releases = host.releases(r.period);
+    let rows = host.candidates(r.period, ui.contentType);
+    if (ui.since) rows = rows.filter((item) => Core.snapshotFromMention(item, names).date >= ui.since.date);
+    const coverageTotal = rows.length;
+    if (ui.selectedOnly) rows = rows.filter((item) => inReport(String(item.id)));
+    const onReleases = ui.coverageTab === 'releases';
+
+    // The "Showing" line, as on the Mentions list.
+    const filters = host.filterSummary ? host.filterSummary() : '';
+    const showing = ['Showing: ' + Core.formatPeriod(r.period.start, r.period.end)];
+    if (filters) showing.push(filters);
+    if (ui.since && !onReleases) showing.push('on or after ' + Core.formatDate(ui.since.date));
+    if (ui.selectedOnly && !onReleases) showing.push('selected only');
+    root.append(h('p', { class: 'app-help-text', 'aria-live': 'polite',
+      text: showing.join(' · ') + ' (' + (onReleases ? releases.length + ' release' + (releases.length === 1 ? '' : 's') : rows.length + ' item' + (rows.length === 1 ? '' : 's')) + ')' }));
+
+    // Releases and Coverage tabs.
+    const tabs = h('div', { class: 'tab-list' }, h('div', { role: 'tablist', 'aria-label': 'Choose from' }));
+    [{ id: 'releases', label: 'Releases (' + releases.length + ')' }, { id: 'coverage', label: 'Coverage (' + coverageTotal + ')' }].forEach((t) => {
+      const b = h('button', { type: 'button', role: 'tab', class: 'tab-button', 'data-key': 'cov-tab-' + t.id, 'aria-selected': String(ui.coverageTab === t.id), 'aria-controls': 'rp-cov-panel', text: t.label });
+      b.addEventListener('click', () => { ui.coverageTab = t.id; ui.showAllRows = false; render('cov-tab-' + t.id); });
+      tabs.firstChild.append(b);
+    });
+    root.append(tabs);
+
+    // Type of coverage, as tabs like the Mentions content tabs.
+    if (!onReleases) {
+      const types = h('div', { class: 'tab-list' }, h('div', { role: 'tablist', 'aria-label': 'Type of coverage' }));
+      [['news-video', 'News and video'], ['news', 'News'], ['video', 'Video'], ['social', 'Social'], ['all', 'All']].forEach(([value, label]) => {
+        const b = h('button', { type: 'button', role: 'tab', class: 'tab-button', 'data-key': 'type-' + value, 'aria-selected': String(ui.contentType === value), text: label });
+        b.addEventListener('click', () => { ui.contentType = value; ui.showAllRows = false; render('type-' + value); });
+        types.firstChild.append(b);
       });
-      root.append(table);
+      root.append(types);
     }
-    root.append(h('div', { class: 'mm-rp-actions' }, [button('Add a news release by hand', 'add-release-hand', () => {
-      releaseForm('add-release-hand', (v) => {
-        const release = Core.newRelease(v);
-        const target = Core.releaseSectionFor(ui.report, release.date) || null;
-        if (!target) { say('releases', 'Add a "News releases with coverage" section in Organize first.'); return; }
-        setReport(Core.addToSection(ui.report, target.id, release), 'add-release-hand');
-      });
-    })]), status('releases'));
 
-    // Coverage candidates
-    root.append(h('h4', { text: 'Coverage' }));
-    const typeSelect = selectOf([
-      { value: 'news-video', label: 'News and video' }, { value: 'all', label: 'All types, including social' },
-      { value: 'news', label: 'News only' }, { value: 'video', label: 'Video only' }, { value: 'social', label: 'Social only' },
-    ], ui.contentType, (value) => { ui.contentType = value; ui.showAllRows = false; render('content-type'); });
-    typeSelect.setAttribute('data-key', 'content-type');
-    root.append(field('Type of coverage', typeSelect));
-    const rows = host.candidates(r.period, ui.contentType);
+    // Icon action buttons.
+    const group = h('div', { class: 'action-group', role: 'group', 'aria-label': 'Coverage actions' }, [
+      button('Change dates', 'change-dates', () => { ui.stage = 'details'; render('stage-heading'); }, { icon: 'pencil' }),
+      onReleases
+        ? button('Add a news release by hand', 'add-release-hand', () => {
+          releaseForm('add-release-hand', (v) => {
+            const release = Core.newRelease(v);
+            const target = Core.releaseSectionFor(ui.report, release.date) || null;
+            if (!target) { say('releases', 'Add a "News releases with coverage" section in Organize first.'); return; }
+            setReport(Core.addToSection(ui.report, target.id, release), 'add-release-hand');
+          });
+        }, { icon: 'plus' })
+        : button('Add coverage by hand', 'add-coverage-hand', () => coverageForm('add-coverage-hand', (v) => setReport(Core.addUnplaced(ui.report, Core.manualCoverage(v)), 'add-coverage-hand')), { icon: 'plus' }),
+    ]);
+    if (!onReleases && ui.since) group.append(button('Show coverage from all dates', 'clear-since', () => { ui.since = null; ui.showAllRows = false; render('clear-since'); }, { icon: 'x' }));
+    root.append(h('div', { class: 'action-toolbar' }, group));
+    root.append(status(onReleases ? 'releases' : 'select'));
+
+    const panel = h('div', { id: 'rp-cov-panel', role: 'tabpanel' });
+    root.append(panel);
+
+    if (onReleases) {
+      if (!releases.length) panel.append(h('p', { class: 'app-help-text', text: 'No County releases found for these dates.' }));
+      else {
+        const list = h('ul', { class: 'search-results-list', 'aria-label': 'County news releases' });
+        releases.slice(0, ROW_LIMIT).forEach((item) => {
+          const snap = Core.snapshotFromMention(item, names);
+          list.append(mentionCard(item, snap, {
+            onToggle: (on) => {
+              if (on) {
+                const release = Core.newRelease({ origin: 'mentions', itemId: String(item.id), date: snap.date, department: snap.source, title: snap.headline, url: snap.url });
+                const target = Core.releaseSectionFor(ui.report, snap.date);
+                if (!target) { say('releases', 'Add a "News releases with coverage" section in Organize first.'); render('pick-' + item.id); return; }
+                setReport(Core.addToSection(ui.report, target.id, release), 'pick-' + item.id);
+                say('releases', 'Added "' + snap.headline + '" to ' + target.title + '.');
+              } else {
+                const found = findByItemId(ui.report, String(item.id));
+                if (found) setReport(Core.removeItem(ui.report, found.uid), 'pick-' + item.id);
+              }
+            },
+            actions: [button('Find coverage after this release', 'find-' + item.id, () => {
+              ui.since = { date: snap.date, title: snap.headline };
+              ui.coverageTab = 'coverage';
+              ui.showAllRows = false;
+              render('cov-tab-coverage');
+            }, { icon: 'search', 'aria-label': 'Find coverage after: ' + snap.headline })],
+          }));
+        });
+        panel.append(list);
+      }
+      root.append(h('div', { class: 'mm-rp-actions' }, [button('Next: organize', 'next-organize', () => enterStage('organize'), { primary: true })]));
+      return root;
+    }
+
+    // Coverage: select all, selected only, then the cards.
     const selectedCount = rows.filter((item) => inReport(String(item.id))).length;
-    root.append(h('p', { 'aria-live': 'polite', text: rows.length + ' item' + (rows.length === 1 ? '' : 's') + ' match. ' + selectedCount + ' selected.' }));
-    root.append(h('div', { class: 'mm-rp-actions' }, [
-      button('Select all shown', 'select-all-shown', () => {
-        let next = ui.report;
-        rows.forEach((item) => { if (!Core.hasMentionsItem(next, String(item.id))) next = Core.addUnplaced(next, Core.snapshotFromMention(item, host.monitorNames())); });
-        setReport(next, 'select-all-shown');
+    const selectAll = h('input', { type: 'checkbox', id: 'rp-select-all', 'data-key': 'select-all-shown' });
+    selectAll.disabled = !rows.length;
+    selectAll.checked = rows.length > 0 && selectedCount === rows.length;
+    selectAll.indeterminate = selectedCount > 0 && selectedCount < rows.length;
+    selectAll.addEventListener('change', () => {
+      let next = ui.report;
+      if (selectAll.checked) {
+        rows.forEach((item) => { if (!Core.hasMentionsItem(next, String(item.id))) next = Core.addUnplaced(next, Core.snapshotFromMention(item, names)); });
         say('select', 'Selected ' + rows.length + ' items.');
-      }),
-      button('Clear all shown', 'clear-all-shown', () => {
-        let next = ui.report;
+      } else {
         rows.forEach((item) => {
           const found = findByItemId(next, String(item.id));
           if (found) next = Core.removeItem(next, found.uid);
         });
-        setReport(next, 'clear-all-shown');
         say('select', 'Cleared the shown items.');
-      }),
-      button('Add coverage by hand', 'add-coverage-hand', () => coverageForm('add-coverage-hand', (v) => setReport(Core.addUnplaced(ui.report, Core.manualCoverage(v)), 'add-coverage-hand'))),
-    ]), status('select'));
+      }
+      setReport(next, 'select-all-shown');
+    });
+    const selectedOnly = h('input', { type: 'checkbox', id: 'rp-selected-only', 'data-key': 'selected-only' });
+    selectedOnly.checked = ui.selectedOnly;
+    selectedOnly.addEventListener('change', () => { ui.selectedOnly = selectedOnly.checked; ui.showAllRows = false; render('selected-only'); });
+    panel.append(h('div', { class: 'mm-select-all' }, [
+      h('label', {}, [selectAll, ' Select all']),
+      h('label', {}, [selectedOnly, ' Selected only']),
+    ]));
+
     const clips = host.clipped();
     if (clips.length) {
-      root.append(button('Add the ' + clips.length + ' item' + (clips.length === 1 ? '' : 's') + ' I selected in the list', 'use-clips', () => {
+      panel.append(button('Add the ' + clips.length + ' item' + (clips.length === 1 ? '' : 's') + ' I selected in the list', 'use-clips', () => {
         let next = ui.report;
         clips.forEach((clip) => {
-          const snap = Core.snapshotFromMention(clip.item, host.monitorNames());
+          const snap = Core.snapshotFromMention(clip.item, names);
           if (!Core.hasMentionsItem(next, snap.itemId)) next = Core.addUnplaced(next, snap);
           if (clip.release) {
             let relUid = findByItemId(next, String(clip.release.id));
             if (!relUid) {
-              const rs = Core.snapshotFromMention(clip.release, host.monitorNames());
+              const rs = Core.snapshotFromMention(clip.release, names);
               const release = Core.newRelease({ origin: 'mentions', itemId: String(clip.release.id), date: rs.date, department: rs.source, title: rs.headline, url: rs.url });
               const target = Core.releaseSectionFor(next, rs.date);
               if (target) { next = Core.addToSection(next, target.id, release); relUid = release; }
@@ -500,26 +598,27 @@
         say('select', 'Added your selections. Open Organize to place them.');
       }));
     }
-    if (rows.length) {
+
+    if (!rows.length) panel.append(h('p', { class: 'app-help-text', text: 'No coverage matches.' }));
+    else {
       const shown = ui.showAllRows ? rows : rows.slice(0, ROW_LIMIT);
-      const table = h('table', {}, [h('thead', {}, h('tr', {}, ['Select', 'Date', 'Headline', 'Source', 'Type'].map((t) => h('th', { scope: 'col', text: t })))), h('tbody')]);
+      const list = h('ul', { class: 'search-results-list', 'aria-label': 'Coverage that matches' });
       shown.forEach((item) => {
-        const snap = Core.snapshotFromMention(item, host.monitorNames());
-        const box = h('input', { type: 'checkbox', 'data-key': 'pick-' + item.id, 'aria-label': 'Select: ' + snap.headline + ', ' + Core.formatDate(snap.date) });
-        box.checked = inReport(String(item.id));
-        box.addEventListener('change', () => {
-          if (box.checked) setReport(Core.addUnplaced(ui.report, snap), 'pick-' + item.id);
-          else {
-            const found = findByItemId(ui.report, String(item.id));
-            if (found) setReport(Core.removeItem(ui.report, found.uid), 'pick-' + item.id);
-          }
-        });
-        table.lastChild.append(h('tr', {}, [h('td', {}, box), h('td', { text: Core.formatDate(snap.date) }), h('td', { text: snap.headline }), h('td', { text: snap.source }), h('td', { text: snap.contentType })]));
+        const snap = Core.snapshotFromMention(item, names);
+        list.append(mentionCard(item, snap, {
+          onToggle: (on) => {
+            if (on) setReport(Core.addUnplaced(ui.report, snap), 'pick-' + item.id);
+            else {
+              const found = findByItemId(ui.report, String(item.id));
+              if (found) setReport(Core.removeItem(ui.report, found.uid), 'pick-' + item.id);
+            }
+          },
+        }));
       });
-      root.append(h('div', { class: 'mm-rp-scroll', tabindex: '0', role: 'region', 'aria-label': 'Coverage that matches' }, table));
-      if (rows.length > shown.length) root.append(button('Show all ' + rows.length, 'show-all-rows', () => { ui.showAllRows = true; render('show-all-rows'); }));
+      panel.append(list);
+      if (rows.length > shown.length) panel.append(button('Show all ' + rows.length, 'show-all-rows', () => { ui.showAllRows = true; render('show-all-rows'); }));
     }
-    root.append(h('div', { class: 'mm-rp-actions' }, [button('Next: organize', 'next-organize', () => { ui.stage = 'organize'; render('stage-heading'); }, { primary: true })]));
+    root.append(h('div', { class: 'mm-rp-actions' }, [button('Next: organize', 'next-organize', () => enterStage('organize'), { primary: true })]));
     return root;
   }
 
@@ -580,6 +679,7 @@
   }
 
   function sectionBlock(section, index, total) {
+    if (section.type === 'stats') return statsBox(section, index, total);
     const key = 'sec-' + section.id;
     const wrap = h('section', { class: 'app-card mm-rp-section', 'aria-labelledby': key + '-title' });
     wrap.append(h('h4', { id: key + '-title', text: section.title }));
@@ -613,28 +713,81 @@
     return wrap;
   }
 
+  // Checking a stat adds the report's Stats section (made once, with the numbers); unchecking the last one removes it.
+  function toggleStat(id, on) {
+    let next = ui.report;
+    let sec = next.sections.filter((x) => x.type === 'stats')[0];
+    if (!sec) {
+      if (!on) return;
+      next = Core.addSection(next, 'stats', 'Stats');
+      sec = next.sections[next.sections.length - 1];
+      if (!sec || sec.type !== 'stats') return;
+      next = Core.updateSection(next, sec.id, { charts: [id], stats: ui.host.stats(next.period) });
+      for (let i = next.sections.length - 1; i > 0; i -= 1) next = Core.moveSectionBy(next, sec.id, -1);
+    } else {
+      const charts = Core.STAT_CHARTS.map((c) => c.id).filter((c) => (c === id ? on : (sec.charts || []).indexOf(c) >= 0));
+      next = charts.length ? Core.updateSection(next, sec.id, { charts: charts }) : Core.deleteSection(next, sec.id);
+    }
+    setReport(next, 'stat-' + id);
+  }
+
+  // The one Stats box: which stats to include, the numbers, and (once something is ticked) the same
+  // show and move controls as the other sections. Without a Stats section it is just the checkboxes.
+  function statsBox(sec, index, total) {
+    const box = h('section', { class: 'app-card' + (sec ? ' mm-rp-section' : ''), 'aria-labelledby': 'stats-title' });
+    box.append(h('h4', { id: 'stats-title', text: 'Stats' }));
+    box.append(h('p', { class: 'app-help-text', text: 'Choose the numbers to include. They come from the report dates and the filters on the left, and show in the report as tables.' }));
+    const picks = h('fieldset', { class: 'mm-rp-charts' }, [h('legend', { class: 'visually-hidden', text: 'Stats to include' })]);
+    Core.STAT_CHARTS.forEach((chart) => {
+      const check = h('input', { type: 'checkbox', 'data-key': 'stat-' + chart.id });
+      check.checked = Boolean(sec) && (sec.charts || []).indexOf(chart.id) >= 0;
+      check.addEventListener('change', () => toggleStat(chart.id, check.checked));
+      picks.append(h('label', {}, [check, ' ' + chart.label]));
+    });
+    box.append(picks);
+    if (!sec) return box;
+    box.append(h('p', { class: 'app-help-text', text: sec.stats ? sec.stats.basis : 'No numbers yet.' }));
+    const show = h('input', { type: 'checkbox', 'data-key': 'stats-show' });
+    show.checked = sec.enabled;
+    show.addEventListener('change', () => setReport(Core.updateSection(ui.report, sec.id, { enabled: show.checked }), 'stats-show'));
+    box.append(h('div', { class: 'mm-rp-field' }, [h('label', {}, [show, ' Show in report'])]));
+    box.append(h('div', { class: 'mm-rp-actions' }, [
+      button('Update numbers', 'stats-update', () => {
+        setReport(Core.updateSection(ui.report, sec.id, { stats: ui.host.stats(ui.report.period) }), 'stats-update');
+        say('stats-update', 'Numbers updated.');
+      }, { icon: 'refresh-cw' }),
+      button('Move section up', 'stats-sup', () => setReport(Core.moveSectionBy(ui.report, sec.id, -1), 'stats-sup'), { 'aria-label': 'Move section up: Stats', icon: 'arrow-up', disabled: index === 0 }),
+      button('Move section down', 'stats-sdown', () => setReport(Core.moveSectionBy(ui.report, sec.id, 1), 'stats-sdown'), { 'aria-label': 'Move section down: Stats', icon: 'arrow-down', disabled: index === total - 1 }),
+    ]));
+    box.append(status('stats-update'));
+    return box;
+  }
+
   function organizeScreen() {
     const r = ui.report;
     const root = h('div', {});
     root.append(h('h3', { id: 'rp-heading', tabindex: '-1', 'data-key': 'organize-heading', text: 'Organize the report' }));
     root.append(h('p', { text: 'Place coverage in sections, put things in order, and edit what shows. Everything has buttons for moving, so nothing needs dragging.' }));
+    if (!r.sections.some((x) => x.type === 'stats')) root.append(statsBox(null));
     const pool = h('section', { class: 'app-card', 'aria-labelledby': 'pool-title' });
     pool.append(h('h4', { id: 'pool-title', text: 'Not yet placed (' + r.unplaced.length + ')' }));
     pool.append(h('p', { class: 'app-help-text', text: 'These items are not in the report until you place them in a section.' }));
     const list = h('ul', { class: 'mm-rp-items', 'aria-label': 'Items not yet placed' });
     r.unplaced.forEach((item, i) => list.append(itemRow(item, 'pool-' + i, { pool: true })));
-    if (!r.unplaced.length) list.append(h('li', { class: 'app-help-text', text: 'Nothing waiting. Choose coverage on the Coverage step.' }));
     pool.append(list);
-    root.append(pool);
+    // Nothing waiting means nothing to show: the box only appears while items still need a section.
+    if (r.unplaced.length) root.append(pool);
     r.sections.forEach((s, i) => root.append(sectionBlock(s, i, r.sections.length)));
     // Add a section
     let newType = 'coverage-list';
     let newTitle = '';
-    const type = selectOf(Core.SECTION_TYPES.map((t) => ({ value: t, label: Core.SECTION_TYPE_LABELS[t] })), newType, (v) => { newType = v; });
+    const type = selectOf(Core.SECTION_TYPES.filter((t) => t !== 'stats').map((t) => ({ value: t, label: Core.SECTION_TYPE_LABELS[t] })), newType, (v) => { newType = v; });
     const title = input('text', '', (v) => { newTitle = v; });
     root.append(h('div', { class: 'app-card' }, [h('h4', { text: 'Add a section' }), field('Section type', type), field('Section title', title),
-      button('Add section', 'add-section', () => setReport(Core.addSection(ui.report, newType, newTitle), 'add-section'))]));
-    root.append(h('div', { class: 'mm-rp-actions' }, [button('Next: report', 'next-report', () => { ui.stage = 'report'; render('stage-heading'); })]));
+      button('Add section', 'add-section', () => {
+        setReport(Core.addSection(ui.report, newType, newTitle), 'add-section');
+      })]));
+    root.append(h('div', { class: 'mm-rp-actions' }, [button('Next: report', 'next-report', () => enterStage('report'), { primary: true })]));
     return root;
   }
 
@@ -706,7 +859,15 @@
     } else {
       ui.root.append(stageNav());
       const screens = { details: detailsScreen, coverage: coverageScreen, organize: organizeScreen, report: reportScreen };
-      ui.root.append(screens[ui.stage]());
+      try {
+        ui.root.append(screens[ui.stage]());
+      } catch (error) {
+        // Never leave the step blank. The draft is already saved, so reloading loses nothing.
+        console.error(error);
+        ui.root.append(h('div', { class: 'app-error', role: 'alert' }, [
+          h('p', { text: 'This step could not be shown. Reload the page (hold Shift while you reload) and your saved draft will still be here.' }),
+        ]));
+      }
     }
     if (keep) {
       if (!focusKey(keep)) {

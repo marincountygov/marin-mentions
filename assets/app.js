@@ -264,6 +264,44 @@ document.addEventListener("DOMContentLoaded", () => {
   // `state` directly, so the two stay separate.
   const reportsHost = {
     announce,
+    filterSummary: () => describeActiveFilters(true),
+    // The Stats tab's numbers for the report dates and the sidebar filters (not the Time filter).
+    stats: (period) => {
+      const Core = window.ReportsCore;
+      const items = (state.data?.items || [])
+        .filter((item) => passesFilters(item, { skipContentType: true, skipTime: true }))
+        .filter((item) => Core.inPeriod(Core.pacificDate(item.publishedAt), period));
+      const named = (entries) => entries.map(([key, value]) => [key, value]);
+      const days = [];
+      for (let day = period.start; day <= period.end && days.length < 400; day = Core.addDays(day, 1)) days.push(day);
+      const weekly = days.length > 14;
+      const buckets = new Map();
+      days.forEach((day, i) => buckets.set(weekly ? days[i - (i % 7)] : day, 0));
+      items.forEach((item) => {
+        const index = days.indexOf(Core.pacificDate(item.publishedAt));
+        if (index < 0) return;
+        const key = weekly ? days[index - (index % 7)] : days[index];
+        buckets.set(key, (buckets.get(key) || 0) + 1);
+      });
+      const placeIds = new Set((state.data?.monitors || []).filter((m) => m.group === "Towns" || m.group === "Districts").map((m) => m.id));
+      const authors = (type) => topCounts(items.filter((i) => i.sourceType === type && i.author && i.author.trim()).map((i) => i.author));
+      return {
+        basis: `Mentions from ${Core.formatDate(period.start)} to ${Core.formatDate(period.end)} · ${describeActiveFilters(true)}`,
+        totals: {
+          mentions: items.length,
+          sources: new Set(items.map((i) => i.sourceId)).size,
+          social: items.filter((i) => i.sourceType === "social").length,
+        },
+        tables: {
+          timeline: [...buckets.entries()].map(([day, n]) => [(weekly ? "Week of " : "") + Core.formatDate(day), n]),
+          monitors: named(topCounts(items.flatMap(relevantMonitorIdsFor))).map(([id, n]) => [monitorNameFor(id), n]),
+          sources: topCounts(items.filter((i) => i.sourceType === "news" && !state.officialSourceIds.has(i.sourceId)).map((i) => i.source)),
+          authors: authors("news"),
+          social: authors("social"),
+          places: topCounts(items.flatMap((i) => i.matchedMonitors.filter((id) => placeIds.has(id)))).map(([id, n]) => [monitorNameFor(id), n]),
+        },
+      };
+    },
     monitorNames: () => Object.fromEntries((state.data?.monitors || []).map((m) => [m.id, m.name])),
     // Items that pass the sidebar filters (monitors, sources, search), ignoring the Time filter
     // and the content-type tab, and whose Pacific-time day falls in the report period.
@@ -751,11 +789,14 @@ document.addEventListener("DOMContentLoaded", () => {
     return `${text.slice(0, max).trim()}…`;
   }
 
-  function describeActiveFilters() {
+  // forReports leaves out the Time and content-type parts: Reports uses its own dates and type tabs.
+  function describeActiveFilters(forReports = false) {
     const parts = [];
 
-    const timeLabel = elements.timeSelect?.options[elements.timeSelect.selectedIndex]?.text;
-    parts.push(timeLabel || state.time);
+    if (!forReports) {
+      const timeLabel = elements.timeSelect?.options[elements.timeSelect.selectedIndex]?.text;
+      parts.push(timeLabel || state.time);
+    }
 
     if (state.selectedMonitors.size > 0) {
       const names = state.data.monitors
@@ -778,7 +819,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Stats ignores the content-type tab (see passesFilters), so don't
     // claim one in its "Showing: ..." line — it would misdescribe what the
     // charts actually reflect.
-    if (state.contentType !== "all" && !state.statsView) {
+    if (state.contentType !== "all" && !state.statsView && !forReports) {
       const tabLabel = elements.contentTabs?.querySelector(`[data-content-type="${state.contentType}"]`)?.textContent;
       parts.push(tabLabel || state.contentType);
     }
@@ -860,7 +901,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (elements.statsToggle) elements.statsToggle.setAttribute("aria-pressed", String(state.statsView));
     if (elements.reportsToggle) elements.reportsToggle.setAttribute("aria-pressed", String(state.reportsView));
     // Reports builds its own date range, so the sidebar's Time filter does not apply there.
-    if (elements.timeSelect) elements.timeSelect.disabled = state.reportsView;
+    // The select shows "Report dates" instead of a stale "Past 24 hours".
+    if (elements.timeSelect) {
+      elements.timeSelect.disabled = state.reportsView;
+      elements.timeSelect.value = state.reportsView ? "report" : state.time;
+    }
     // The "Showing: ..." line and the Copy / Link / CSV / RSS buttons describe the list, so
     // they step aside while the report builder is open.
     document.querySelectorAll(".mm-results-summary, #results-toolbar .action-group, #rss-feed-status").forEach((node) => {
@@ -2193,7 +2238,7 @@ document.addEventListener("DOMContentLoaded", () => {
     state.selectedMonitors = new Set();
     state.selectedFeedSources = new Set();
     state.time = "24h";
-    if (elements.timeSelect) elements.timeSelect.value = "24h";
+    if (elements.timeSelect) elements.timeSelect.value = state.reportsView ? "report" : "24h";
     state.contentType = "all";
     state.statsView = false;
     elements.contentTabs?.querySelectorAll("[data-content-type]").forEach((tab) => {
