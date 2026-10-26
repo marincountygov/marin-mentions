@@ -421,7 +421,7 @@
     root.append(status('period'));
     root.append(field('Notes (optional)', textarea(r.footer, (v) => quietChange(Core.updateDetails(ui.report, { footer: v })), 4),
       'Shown at the end of the report. Leave blank for none.'));
-    root.append(h('div', { class: 'mm-rp-actions' }, [button('Next: choose coverage', 'next-coverage', () => { ui.stage = 'coverage'; render('stage-heading'); }, { primary: true })]));
+    root.append(h('div', { class: 'mm-rp-actions' }, [button('Next: coverage', 'next-coverage', () => { ui.stage = 'coverage'; render('stage-heading'); }, { primary: true })]));
     return root;
   }
 
