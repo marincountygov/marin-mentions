@@ -44,6 +44,11 @@
             </div>
 
             <div class="search-input-field">
+              <label for="filter-search">Search</label>
+              <input type="search" id="filter-search" name="search" data-search-input placeholder="Search titles and text&hellip;" autocomplete="off">
+            </div>
+
+            <div class="search-input-field">
               <label for="filter-time">Time</label>
               <select id="filter-time" name="time">
                 <option value="24h" selected>Past 24 hours</option>
@@ -53,6 +58,7 @@
                 <option value="30d">Past 30 days</option>
                 <option value="60d">Past 60 days</option>
                 <option value="all">All available data</option>
+                <option value="report" hidden>Report dates</option>
               </select>
             </div>
 
@@ -105,10 +111,6 @@
                 <button type="button" class="action-button" id="copy-link-button" aria-label="Copy link" title="Copy link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
                 <button type="button" class="action-button" id="download-data-button" aria-label="Download CSV" title="Download CSV"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg></button>
                 <a role="button" class="action-button" id="rss-feed-link" target="_blank" rel="noreferrer" aria-label="RSS feed (opens in a new tab)" title="RSS feed"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg></a>
-              </div>
-              <div class="action-search" role="search" aria-label="Search mentions">
-                <label class="visually-hidden" for="filter-search">Search mentions</label>
-                <input type="search" id="filter-search" name="search" data-search-input placeholder="Search titles and text&hellip;" autocomplete="off">
               </div>
             </div>
             <p class="app-help-text" id="rss-feed-status" role="status"></p>

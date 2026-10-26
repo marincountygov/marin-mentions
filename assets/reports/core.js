@@ -12,15 +12,27 @@
 
   const SCHEMA_VERSION = '1.0';
   const TIME_ZONE = 'America/Los_Angeles';
-  const SECTION_TYPES = ['release-coverage', 'coverage-list', 'manual-table', 'text', 'highlights'];
+  const SECTION_TYPES = ['release-coverage', 'coverage-list', 'manual-table', 'text', 'highlights', 'stats'];
   const SECTION_TYPE_LABELS = {
     'release-coverage': 'News releases with coverage',
     'coverage-list': 'Coverage list',
     'manual-table': 'Table you fill in',
     text: 'Text',
     highlights: 'Highlights',
+    stats: 'Stats',
   };
-  const LIMITS = { sections: 40, items: 500, coverage: 200, short: 300, long: 5000, json: 4000000 };
+  // The numbers a Stats section can show. Each is a small table in the report, so it pastes into Word.
+  const STAT_CHARTS = [
+    { id: 'totals', label: 'Totals', column: 'Measure' },
+    { id: 'timeline', label: 'Mentions over time', column: 'Date' },
+    { id: 'monitors', label: 'Top monitors', column: 'Topic' },
+    { id: 'sources', label: 'Top news sources', column: 'Source' },
+    { id: 'authors', label: 'Top journalists', column: 'Journalist' },
+    { id: 'social', label: 'Top social accounts', column: 'Account' },
+    { id: 'places', label: 'Coverage by town and district', column: 'Town or district' },
+  ];
+  const DEFAULT_STAT_CHARTS = ['totals', 'timeline', 'monitors', 'sources'];
+  const LIMITS = { sections: 40, items: 500, coverage: 200, short: 300, long: 5000, json: 4000000, statRows: 60 };
   const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September',
     'October', 'November', 'December'];
   const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -219,8 +231,8 @@
         section('opinion', 'Opinion Pieces About County-Related Work / Priorities', 'coverage-list'),
         section('upcoming', 'Upcoming Opportunities / Planned News Releases', 'manual-table'),
       ],
-      footer: 'Know of an upcoming news opportunity or great story to tell?\n\nPlease reach out to PIO@marincounty.gov with details.',
-      footerBold: true,
+      footer: '',
+      footerBold: false,
     },
     {
       id: 'custom',
@@ -277,6 +289,35 @@
     };
   }
 
+  function count(value) {
+    const n = Math.floor(Number(value));
+    return Number.isFinite(n) && n >= 0 ? n : 0;
+  }
+
+  // A snapshot of the Mentions numbers for the report's dates: { basis, totals, tables }.
+  function normalizeStats(raw) {
+    if (!raw || typeof raw !== 'object') return null;
+    const totals = raw.totals && typeof raw.totals === 'object' ? raw.totals : {};
+    const tables = {};
+    const source = raw.tables && typeof raw.tables === 'object' ? raw.tables : {};
+    STAT_CHARTS.forEach((chart) => {
+      if (chart.id === 'totals' || !Array.isArray(source[chart.id])) return;
+      tables[chart.id] = source[chart.id].slice(0, LIMITS.statRows)
+        .filter((row) => Array.isArray(row))
+        .map((row) => [cleanText(row[0], 120), count(row[1])]);
+    });
+    return {
+      basis: cleanText(raw.basis, LIMITS.short),
+      totals: { mentions: count(totals.mentions), sources: count(totals.sources), social: count(totals.social) },
+      tables: tables,
+    };
+  }
+
+  function normalizeCharts(value) {
+    const ids = STAT_CHARTS.map((c) => c.id);
+    return Array.isArray(value) ? ids.filter((id) => value.indexOf(id) >= 0) : DEFAULT_STAT_CHARTS.slice();
+  }
+
   function normalizeSection(raw, path, errors) {
     if (!raw || typeof raw !== 'object') {
       errors.push(path + ' is not a section.');
@@ -290,6 +331,11 @@
       enabled: raw.enabled !== false,
       intro: cleanText(raw.intro, LIMITS.long),
     });
+    if (raw.type === 'stats') {
+      out.charts = normalizeCharts(raw.charts);
+      out.stats = normalizeStats(raw.stats);
+      return out;
+    }
     const items = Array.isArray(raw.items) ? raw.items : [];
     if (items.length > LIMITS.items) errors.push(path + ' has too many items (the limit is ' + LIMITS.items + ').');
     items.slice(0, LIMITS.items).forEach((item) => {
@@ -534,13 +580,18 @@
     if ('title' in fields) target.title = cleanText(fields.title);
     if ('intro' in fields) target.intro = cleanText(fields.intro, LIMITS.long);
     if ('enabled' in fields) target.enabled = Boolean(fields.enabled);
+    if (target.type === 'stats') {
+      if ('charts' in fields) target.charts = normalizeCharts(fields.charts);
+      if ('stats' in fields) target.stats = normalizeStats(fields.stats);
+    }
     return next;
   }
 
   function addSection(report, type, title) {
     const next = clone(report);
     if (SECTION_TYPES.indexOf(type) < 0 || next.sections.length >= LIMITS.sections) return next;
-    next.sections.push(section(uid('s'), cleanText(title) || SECTION_TYPE_LABELS[type], type));
+    next.sections.push(section(uid('s'), cleanText(title) || SECTION_TYPE_LABELS[type], type,
+      type === 'stats' ? { charts: DEFAULT_STAT_CHARTS.slice(), stats: null } : undefined));
     return next;
   }
 
@@ -579,7 +630,7 @@
   }
 
   return {
-    SCHEMA_VERSION, TIME_ZONE, SECTION_TYPES, SECTION_TYPE_LABELS, TEMPLATES, PERIOD_PRESETS, LIMITS,
+    SCHEMA_VERSION, TIME_ZONE, SECTION_TYPES, SECTION_TYPE_LABELS, STAT_CHARTS, TEMPLATES, PERIOD_PRESETS, LIMITS,
     cleanText, safeUrl, isIsoDate, addDays, pacificDate, formatDate, formatPeriod, periodFor, inPeriod, weekday,
     uid, snapshotFromMention, manualCoverage, newRelease, newRow, templateById, createReport,
     validateReport, parseJson, toJson, clone, findSection, locate, hasMentionsItem,
