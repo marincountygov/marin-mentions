@@ -45,7 +45,7 @@ def run(base, context, page, problems):
     require(page.get_by_label("Notes (optional)").input_value() == "", "Notes start empty")
 
     # Coverage: releases and items follow the sidebar filters and the period.
-    page.get_by_role("button", name="Next: choose coverage").click()
+    page.get_by_role("button", name="Next: coverage").click()
     require(page.locator("#reports-root h3").inner_text() == "Choose coverage", "Coverage stage")
     # Releases tab: a card per release with a checkbox; checking one adds it to the report.
     require(page.get_by_role("tab", name="Releases", exact=False).count() == 1, "Releases tab")
