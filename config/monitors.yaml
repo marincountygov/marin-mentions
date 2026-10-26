@@ -147,7 +147,8 @@ monitors:
       - Inverness
       - Inverness Park
       - Point Reyes Station
-      - Olema
+      - word:Olema
+      - "#Olema"
       - Tocaloma
       - Nicasio
       - Chileno Valley
@@ -165,7 +166,10 @@ monitors:
       - Woodacre
 
       # Other District 4 areas
-      - Novato
+      # word: keeps "innovator" from matching Novato (and "Coleman" from matching Olema); the
+      # "#" forms keep hashtags like #NovatoMarinCounty, which word: would miss.
+      - word:Novato
+      - "#Novato"
       - West Novato
       - [San Rafael, word:Marin]
       - East San Rafael
@@ -183,7 +187,8 @@ monitors:
       - [5th District, word:Marin]
       - Eric Lucan
       - Magali Limeta
-      - Novato
+      - word:Novato
+      - "#Novato"
       - Bel Marin Keys
       - [Marin, Loma Verde]
       - [Marin, Black Point]
@@ -538,6 +543,10 @@ monitors:
     name: Marin County Civic Center
     group: Events & Places
     youtubeSearch: true
+    # San Francisco's Civic Center is not Marin's. Added 2026-10-26 after "Marin to the SF Civic Center".
+    exclude:
+      - SF Civic Center
+      - San Francisco Civic Center
     include:
       - Marin Civic Center
       - Marin County Civic Center
@@ -659,6 +668,11 @@ monitors:
     exclude:
       - Marin County Florida
       - Marin County, Florida
+      # Bank of Marin is a bank, not the County. Added 2026-10-26.
+      - Bank of Marin
+      # San Francisco's Civic Center, not Marin's. Added 2026-10-26.
+      - SF Civic Center
+      - San Francisco Civic Center
 
   - id: marin-county-social
     name: General (Social)
@@ -720,7 +734,7 @@ monitors:
       - [word:Marin, inclusionary housing]
       - [word:Marin, Board of Supervisors, housing]
       - [Marin City, housing]
-      - [Novato, housing]
+      - [word:Novato, housing]
       - [San Rafael, housing]
       - [Point Reyes Station, housing]
       - [Dillon Beach, housing]
@@ -933,6 +947,10 @@ monitors:
   - id: marin-infrastructure-topic
     name: Infrastructure
     group: Topics
+    # San Francisco's Civic Center is not Marin's. Added 2026-10-26.
+    exclude:
+      - SF Civic Center
+      - San Francisco Civic Center
     include:
       - Investing in Marin County's Infrastructure
       - [word:Marin, infrastructure]
@@ -993,6 +1011,9 @@ monitors:
   - id: marin-economic-development-topic
     name: Economy
     group: Topics
+    # Bank of Marin is a bank, not the County: its earnings stories matched on "Marin" plus a business word. Added 2026-10-26.
+    exclude:
+      - Bank of Marin
     include:
       - Improving Community & Economic Vitality
       - [word:Marin, economy]
@@ -1326,13 +1347,15 @@ monitors:
     name: Novato
     group: Towns
     include:
-      - Novato
+      - word:Novato
+      - "#Novato"
 
   - id: olema
     name: Olema
     group: Towns
     include:
-      - Olema
+      - word:Olema
+      - "#Olema"
 
   - id: paradise-cay
     name: Paradise Cay
