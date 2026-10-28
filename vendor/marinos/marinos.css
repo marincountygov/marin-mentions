@@ -1303,6 +1303,13 @@ th[aria-sort="descending"] .sort-button::after {
   min-width: 0;
 }
 
+/* The page's content is a bordered box with no shadow, the same as a Marin
+   Learn note. Pico gives <article> a shadow; this removes it. */
+.content {
+  border: 1px solid var(--app-border);
+  box-shadow: none;
+}
+
 .docs-breadcrumb {
   margin-bottom: 1.5rem;
   font-size: 0.9375rem;
@@ -1594,44 +1601,59 @@ th[aria-sort="descending"] .sort-button::after {
   position: sticky;
   top: 1rem;
   align-self: start;
-  padding-left: 1rem;
-  border-left: 2px solid var(--app-border);
+  padding: 1.25rem;
+  border: 1px solid var(--app-border);
+  border-radius: var(--pico-border-radius);
+  background: var(--app-surface);
 }
 
 .toc h2 {
   margin: 0 0 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--app-border);
   font-size: 1rem;
 }
 
 .toc ul {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.25rem;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .toc li {
-  margin: 0.4rem 0;
+  width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .toc a {
-  color: var(--app-muted);
+  display: block;
+  padding: 0.4rem 0.5rem;
+  border-radius: var(--pico-border-radius);
+  color: var(--app-text);
   font-size: 0.9rem;
   text-decoration: none;
 }
 
 .toc a[aria-current="location"] {
-  color: var(--app-accent);
+  color: var(--app-text);
   font-weight: 700;
+}
+
+.toc a:hover,
+.toc a:focus-visible {
+  background: var(--app-bg-soft);
+  color: var(--app-accent-on-tint);
 }
 
 @media (max-width: 850px) {
   .toc {
     position: static;
     order: -1;
-    padding: 1rem;
-    border: 1px solid var(--app-border);
-    border-radius: var(--pico-border-radius);
-    background: var(--app-surface);
   }
 }
 
@@ -1935,7 +1957,7 @@ th[aria-sort="descending"] .sort-button::after {
   stroke-linejoin: round;
 }
 
-/* Marin App Shell 1.19.0: component integration only.
+/* Marin App Shell 1.20.0: component integration only.
    General visual rules come from the locked, unmodified Marin UI input. */
 marin-os-banner,
 marin-app-header,
@@ -2159,7 +2181,7 @@ a.action-button[role="button"] {
   min-height: 2.25rem;
   margin: 0;
   padding: 0.25rem 0.625rem;
-  border: 1px solid transparent;
+  border: 1px solid var(--app-border);
   border-radius: var(--pico-border-radius);
   background: none;
   box-shadow: none;
@@ -2178,7 +2200,7 @@ a.action-button[role="button"][hidden] {
 }
 
 .action-button:hover {
-  border-color: var(--app-border);
+  border-color: var(--app-accent);
   background: none;
   color: var(--app-accent);
 }
