@@ -326,14 +326,9 @@ document.addEventListener("DOMContentLoaded", () => {
           release: clip.releaseId ? state.data.items.find((item) => item.id === clip.releaseId) || null : null,
         }))
         .filter((entry) => entry.item),
-    // Fallback when the browser's own clipboard call is unavailable: select hidden content and
-    // copy it, as the rest of Marin Mentions does; show the manual-copy box if that fails.
-    copyRich: (html, text) => {
-      try {
-        if (copyRichTextToClipboard(html)) return true;
-      } catch (error) {
-        console.error(error);
-      }
+    // The shared copy (clean HTML, no page styles); the manual-copy box shows if it fails.
+    copyRich: async (html, text) => {
+      if (await marinCopyRich(text, html)) return true;
       showCopyFallback(text);
       return false;
     },
@@ -1136,15 +1131,9 @@ document.addEventListener("DOMContentLoaded", () => {
       `<div class="mm-card__copy-actions"><div class="action-group" role="group" aria-label="Actions: ${escapeHtml(heading)}">` +
       // data-copy-item (not data-copy-value/data-copy-html) — this button
       // is wired up by its own dedicated listener below, via
-      // copyItemContentsToClipboard(), rather than vendor/marinos/marinos.js's
-      // generic handler. That generic handler's copyRich() prefers the
-      // modern navigator.clipboard.write([ClipboardItem]) API, which this
-      // project already found unreliable for rich HTML in one paste target
-      // (see buildStatsSummaryHtml()'s comment on the stats-chart copy
-      // feature) — confirmed directly here too: a pasted article's title
-      // lost its link under that path. copyRichTextToClipboard()'s
-      // execCommand/contenteditable technique, the same one the toolbar's
-      // own Copy button already relies on, doesn't have that problem.
+      // copyItemContentsToClipboard(), so it can drive its own checkmark and
+      // fall back to the manual-copy box. It copies through the shell's
+      // marinCopyRich, which keeps the article title's link.
       `<button type="button" class="copy-button" data-copy-item="${escapeHtml(item.id)}" aria-label="Copy article: ${escapeHtml(heading)}">` +
       `<svg class="copy-icon" aria-hidden="true" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>` +
       `<svg class="copy-check-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>` +
@@ -1795,31 +1784,7 @@ document.addEventListener("DOMContentLoaded", () => {
     elements.copyFallbackText.select();
   }
 
-  /** Copy rich HTML to the clipboard the same way marin-magic's "Copy rich
-   * text" button does: render it into a hidden contenteditable element,
-   * select that element's contents, and let the browser's native
-   * execCommand("copy") capture both the HTML and plain-text clipboard
-   * flavors from the real selection — broader, longer-standing browser
-   * support than writing multiple flavors via the async Clipboard API. */
-  function copyRichTextToClipboard(html) {
-    const temp = document.createElement("div");
-    temp.contentEditable = "true";
-    temp.style.position = "fixed";
-    temp.style.left = "-9999px";
-    temp.innerHTML = html;
-    document.body.appendChild(temp);
-    const range = document.createRange();
-    range.selectNodeContents(temp);
-    const selection = window.getSelection();
-    selection.removeAllRanges();
-    selection.addRange(range);
-    const copied = document.execCommand("copy");
-    selection.removeAllRanges();
-    document.body.removeChild(temp);
-    return copied;
-  }
-
-  function copyDigestToClipboard() {
+  async function copyDigestToClipboard() {
     // Clipping is purely additive: with nothing clipped, Copy still means
     // "everything currently filtered," unchanged from before this feature.
     // Once at least one item is clipped, Copy narrows to just those.
@@ -1836,8 +1801,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (elements.copyFallback) elements.copyFallback.hidden = true;
 
     try {
-      const copied = copyRichTextToClipboard(html);
-      if (!copied) throw new Error("execCommand(\"copy\") returned false");
+      const copied = await marinCopyRich(text, html);
+      if (!copied) throw new Error("The browser did not copy");
       announce(`Copied ${items.length} mention${items.length === 1 ? "" : "s"} to clipboard.`);
     } catch (error) {
       console.error(error);
@@ -1852,14 +1817,14 @@ document.addEventListener("DOMContentLoaded", () => {
    * one item and manually driving the button's own is-copied checkmark
    * (vendor/marinos/marinos.js's generic handler normally does that, but this
    * button bypasses it — see renderCopyButtons()'s comment on why). */
-  function copyItemContentsToClipboard(item, button) {
+  async function copyItemContentsToClipboard(item, button) {
     const text = buildItemTextBlock(item);
     const html = buildItemHtmlBlock(item);
     if (elements.copyFallback) elements.copyFallback.hidden = true;
 
     try {
-      const copied = copyRichTextToClipboard(html);
-      if (!copied) throw new Error("execCommand(\"copy\") returned false");
+      const copied = await marinCopyRich(text, html);
+      if (!copied) throw new Error("The browser did not copy");
       button.classList.add("is-copied");
       clearTimeout(button.copyResetTimeout);
       button.copyResetTimeout = setTimeout(() => button.classList.remove("is-copied"), 1500);
@@ -1874,29 +1839,14 @@ document.addEventListener("DOMContentLoaded", () => {
   /** Shared by copyCurrentLink() and copyStatsToClipboard()'s no-image-
    * support fallback — writeText when available, else the execCommand
    * contenteditable trick, else the visible textarea fallback. */
-  function copyPlainTextToClipboard(text, successMessage) {
+  async function copyPlainTextToClipboard(text, successMessage) {
     if (elements.copyFallback) elements.copyFallback.hidden = true;
-
-    if (navigator.clipboard?.writeText) {
-      navigator.clipboard
-        .writeText(text)
-        .then(() => announce(successMessage))
-        .catch(() => {
-          showCopyFallback(text);
-          announce("Couldn't copy automatically — select the text below and copy it manually.");
-        });
+    if (await marinCopyText(text)) {
+      announce(successMessage);
       return;
     }
-
-    try {
-      const copied = copyRichTextToClipboard(text);
-      if (!copied) throw new Error("execCommand(\"copy\") returned false");
-      announce(successMessage);
-    } catch (error) {
-      console.error(error);
-      showCopyFallback(text);
-      announce("Couldn't copy automatically — select the text below and copy it manually.");
-    }
+    showCopyFallback(text);
+    announce("Couldn't copy automatically — select the text below and copy it manually.");
   }
 
   function copyCurrentLink() {
@@ -1910,15 +1860,8 @@ document.addEventListener("DOMContentLoaded", () => {
     return new Date().toLocaleString([], { month: "short", day: "numeric", year: "numeric" });
   }
 
-  function triggerDownload(blob, filename) {
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
+  function triggerDownload(content, filename) {
+    marinDownload({ content, name: filename });
   }
 
   /** RFC 4180: quote a field (doubling any embedded quote) whenever it
@@ -1951,10 +1894,7 @@ document.addEventListener("DOMContentLoaded", () => {
       announce("No mentions to download — adjust the filters first.");
       return;
     }
-    triggerDownload(
-      new Blob([toCsv(items)], { type: "text/csv;charset=utf-8" }),
-      `Marin Mentions - ${filenameDate()}.csv`
-    );
+    triggerDownload(toCsv(items), `Marin Mentions - ${filenameDate()}.csv`);
     announce(`Downloaded ${items.length} mention${items.length === 1 ? "" : "s"} as CSV.`);
   }
 
@@ -2052,18 +1992,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /** Copies all three charts (each embedded as a real image, not just
-   * described in text) plus a text summary, using the exact same
-   * execCommand-based copyRichTextToClipboard() the news digest already
-   * uses successfully — see buildStatsSummaryHtml()'s comment for why
-   * this replaced the original navigator.clipboard.write()/ClipboardItem
-   * attempt. */
-  function copyStatsToClipboard() {
+   * described in text) plus a text summary, using the
+   * shared marinCopyRich the news digest uses — see buildStatsSummaryHtml()'s
+   * comment on why the HTML is built this way. */
+  async function copyStatsToClipboard() {
     const text = buildStatsSummaryText();
     if (elements.copyFallback) elements.copyFallback.hidden = true;
 
     try {
-      const copied = copyRichTextToClipboard(buildStatsSummaryHtml());
-      if (!copied) throw new Error("execCommand(\"copy\") returned false");
+      const copied = await marinCopyRich(text, buildStatsSummaryHtml());
+      if (!copied) throw new Error("The browser did not copy");
       announce("Copied charts to clipboard.");
     } catch (error) {
       console.error(error);

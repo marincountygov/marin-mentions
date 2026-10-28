@@ -23,6 +23,8 @@ else
 fi
 # The button audit ships with the shell release; use the installed copy so it matches the installed shell.
 python3 "$ROOT_DIR/vendor/marinos/audit-buttons.py" "$ROOT_DIR" --fail
+# Lists copy, download, file reading and upload code the app does itself; it must list nothing.
+python3 "$ROOT_DIR/vendor/marinos/audit-shared-helpers.py" "$ROOT_DIR" --fail
 if command -v node >/dev/null 2>&1; then
   node --check "$ROOT_DIR/assets/app.js"
   (cd "$ROOT_DIR" && node --test tests/match.test.js tests/reports.test.js)

@@ -364,9 +364,8 @@
     file.addEventListener('change', () => {
       const chosen = file.files && file.files[0];
       if (!chosen) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = Core.parseJson(String(reader.result || ''));
+      window.marinReadText(chosen).then(({ text }) => {
+        const result = Core.parseJson(text);
         if (!result.ok) {
           ui.errors = result.errors;
           ui.report = null;
@@ -379,9 +378,7 @@
         saveDraft();
         render('stage-heading');
         announce('Report opened.');
-      };
-      reader.onerror = () => { ui.errors = ['The file could not be read.']; render('stage-heading'); };
-      reader.readAsText(chosen);
+      }).catch(() => { ui.errors = ['The file could not be read.']; render('stage-heading'); });
     });
     return h('div', { class: 'app-card' }, [h('h4', { text: 'Open a saved report' }),
       field('Report file (.json)', file, 'Use a file you downloaded from Reports with "Download report file".')]);
@@ -793,33 +790,16 @@
 
   // Report
   function download(filename, type, text) {
-    const url = URL.createObjectURL(new Blob([text], { type: type }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
+    marinDownload({ content: text, name: filename, type: type });
   }
 
   function fileName(ext) {
     return (ui.report.title || 'report').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase() + '-' + ui.report.period.end + '.' + ext;
   }
 
-  // Put HTML and plain text on the clipboard. The async clipboard gives Word clean markup;
-  // if it is unavailable, fall back to the hidden-selection copy used elsewhere in Marin Mentions.
-  async function copyHtml(html, text) {
-    try {
-      if (navigator.clipboard && window.ClipboardItem) {
-        await navigator.clipboard.write([new ClipboardItem({
-          'text/html': new Blob(['<html><body>' + html + '</body></html>'], { type: 'text/html' }),
-          'text/plain': new Blob([text], { type: 'text/plain' }),
-        })]);
-        return true;
-      }
-    } catch (error) { /* fall through to the other copy method */ }
-    return ui.host.copyRich(html, text);
+  // Put HTML and plain text on the clipboard through the shared copy (clean HTML, no page styles).
+  function copyHtml(html, text) {
+    return ui.host.copyRich('<html><body>' + html + '</body></html>', text);
   }
 
   async function copyReport(key, onlySectionId) {

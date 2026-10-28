@@ -1957,7 +1957,7 @@ th[aria-sort="descending"] .sort-button::after {
   stroke-linejoin: round;
 }
 
-/* Marin App Shell 1.20.0: component integration only.
+/* Marin App Shell 1.21.0: component integration only.
    General visual rules come from the locked, unmodified Marin UI input. */
 marin-os-banner,
 marin-app-header,
@@ -2555,4 +2555,34 @@ textarea.visually-hidden {
   margin: -1px !important;
   padding: 0 !important;
   border: 0 !important;
+}
+
+/* Upload (marinUpload): a card with a dashed border holds the heading, one sentence of help and the Browse files button.
+   While a file is dragged over the page, a full-page layer says where to drop it. */
+.upload-panel {
+  border: 2px dashed var(--app-border);
+}
+
+.upload-drop-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 997;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  color: #ffffff;
+  pointer-events: none;
+}
+
+.upload-drop-overlay[data-active="true"] {
+  display: flex;
+}
+
+.upload-drop-overlay__inner {
+  padding: 1.5rem;
+  border: 2px dashed #ffffff;
+  border-radius: var(--pico-border-radius);
+  background: rgba(0, 0, 0, 0.7);
+  font-weight: 700;
 }
