@@ -99,6 +99,18 @@ def run(base, page):
     require(page.is_visible("#filter-panel"), "Wide screens go back to the remembered choice")
     page.evaluate("localStorage.clear()")
 
+    # Copy and Download use the shell's helpers: the copied digest is clean HTML (no page styles), and the CSV starts with a
+    # byte-order mark so Excel reads accents and apostrophes.
+    page.goto(base + "?time=all")
+    page.wait_for_selector("#media-feed > li")
+    page.click("#copy-email-button")
+    page.wait_for_function("/Copied/.test(document.querySelector('#app-status-message')?.textContent || '')")
+    html = page.evaluate("""async () => { const [item] = await navigator.clipboard.read(); return await (await item.getType('text/html')).text(); }""")
+    require("style=" not in html, f"The copied digest carries no page styles: {html[:200]}")
+    with page.expect_download() as info:
+        page.click("#download-data-button")
+    require(Path(info.value.path()).read_bytes().startswith(b"\xef\xbb\xbf"), "The CSV download starts with a byte-order mark")
+
 
 def main():
     if not (ROOT / "data.json").exists():
@@ -112,7 +124,8 @@ def main():
         with sync_playwright() as p:
             browser = p.chromium.launch()
             for scheme in ("light", "dark"):
-                context = browser.new_context(color_scheme=scheme, viewport={"width": 1280, "height": 1000})
+                context = browser.new_context(color_scheme=scheme, viewport={"width": 1280, "height": 1000}, accept_downloads=True)
+                context.grant_permissions(["clipboard-read", "clipboard-write"], origin=base.rstrip("/"))
                 page = context.new_page()
                 page.on("pageerror", lambda e: problems.append(str(e)))
                 page.on("console", lambda m: problems.append(m.text) if m.type == "error" and "lighthouse" not in m.text and "localhost:8935" not in m.text else None)

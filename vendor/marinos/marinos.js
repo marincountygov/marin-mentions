@@ -6,7 +6,7 @@
     return;
   }
 
-  const SHELL_VERSION = "1.20.0";
+  const SHELL_VERSION = "1.21.0";
   const MARIN_UI_VERSION = "1.31.0";
   const MARINOS_URL = "https://marincountygov.github.io/marin-os/";
   const MARINOS_STATUS_URL = `${MARINOS_URL}#status`;
@@ -1276,37 +1276,48 @@
     });
   });
 
-  /** Render html into a hidden contenteditable element, select it, and let
-   * the browser's native execCommand("copy") capture both clipboard
-   * flavors from the real selection. Kept only as a fallback for browsers
-   * without the async Clipboard API's multi-flavor write() below — its
-   * plain-text flavor is the browser's own derivation from the selected
-   * DOM (visible text only, e.g. a link's href is dropped), not the exact
-   * `text` a caller asked for, which write() gives explicit control over. */
-  function copyRichTextViaExecCommand(html) {
-    const temp = document.createElement("div");
-    temp.contentEditable = "true";
-    temp.style.position = "fixed";
-    temp.style.left = "-9999px";
-    temp.innerHTML = html;
-    document.body.appendChild(temp);
-    const range = document.createRange();
-    range.selectNodeContents(temp);
-    const selection = window.getSelection();
-    selection.removeAllRanges();
-    selection.addRange(range);
-    const copied = document.execCommand("copy");
-    selection.removeAllRanges();
-    document.body.removeChild(temp);
+  // ---- Shared copy, download, file reading and text cleaning ----------------------------------
+  // Apps call these instead of writing their own, so the same fixes (no page styles in a copied
+  // heading, a byte-order mark in a CSV, Windows-1252 files read correctly) reach every app.
+
+  /** Put `html` and `text` on the clipboard through the browser's copy event. Nothing is rendered,
+   * so no fonts, sizes, colors or bold weights from this page come along: a CMS pastes plain
+   * <h2> and <li> and applies its own look. A text box holds the selection the browser needs to
+   * fire the event (Safari and Firefox do not fire it with nothing selected). */
+  function copyViaCopyEvent(html, text) {
+    const holder = document.createElement("textarea");
+    holder.value = text || " ";
+    holder.setAttribute("readonly", "");
+    holder.setAttribute("aria-hidden", "true");
+    holder.tabIndex = -1;
+    holder.style.cssText = "position:fixed;left:-9999px;top:0;opacity:0";
+    const previousFocus = document.activeElement;
+    document.body.appendChild(holder);
+    holder.select();
+    const onCopy = (event) => {
+      if (html != null) event.clipboardData.setData("text/html", html);
+      event.clipboardData.setData("text/plain", text ?? "");
+      event.preventDefault();
+    };
+    document.addEventListener("copy", onCopy, { once: true });
+    let copied = false;
+    try {
+      copied = document.execCommand("copy");
+    } catch {
+      copied = false;
+    }
+    document.removeEventListener("copy", onCopy);
+    document.body.removeChild(holder);
+    if (previousFocus instanceof HTMLElement) previousFocus.focus({ preventScroll: true });
     return copied;
   }
 
-  /** Write both clipboard flavors explicitly so a plain-text paste gets
-   * exactly `text` (e.g. a link's URL, spelled out, not just its visible
-   * label) and a rich-text paste gets exactly `html`. Falls back to the
-   * execCommand technique above, then to plain writeText(text), for
-   * browsers without ClipboardItem/clipboard.write support. */
+  /** Copy rich text: HTML for a visual editor, plain text for everything else. Tries the browser's
+   * copy event first, because it puts exactly the HTML given on the clipboard (the asynchronous
+   * Clipboard API sanitizes it, and an app found a title losing its link that way), then the
+   * asynchronous Clipboard API. Resolves true when copied. */
   async function copyRich(text, html) {
+    if (copyViaCopyEvent(html, text)) return true;
     if (typeof ClipboardItem !== "undefined" && navigator.clipboard?.write) {
       try {
         await navigator.clipboard.write([
@@ -1317,18 +1328,208 @@
         ]);
         return true;
       } catch {
-        // Fall through to the older technique below (older browser, or a
-        // permissions/user-gesture rejection ClipboardItem hit but
-        // execCommand might not).
+        // Neither route worked: the caller shows its manual-copy box.
       }
-    }
-    try {
-      if (copyRichTextViaExecCommand(html)) return true;
-    } catch {
-      // Fall through to plain-text writeText in the caller.
     }
     return false;
   }
+
+  /** Copy plain text. Resolves true when copied. */
+  async function copyText(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      return copyViaCopyEvent(null, text);
+    }
+  }
+
+  const DOWNLOAD_TYPES = Object.freeze({
+    csv: "text/csv", tsv: "text/tab-separated-values", txt: "text/plain", html: "text/html",
+    md: "text/markdown", json: "application/json", svg: "image/svg+xml", png: "image/png",
+  });
+
+  /** Save a file. `content` is a string, Blob or typed array; `type` defaults from the file name.
+   * Text files are UTF-8, and a CSV gets a byte-order mark so Excel reads accents and apostrophes
+   * correctly (pass bom: false to leave it off). */
+  function downloadFile({ content, name, type, bom } = {}) {
+    if (!name) throw new Error("marinDownload needs a file name.");
+    const extension = String(name).split(".").pop().toLowerCase();
+    const mime = type || DOWNLOAD_TYPES[extension] || "application/octet-stream";
+    const isText = typeof content === "string";
+    const withBom = isText && bom !== false && (bom === true || mime.startsWith("text/csv") || extension === "csv");
+    const parts = withBom && !content.startsWith("﻿") ? ["﻿", content] : [content];
+    const blob = content instanceof Blob ? content : new Blob(parts, { type: isText && !/charset=/.test(mime) ? `${mime};charset=utf-8` : mime });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.download = name;
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  /** Decode bytes as text. Valid UTF-8 is read as UTF-8; anything else (a file saved from Excel, where
+   * a curly apostrophe is one byte) is read as Windows-1252. A byte-order mark is dropped.
+   * Returns { text, encoding }. The text never holds a replacement character made by this step. */
+  function decodeText(input) {
+    const bytes = input instanceof ArrayBuffer ? new Uint8Array(input) : input;
+    try {
+      return { text: new TextDecoder("utf-8", { fatal: true }).decode(bytes).replace(/^﻿/, ""), encoding: "utf-8" };
+    } catch {
+      return { text: new TextDecoder("windows-1252").decode(bytes), encoding: "windows-1252" };
+    }
+  }
+
+  /** Read a File or Blob as text (see decodeText). Resolves { text, encoding }. */
+  async function readText(file) {
+    return decodeText(await file.arrayBuffer());
+  }
+
+  // Text that was read with the wrong encoding shows up as these sequences (UTF-8 bytes read as Windows-1252).
+  const MOJIBAKE = Object.freeze([
+    [/â€™|â€˜/g, "'"],
+    [/â€œ|â€\u009d|â€�/g, '"'],
+  ]);
+
+  /** Plain characters for output that goes to a CMS, a URL or a CSV: curly quotes become straight,
+   * non-breaking and zero-width characters are normalized or dropped, text read with the wrong
+   * encoding is repaired, and a replacement character between two letters becomes an apostrophe
+   * (any other is dropped). Opt in: an app that shows text keeps its typographic quotes. */
+  function cleanText(value) {
+    if (typeof value !== "string") return value;
+    let text = value;
+    for (const [pattern, plain] of MOJIBAKE) text = text.replace(pattern, plain);
+    return text
+      .replace(/(\p{L})�(\p{L})/gu, "$1'$2")
+      .replace(/�/g, "")
+      .replace(/[‘’‚‛′`´]/g, "'")
+      .replace(/[“”„″]/g, '"')
+      .replace(/…/g, "...")
+      .replace(/[   ]/g, " ")
+      .replace(/[​‌‍⁠﻿]/g, "");
+  }
+
+  // ---- Upload: a Browse files button, drop anywhere on the page, one set of messages ----------------
+  const UPLOAD_MESSAGES = Object.freeze({
+    type: (accept) => `Unsupported file type. Upload ${accept}.`,
+    size: (bytes) => `That file is too large. The limit is ${bytes >= 1048576 ? `${Math.round((bytes / 1048576) * 10) / 10} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`}.`,
+    first: (name) => `More than one file was dropped. Using the first file: ${name}.`,
+  });
+
+  function acceptList(accept) {
+    return accept.map((item) => item.toLowerCase().replace(/^(?!\.)/, "."));
+  }
+
+  function joinWords(items) {
+    if (items.length <= 1) return items.join("");
+    if (items.length === 2) return `${items[0]} or ${items[1]}`;
+    return `${items.slice(0, -1).join(", ")}, or ${items[items.length - 1]}`;
+  }
+
+  /** Wire a file upload.
+   *
+   *   marinUpload({
+   *     button,           // the Browse files button
+   *     input,            // the hidden <input type="file">
+   *     accept: [".csv", ".xlsx"],   // allowed extensions
+   *     maxBytes,         // optional size limit per file
+   *     multiple,         // true: pass every file; default false: pass the first
+   *     onFile(file),     // called with each accepted file (onFiles(files) once for all of them, if given)
+   *     onMessage(text),  // called with a short plain-language message to show in the page's status line
+   *     overlay,          // true (default) shows a full-page "Drop a file" layer while dragging
+   *   })
+   *
+   * Drop works anywhere on the page. Returns { open() } to open the file chooser from code. */
+  function marinUpload(options) {
+    const { button, input, onFile, onFiles, onMessage, accept = [], maxBytes = 0, multiple = false } = options;
+    const extensions = acceptList(accept);
+    const say = (text) => typeof onMessage === "function" && onMessage(text);
+    let overlay = null;
+    if (options.overlay !== false) {
+      overlay = document.createElement("div");
+      overlay.className = "upload-drop-overlay";
+      overlay.setAttribute("aria-hidden", "true");
+      const inner = document.createElement("div");
+      inner.className = "upload-drop-overlay__inner";
+      inner.textContent = multiple ? "Drop files to upload" : "Drop a file to upload";
+      overlay.append(inner);
+      document.body.append(overlay);
+    }
+    const showOverlay = (on) => overlay && (overlay.dataset.active = on ? "true" : "false");
+
+    function accepted(files) {
+      const ok = [];
+      for (const file of files) {
+        const name = String(file.name || "").toLowerCase();
+        if (extensions.length && !extensions.some((ext) => name.endsWith(ext))) {
+          say(UPLOAD_MESSAGES.type(joinWords(extensions)));
+          continue;
+        }
+        if (maxBytes && file.size > maxBytes) {
+          say(UPLOAD_MESSAGES.size(maxBytes));
+          continue;
+        }
+        ok.push(file);
+      }
+      return ok;
+    }
+
+    function receive(fileList, fromDrop) {
+      const files = Array.from(fileList || []);
+      if (!files.length) return;
+      let chosen = files;
+      if (!multiple && files.length > 1) {
+        chosen = [files[0]];
+        if (fromDrop) say(UPLOAD_MESSAGES.first(files[0].name));
+      }
+      const good = accepted(chosen);
+      if (!good.length) return;
+      if (typeof onFiles === "function") onFiles(good);
+      if (typeof onFile === "function") good.forEach((file) => onFile(file));
+    }
+
+    const open = () => input.click();
+    button?.addEventListener("click", open);
+    input.addEventListener("change", () => {
+      receive(input.files, false);
+      input.value = "";
+    });
+
+    const hasFiles = (event) => event.dataTransfer && Array.from(event.dataTransfer.types || []).includes("Files");
+    window.addEventListener("dragenter", (event) => {
+      if (!hasFiles(event)) return;
+      event.preventDefault();
+      showOverlay(true);
+    });
+    window.addEventListener("dragover", (event) => {
+      if (!hasFiles(event)) return;
+      event.preventDefault();
+      showOverlay(true);
+    });
+    window.addEventListener("dragleave", (event) => {
+      if (!hasFiles(event)) return;
+      if (event.clientX <= 0 || event.clientY <= 0 || event.clientX >= window.innerWidth || event.clientY >= window.innerHeight) showOverlay(false);
+    });
+    window.addEventListener("drop", (event) => {
+      if (!hasFiles(event)) return;
+      event.preventDefault();
+      showOverlay(false);
+      receive(event.dataTransfer.files, true);
+    });
+    return { open };
+  }
+
+  window.marinUpload = marinUpload;
+
+  window.marinCopyRich = copyRich;
+  window.marinCopyText = copyText;
+  window.marinDownload = downloadFile;
+  window.marinDecodeText = decodeText;
+  window.marinReadText = readText;
+  window.marinCleanText = cleanText;
 
   // Copy-to-clipboard: any button[data-copy-value] copies that value and
   // shows brief feedback. Announces through #app-status-message if present
@@ -1356,12 +1557,12 @@
     if (html) {
       copyRich(value, html).then((copied) => {
         if (copied) onCopied();
-        else navigator.clipboard.writeText(value).then(onCopied).catch(onFailed);
+        else copyText(value).then((plain) => (plain ? onCopied() : onFailed()));
       });
       return;
     }
 
-    navigator.clipboard.writeText(value).then(onCopied).catch(onFailed);
+    copyText(value).then((copied) => (copied ? onCopied() : onFailed()));
   });
 
   // Share: any button[data-action="share"] copies the current page URL and
@@ -1370,12 +1571,8 @@
   document.querySelectorAll('[data-action="share"]').forEach((button) => {
     button.addEventListener("click", async () => {
       const status = button.closest(".doc-actions")?.querySelector(".doc-action-status") ?? null;
-      try {
-        await navigator.clipboard.writeText(window.location.href);
-        if (status) status.textContent = "Link copied";
-      } catch {
-        if (status) status.textContent = "Couldn't copy — copy the address bar link instead";
-      }
+      const copied = await copyText(window.location.href);
+      if (status) status.textContent = copied ? "Link copied" : "Couldn't copy — copy the address bar link instead";
     });
   });
 
