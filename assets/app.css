@@ -9,29 +9,11 @@
        marin-app-shell or marin-ui, then install a released App Shell bundle.
        Do not edit vendor/marinos/ or duplicate standard status-badge styles here.
 
-  The filter layout (.search-layout, .search-side, .search-sidebar, .search-results) and the
-  Filters button (.filter-toggle) come from Marin UI through the shell. The field and facet
-  styles below (.search-input-field, .search-facet-group, .search-facet-list,
-  .search-results-list) mirror marin-docs' search/shared/search-layout.css pattern and stay
-  with the app; keep them in sync by eye if that pattern changes there.
+  The filter layout (.search-layout, .search-side, .search-sidebar, .search-results), the
+  Filters button (.filter-toggle), the search field (.search-input-field) and the filter groups
+  (.search-facet-group, .search-facet-list, .search-facet-count, .mm-facet-group) come from
+  Marin UI through the shell (Marin UI 1.30.0 and later).
 */
-
-.search-input-field {
-  margin-bottom: 1.5rem;
-}
-
-.search-input-field label {
-  display: block;
-  margin-bottom: 0.35rem;
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-.search-input-field input[type="search"] {
-  width: 100%;
-  /* Pico makes search inputs pill-shaped; in the filter panel it matches the Time select. */
-  --pico-border-radius: var(--pico-form-element-border-radius, 0.25rem);
-}
 
 #sources-table-wrap button[data-goto-feed-source] {
   width: auto;
@@ -76,70 +58,12 @@
   }
 }
 
-.search-facet-group {
-  margin: 0 0 1.5rem;
-  padding: 0;
-  border: 0;
-}
-
-.search-facet-group legend {
-  margin-bottom: 0.5rem;
-  padding: 0;
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-.search-facet-list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-/* Pico's bundled <li> rule in vendor/marinos/marinos.css (meant for nav/menu lists) carries
-   padding: calc(--pico-nav-element-spacing-vertical) ... — 8px top+bottom
-   here, the actual bulk of this list's row spacing (not the 0 margin below,
-   which was the only thing touched in two earlier passes at this). */
-.search-facet-list li {
-  margin: 0 0 0.45rem;
-  padding: 0;
-  list-style: none;
-}
-
-.search-facet-list li:last-child {
-  margin-bottom: 0;
-}
-
-.search-facet-list label {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-bottom: 0;
-  font-size: 0.875rem;
-  font-weight: 400;
-  color: var(--app-text);
-}
-
-/* The bundled Pico baseline gives every checkbox a 1rem bottom margin by default
-   (its usual form-field spacing) — nowhere near "slightly less," so this
-   list's rows were reading as a stack of separate form fields rather than
-   a tight filter list. Overridden to 0 here; .search-facet-list li's own
-   small margin above controls the actual row spacing instead. */
-.search-facet-list input[type="checkbox"] {
-  margin: 0;
-}
-
 /* Checkboxes are 24 px square (WCAG 2.5.8 target size), larger than Pico's default of about 18 px. */
-.search-facet-list input[type="checkbox"],
 .mm-card__select input[type="checkbox"],
 .mm-select-all input[type="checkbox"] {
   width: 1.5rem;
   height: 1.5rem;
   flex: none;
-}
-
-.search-facet-count {
-  color: var(--app-muted);
-  font-size: 0.8rem;
 }
 
 /* Last updated / Showing (with mention counts folded into the same line,
@@ -352,20 +276,6 @@
 
 /* Two-level monitor filter: a simplified, collapsed-by-default top level
    (one <details> per group) that expands to its individual monitors. */
-.mm-facet-group {
-  margin-bottom: 0.125rem;
-}
-
-.mm-facet-group summary {
-  cursor: pointer;
-  font-weight: 400;
-  padding: 0.25rem 0;
-}
-
-.mm-facet-group .search-facet-list {
-  margin-top: 0.25rem;
-}
-
 .mm-monitor-group {
   margin-bottom: 1.5rem;
 }

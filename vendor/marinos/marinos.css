@@ -967,8 +967,7 @@ th[aria-sort="descending"] .sort-button::after {
 }
 
 /* Filter layout and the collapsible filter panel. A filter column beside a list of results (the pattern in
-   marin-docs' search/shared/search-layout.css, which this now owns the layout shell of; the field and facet
-   styles stay with the app). A button[data-filter-toggle] at the top of the column hides and shows the panel
+   marin-docs' search/shared/search-layout.css; this owns the layout shell, the fields and the filter groups). A button[data-filter-toggle] at the top of the column hides and shows the panel
    (app-shell.js sets data-filters on .search-layout and data-open on the panel). Open, the button sits at the
    column's right edge; hidden, the column shrinks to just the button. Narrow screens stack the column above the
    results and start hidden. Only this bundle's tokens are used, so it looks the same in every app. */
@@ -987,6 +986,94 @@ th[aria-sort="descending"] .sort-button::after {
 
 .search-results {
   min-width: 0;
+}
+
+/* Fields and filters inside the filter panel. The same look in every app, so a filter column in one app is
+   recognizable in the next. Order inside the panel: the title row (.search-panel-header, from the shell, with
+   the Reset icon button beside the title), then Search, then the other fields, then the filter groups. */
+.search-input-field {
+  margin-bottom: 1.5rem;
+}
+
+.search-input-field label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.search-input-field input[type="search"] {
+  width: 100%;
+  /* Pico makes search inputs pill-shaped; in the panel the search field matches the selects. */
+  --pico-border-radius: var(--pico-form-element-border-radius, 0.25rem);
+}
+
+.search-facet-group {
+  margin: 0 0 1.5rem;
+  padding: 0;
+  border: 0;
+}
+
+.search-facet-group legend {
+  margin-bottom: 0.5rem;
+  padding: 0;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.search-facet-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Pico's <li> rule carries 8px of top and bottom padding. The row spacing comes from the small margin instead. */
+.search-facet-list li {
+  margin: 0 0 0.45rem;
+  padding: 0;
+  list-style: none;
+}
+
+.search-facet-list li:last-child {
+  margin-bottom: 0;
+}
+
+.search-facet-list label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--app-text);
+}
+
+/* Checkboxes are 24 px square (WCAG 2.5.8 target size). Pico's bottom margin is removed so rows stay tight. */
+.search-facet-list input[type="checkbox"] {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: none;
+  margin: 0;
+}
+
+.search-facet-count {
+  color: var(--app-muted);
+  font-size: 0.8rem;
+}
+
+/* A filter is a collapsed group that opens to its checkboxes. */
+.mm-facet-group {
+  margin-bottom: 0.125rem;
+}
+
+.mm-facet-group summary {
+  cursor: pointer;
+  font-weight: 400;
+  padding: 0.25rem 0;
+}
+
+.mm-facet-group .search-facet-list {
+  margin-top: 0.25rem;
 }
 
 .filter-toggle {
@@ -1848,7 +1935,7 @@ th[aria-sort="descending"] .sort-button::after {
   stroke-linejoin: round;
 }
 
-/* Marin App Shell 1.18.0: component integration only.
+/* Marin App Shell 1.19.0: component integration only.
    General visual rules come from the locked, unmodified Marin UI input. */
 marin-os-banner,
 marin-app-header,
