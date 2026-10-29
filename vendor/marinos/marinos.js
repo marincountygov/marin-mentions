@@ -6,7 +6,7 @@
     return;
   }
 
-  const SHELL_VERSION = "1.21.0";
+  const SHELL_VERSION = "1.22.1";
   const MARIN_UI_VERSION = "1.31.0";
   const MARINOS_URL = "https://marincountygov.github.io/marin-os/";
   const MARINOS_STATUS_URL = `${MARINOS_URL}#status`;
@@ -926,10 +926,14 @@
     });
   }
 
-  document.querySelectorAll(".menu").forEach((menu) => {
+  // Each .menu (a toggle button and its panel) opens and closes with no per-page script. An app that builds a menu after the page
+  // loads (Marin Learn's notes) calls window.marinWireMenus(container) once the menu is in the page; marinFormatMenus does it for
+  // the menus inside the container it wires.
+  function wireMenu(menu) {
     const toggle = menu.querySelector(":scope > .menu-toggle");
     const panel = menu.querySelector(":scope > .menu-panel");
-    if (!toggle || !panel) return;
+    if (!toggle || !panel || menu.dataset.menuWired) return;
+    menu.dataset.menuWired = "true";
 
     function closeMenuPanel() {
       toggle.setAttribute("aria-expanded", "false");
@@ -962,7 +966,14 @@
         toggle.focus();
       }
     });
-  });
+  }
+
+  function wireMenus(root = document) {
+    root.querySelectorAll(".menu").forEach(wireMenu);
+  }
+
+  wireMenus();
+  window.marinWireMenus = wireMenus;
 
   // MarinOS banner menu: refresh from marinos/catalog.json so a new app
   // shows up in every other app's banner automatically, instead of every
@@ -1530,6 +1541,236 @@
   window.marinDecodeText = decodeText;
   window.marinReadText = readText;
   window.marinCleanText = cleanText;
+
+  // ---- The text, HTML and Markdown of a page or a part of one, and the menus that copy and save them -----
+  // Every Copy and Download button offers the same three formats, in the same order: Text, HTML, Markdown. For a page made
+  // of ordinary headings, paragraphs, lists, tables and links, marinContentFormats(root) reads them from the page. The
+  // output is clean (no classes, styles or scripts), so it pastes into a CMS or Word without the page's look. A page whose
+  // content is data (a note, a report) builds its own three strings and passes them to marinFormatMenus.
+  const FORMAT_SKIP = ".doc-actions, .doc-updated, .heading-anchor, script, style, nav, [data-no-copy]";
+
+  /** { text, html, markdown } of `root`. `extraSkip` is a selector for parts to leave out (the shell already leaves out
+   * .doc-actions, .doc-updated, .heading-anchor, nav, script, style and [data-no-copy]). */
+  function contentFormats(root, extraSkip) {
+    const SKIP = extraSkip ? `${FORMAT_SKIP}, ${extraSkip}` : FORMAT_SKIP;
+    const BLOCKS = new Set(["H1", "H2", "H3", "H4", "H5", "H6", "P", "UL", "OL", "TABLE", "DL", "BLOCKQUOTE", "PRE", "DIV", "SECTION", "ASIDE"]);
+
+    function absolute(href) {
+      try {
+        return new URL(href, document.baseURI).href;
+      } catch {
+        return href;
+      }
+    }
+
+    // A <br> is marked while the text is read, so collapsing spaces keeps it. A paragraph keeps its line breaks; a heading,
+    // list item or table cell turns each one into a space.
+    function clean(text, keepBreaks = false) {
+      const collapsed = text.replace(/\s+/g, " ");
+      return (keepBreaks ? collapsed.replace(/ ?\u0001 ?/g, "  \n") : collapsed.replace(/\u0001/g, " ").replace(/\s+/g, " ")).trim();
+    }
+
+    // ---- Markdown -------------------------------------------------------------------------------------
+
+    function inline(node) {
+      let out = "";
+      node.childNodes.forEach((child) => {
+        if (child.nodeType === Node.TEXT_NODE) {
+          out += child.textContent.replace(/\s+/g, " ");
+        } else if (child.nodeType === Node.ELEMENT_NODE && !child.matches(SKIP)) {
+          const text = inline(child);
+          switch (child.tagName) {
+            case "STRONG":
+            case "B":
+              out += text.trim() ? `**${text.trim()}**` : text;
+              break;
+            case "EM":
+            case "I":
+              out += text.trim() ? `*${text.trim()}*` : text;
+              break;
+            case "CODE":
+              out += `\`${text}\``;
+              break;
+            case "A":
+              out += child.getAttribute("href") ? `[${text.trim()}](${absolute(child.getAttribute("href"))})` : text;
+              break;
+            case "BR":
+              out += "\u0001";
+              break;
+            case "INPUT":
+              out += child.type === "checkbox" ? (child.checked ? "[x] " : "[ ] ") : "";
+              break;
+            default:
+              out += text;
+          }
+        }
+      });
+      return out;
+    }
+
+    function listToMarkdown(list, depth) {
+      const lines = [];
+      let n = 0;
+      Array.from(list.children).forEach((item) => {
+        if (item.tagName !== "LI") return;
+        n += 1;
+        const marker = list.tagName === "OL" ? `${n}.` : "-";
+        const nested = Array.from(item.children).filter((c) => c.tagName === "UL" || c.tagName === "OL");
+        const own = document.createElement("div");
+        Array.from(item.childNodes).forEach((c) => {
+          if (!nested.includes(c)) own.append(c.cloneNode(true));
+        });
+        lines.push(`${"  ".repeat(depth)}${marker} ${clean(inline(own))}`);
+        nested.forEach((sub) => lines.push(listToMarkdown(sub, depth + 1)));
+      });
+      return lines.join("\n");
+    }
+
+    function tableToMarkdown(table) {
+      const rows = Array.from(table.rows).map((row) => Array.from(row.cells).map((cell) => clean(inline(cell)).replace(/\\/g, "\\\\").replace(/\|/g, "\\|")));
+      if (!rows.length) return "";
+      const width = Math.max(...rows.map((r) => r.length));
+      const pad = (r) => Array.from({ length: width }, (_, i) => r[i] ?? "");
+      const lines = [`| ${pad(rows[0]).join(" | ")} |`, `| ${Array.from({ length: width }, () => "---").join(" | ")} |`];
+      rows.slice(1).forEach((r) => lines.push(`| ${pad(r).join(" | ")} |`));
+      return lines.join("\n");
+    }
+
+    function blockToMarkdown(el, out) {
+      if (el.matches(SKIP)) return;
+      const tag = el.tagName;
+      if (/^H[1-6]$/.test(tag)) {
+        out.push(`${"#".repeat(Number(tag[1]))} ${clean(inline(el))}`);
+      } else if (tag === "P") {
+        const text = clean(inline(el), true);
+        if (text) out.push(text);
+      } else if (tag === "UL" || tag === "OL") {
+        out.push(listToMarkdown(el, 0));
+      } else if (tag === "TABLE") {
+        out.push(tableToMarkdown(el));
+      } else if (tag === "DL") {
+        Array.from(el.children).forEach((c) => {
+          if (c.tagName === "DT") out.push(`**${clean(inline(c))}**`);
+          else if (c.tagName === "DD") out.push(clean(inline(c)));
+        });
+      } else if (tag === "BLOCKQUOTE") {
+        out.push(clean(inline(el)).replace(/^/, "> "));
+      } else {
+        // A wrapper (section, div, aside): read what is inside it.
+        let loose = document.createElement("p");
+        const flush = () => {
+          const text = clean(inline(loose), true);
+          if (text) out.push(text);
+          loose = document.createElement("p");
+        };
+        Array.from(el.childNodes).forEach((child) => {
+          if (child.nodeType === Node.ELEMENT_NODE && BLOCKS.has(child.tagName)) {
+            flush();
+            blockToMarkdown(child, out);
+          } else if (child.nodeType === Node.ELEMENT_NODE && child.matches(SKIP)) {
+            // left out
+          } else {
+            loose.append(child.cloneNode(true));
+          }
+        });
+        flush();
+      }
+    }
+
+    function toMarkdown() {
+      const out = [];
+      Array.from(root.children).forEach((child) => blockToMarkdown(child, out));
+      return out.filter(Boolean).join("\n\n") + "\n";
+    }
+
+    // ---- Text and HTML --------------------------------------------------------------------------------
+
+    // Plain text: the Markdown without its marks. Links keep their address in brackets.
+    function toText() {
+      return toMarkdown()
+        .replace(/^#{1,6} /gm, "")
+        .replace(/\[([^\]]*)\]\(([^)]+)\)/g, "$1 ($2)")
+        .replace(/\*\*([^*]+)\*\*/g, "$1")
+        .replace(/(^|[^*])\*([^*]+)\*/g, "$1$2")
+        .replace(/^\| (?:---(?: \| ---)*) \|\n/gm, "")
+        .replace(/^\| (.*) \|$/gm, (_, row) => row.split(" | ").join("\t"))
+        .replace(/`([^`]+)`/g, "$1");
+    }
+
+    const ALLOWED = new Set(["H1", "H2", "H3", "H4", "H5", "H6", "P", "UL", "OL", "LI", "A", "STRONG", "EM", "B", "I", "CODE", "TABLE", "THEAD", "TBODY", "TR", "TH", "TD", "DL", "DT", "DD", "BR", "BLOCKQUOTE"]);
+
+    function cleanNode(node, into) {
+      node.childNodes.forEach((child) => {
+        if (child.nodeType === Node.TEXT_NODE) {
+          into.append(document.createTextNode(child.textContent));
+        } else if (child.nodeType === Node.ELEMENT_NODE && !child.matches(SKIP)) {
+          if (child.tagName === "INPUT") {
+            into.append(document.createTextNode(child.type === "checkbox" ? (child.checked ? "[x] " : "[ ] ") : ""));
+          } else if (ALLOWED.has(child.tagName)) {
+            const copy = document.createElement(child.tagName);
+            if (child.tagName === "A" && child.getAttribute("href")) copy.setAttribute("href", absolute(child.getAttribute("href")));
+            if (child.tagName === "TH" && child.getAttribute("scope")) copy.setAttribute("scope", child.getAttribute("scope"));
+            cleanNode(child, copy);
+            into.append(copy);
+          } else {
+            cleanNode(child, into);
+          }
+        }
+      });
+    }
+
+    function toHtml() {
+      const holder = document.createElement("div");
+      cleanNode(root, holder);
+      return holder.innerHTML
+        .replace(/>\s+</g, "><")
+        .replace(/ {2,}/g, " ")
+        .replace(/\s+<\/(h[1-6]|li|p|td|th|dt|dd)>/g, "</$1>")
+        .replace(/<(h[1-6]|li|p|td|th|dt|dd)>\s+/g, "<$1>")
+        .trim();
+    }
+
+
+    return { text: toText(), html: toHtml(), markdown: toMarkdown() };
+  }
+
+  /** Wire the buttons inside `container`: [data-copy-format="text|html|markdown"] copies and [data-download-format=
+   * "text|html|markdown"] saves. `provider` is { text, html, markdown } or a function that returns it. The result goes to
+   * the nearest .doc-action-status (or `status`). When a copy fails, `onFail(text)` is called with that format's text so the app can show it in a box to copy by hand. Other formats (a JSON download, for example) are left to the app. */
+  function formatMenus(container, provider, { fileName = "page", status, onFail } = {}) {
+    const say = (message) => {
+      const target = status || container.querySelector(".doc-action-status") || document.querySelector("#app-status-message");
+      if (target) target.textContent = message;
+    };
+    wireMenus(container);
+    container.addEventListener("click", async (event) => {
+      const button = event.target instanceof Element ? event.target.closest("[data-copy-format], [data-download-format]") : null;
+      if (!button || !container.contains(button)) return;
+      const formats = typeof provider === "function" ? provider() : provider;
+      const copy = button.dataset.copyFormat;
+      const save = button.dataset.downloadFormat;
+      const failed = (text) => {
+        say("Could not copy.");
+        if (typeof onFail === "function") onFail(text);
+      };
+      if (copy === "text") (await copyRich(formats.text, formats.html)) ? say("Copied rich text.") : failed(formats.text);
+      else if (copy === "html") (await copyText(formats.html)) ? say("Copied HTML.") : failed(formats.html);
+      else if (copy === "markdown") (await copyText(formats.markdown)) ? say("Copied Markdown.") : failed(formats.markdown);
+      else if (save === "text") { downloadFile({ content: formats.text, name: `${fileName}.txt` }); say("Text file downloaded."); }
+      else if (save === "html") { downloadFile({ content: formats.html, name: `${fileName}.html` }); say("HTML file downloaded."); }
+      else if (save === "markdown") { downloadFile({ content: formats.markdown, name: `${fileName}.md` }); say("Markdown file downloaded."); }
+    });
+  }
+
+  // Declarative: <div class="doc-actions" data-formats-for="article.content" data-file-name="my-page"> ... buttons ... </div>
+  document.querySelectorAll("[data-formats-for]").forEach((container) => {
+    formatMenus(container, () => contentFormats(document.querySelector(container.dataset.formatsFor) || document.body, container.dataset.formatsSkip), {
+      fileName: container.dataset.fileName || "page",
+    });
+  });
+
+  window.marinContentFormats = contentFormats;
+  window.marinFormatMenus = formatMenus;
 
   // Copy-to-clipboard: any button[data-copy-value] copies that value and
   // shows brief feedback. Announces through #app-status-message if present

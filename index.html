@@ -100,6 +100,7 @@
                 <button type="button" class="action-button" id="download-all-png-button" hidden aria-label="Download all charts as PNG" title="Download all charts as PNG"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg></button>
               </div>
               <div class="action-group" role="group" aria-label="Copy, share and export">
+                <button type="button" class="action-button" id="copy-link-button" aria-label="Copy link" title="Copy link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
                 <span id="copy-format-field">
                 <label class="visually-hidden" for="copy-format-select">Copy format</label>
                 <select id="copy-format-select" class="mm-copy-format">
@@ -107,8 +108,14 @@
                   <option value="releases-news">Releases + news</option>
                 </select>
               </span>
-                <button type="button" class="action-button" id="copy-email-button" aria-label="Copy" title="Copy"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button>
-                <button type="button" class="action-button" id="copy-link-button" aria-label="Copy link" title="Copy link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
+                <div class="menu" id="copy-email-menu">
+                  <button type="button" class="action-button menu-toggle" data-icon="copy" aria-expanded="false" aria-controls="copy-email-panel" aria-label="Copy, choose a format" title="Copy"><svg class="menu-toggle__caret" aria-hidden="true" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4"/></svg></button>
+                  <div id="copy-email-panel" class="menu-panel" hidden>
+                    <button type="button" data-button-kind="menu-item" data-copy-digest="text" aria-label="Copy rich text">Text</button>
+                    <button type="button" data-button-kind="menu-item" data-copy-digest="html" aria-label="Copy HTML source">HTML</button>
+                    <button type="button" data-button-kind="menu-item" data-copy-digest="markdown" aria-label="Copy Markdown">Markdown</button>
+                  </div>
+                </div>
                 <button type="button" class="action-button" id="download-data-button" aria-label="Download CSV" title="Download CSV"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg></button>
                 <a role="button" class="action-button" id="rss-feed-link" target="_blank" rel="noreferrer" aria-label="RSS feed (opens in a new tab)" title="RSS feed"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg></a>
               </div>

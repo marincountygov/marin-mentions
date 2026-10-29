@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
     statsAuthorsCanvas: document.querySelector("#stats-authors-chart"),
     statsSocialCanvas: document.querySelector("#stats-social-chart"),
     statsPlacesCanvas: document.querySelector("#stats-places-chart"),
-    copyEmailButton: document.querySelector("#copy-email-button"),
+    copyEmailButton: document.querySelector("#copy-email-menu"),
     copyLinkButton: document.querySelector("#copy-link-button"),
     copyStatsButton: document.querySelector("#copy-stats-button"),
     downloadDataButton: document.querySelector("#download-data-button"),
@@ -1784,7 +1784,7 @@ document.addEventListener("DOMContentLoaded", () => {
     elements.copyFallbackText.select();
   }
 
-  async function copyDigestToClipboard() {
+  async function copyDigestToClipboard(format = "text") {
     // Clipping is purely additive: with nothing clipped, Copy still means
     // "everything currently filtered," unchanged from before this feature.
     // Once at least one item is clipped, Copy narrows to just those.
@@ -1800,13 +1800,18 @@ document.addEventListener("DOMContentLoaded", () => {
       elements.copyFormatSelect?.value === "releases-news" ? buildReleasesFirstDigest(items) : buildDigest(items);
     if (elements.copyFallback) elements.copyFallback.hidden = true;
 
+    // Text goes out as rich text (HTML with a plain-text fallback); HTML and Markdown go out as the source itself.
+    const holder = document.createElement("div");
+    holder.innerHTML = html;
+    const markdown = window.marinContentFormats(holder).markdown;
+    const source = format === "html" ? html : format === "markdown" ? markdown : text;
     try {
-      const copied = await marinCopyRich(text, html);
+      const copied = format === "text" ? await marinCopyRich(text, html) : await marinCopyText(source);
       if (!copied) throw new Error("The browser did not copy");
-      announce(`Copied ${items.length} mention${items.length === 1 ? "" : "s"} to clipboard.`);
+      announce(`Copied ${items.length} mention${items.length === 1 ? "" : "s"} to clipboard${format === "text" ? "" : ` as ${format === "html" ? "HTML" : "Markdown"}`}.`);
     } catch (error) {
       console.error(error);
-      showCopyFallback(text);
+      showCopyFallback(source);
       announce("Couldn't copy automatically — select the text below and copy it manually.");
     }
   }
@@ -2025,7 +2030,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  elements.copyEmailButton?.addEventListener("click", copyDigestToClipboard);
+  elements.copyEmailButton?.addEventListener("click", (event) => {
+    const choice = event.target.closest("[data-copy-digest]");
+    if (choice) copyDigestToClipboard(choice.dataset.copyDigest);
+  });
   elements.copyLinkButton?.addEventListener("click", copyCurrentLink);
   elements.copyStatsButton?.addEventListener("click", copyStatsToClipboard);
   elements.downloadDataButton?.addEventListener("click", downloadMentionsCsv);
