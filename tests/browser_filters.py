@@ -103,10 +103,19 @@ def run(base, page):
     # byte-order mark so Excel reads accents and apostrophes.
     page.goto(base + "?time=all")
     page.wait_for_selector("#media-feed > li")
-    page.click("#copy-email-button")
+    page.click("#copy-email-menu .menu-toggle")
+    page.click("#copy-email-menu [data-copy-digest='text']")
     page.wait_for_function("/Copied/.test(document.querySelector('#app-status-message')?.textContent || '')")
     html = page.evaluate("""async () => { const [item] = await navigator.clipboard.read(); return await (await item.getType('text/html')).text(); }""")
     require("style=" not in html, f"The copied digest carries no page styles: {html[:200]}")
+    for choice, marker in (("html", "<"), ("markdown", "](")):
+        page.evaluate("document.querySelector('#app-status-message').textContent = ''")
+        page.click("#copy-email-menu .menu-toggle")
+        page.click(f"#copy-email-menu [data-copy-digest='{choice}']")
+        page.wait_for_function("/Copied/.test(document.querySelector('#app-status-message')?.textContent || '')")
+        copied = page.evaluate("navigator.clipboard.readText()")
+        require(marker in copied, f"Copy as {choice} puts {choice} on the clipboard: {copied[:200]}")
+    require(not page.evaluate("[...document.querySelectorAll('#copy-email-menu [data-copy-digest]')].some(b => b.closest('.menu-panel').hidden === false)"), "The Copy menu closes after a choice")
     with page.expect_download() as info:
         page.click("#download-data-button")
     require(Path(info.value.path()).read_bytes().startswith(b"\xef\xbb\xbf"), "The CSV download starts with a byte-order mark")
