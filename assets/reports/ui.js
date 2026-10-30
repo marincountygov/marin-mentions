@@ -76,8 +76,10 @@
     return b;
   }
 
+  let fieldCount = 0;
   function field(label, control, help) {
-    const id = 'rp-' + Math.random().toString(36).slice(2, 8);
+    fieldCount += 1;
+    const id = 'rp-' + fieldCount.toString(36);
     control.id = id;
     const wrap = h('div', { class: 'mm-rp-field' }, [h('label', { for: id, text: label }), control]);
     if (help) {
