@@ -314,3 +314,23 @@ test("a Stats section with no numbers says so", () => {
   const html = Render.renderReport(r, { onlySectionId: r.sections.at(-1).id });
   assert.match(html, /<p>None<\/p>/);
 });
+
+test("uid never uses Math.random and stays unique with or without browser crypto", () => {
+  const originalRandom = Math.random;
+  const cryptoDescriptor = Object.getOwnPropertyDescriptor(globalThis, "crypto");
+  const setCrypto = (value) => Object.defineProperty(globalThis, "crypto", { value, configurable: true, writable: true });
+  Math.random = () => { throw new Error("Math.random must not be used for ids"); };
+  try {
+    setCrypto({ getRandomValues: (array) => { array.fill(7); return array; } });
+    const withCrypto = new Set(Array.from({ length: 50 }, () => Core.uid("c")));
+    setCrypto(undefined);
+    const without = new Set(Array.from({ length: 50 }, () => Core.uid("c")));
+    assert.equal(withCrypto.size, 50);
+    assert.equal(without.size, 50);
+    assert.ok([...without].every((id) => id.startsWith("c")));
+  } finally {
+    Math.random = originalRandom;
+    if (cryptoDescriptor) Object.defineProperty(globalThis, "crypto", cryptoDescriptor);
+    else delete globalThis.crypto;
+  }
+});

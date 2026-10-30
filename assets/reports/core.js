@@ -144,7 +144,10 @@
   let counter = 0;
   function uid(prefix) {
     counter += 1;
-    return (prefix || 'u') + Date.now().toString(36) + counter.toString(36) + Math.random().toString(36).slice(2, 6);
+    // The browser's random source adds a few characters when there is one; time and the counter keep ids apart anyway.
+    const source = typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function' ? crypto : null;
+    const extra = source ? source.getRandomValues(new Uint8Array(3)).reduce((text, byte) => text + byte.toString(36), '') : '';
+    return (prefix || 'u') + Date.now().toString(36) + counter.toString(36) + extra;
   }
 
   // --- items ---
