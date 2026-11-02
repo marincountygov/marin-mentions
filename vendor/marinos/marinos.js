@@ -6,8 +6,8 @@
     return;
   }
 
-  const SHELL_VERSION = "1.22.1";
-  const MARIN_UI_VERSION = "1.31.0";
+  const SHELL_VERSION = "1.23.0";
+  const MARIN_UI_VERSION = "1.33.0";
   const MARINOS_URL = "https://marincountygov.github.io/marin-os/";
   const MARINOS_STATUS_URL = `${MARINOS_URL}#status`;
   const CATALOG_URL = `${MARINOS_URL}catalog.json`;
@@ -825,6 +825,9 @@
         link.target = target;
         if (target === "_blank") link.rel = "noreferrer";
       }
+      // The link sits outside the page's other landmarks, so the component is its own, named by the link text.
+      this.setAttribute("role", "complementary");
+      this.setAttribute("aria-label", label);
       this.replaceChildren(link);
       this.dataset.rendered = "true";
       this.watchFooter(link);
