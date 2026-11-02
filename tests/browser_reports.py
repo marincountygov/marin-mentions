@@ -47,6 +47,14 @@ def run(base, context, page, problems):
     # Coverage: releases and items follow the sidebar filters and the period.
     page.get_by_role("button", name="Next: coverage").click()
     require(page.locator("#reports-root h3").inner_text() == "Choose coverage", "Coverage stage")
+    # Previous: a solid, icon-only button with a left arrow; it goes back and Next returns.
+    previous = page.get_by_role("button", name="Previous: details")
+    require(previous.evaluate("el => el.classList.contains('action-button') && !el.classList.contains('primary') && el.textContent.trim() === '' && !!el.querySelector('svg')"),
+            "Previous should be a quiet icon-only action button with an arrow")
+    previous.click()
+    require(page.locator("#reports-root h3").inner_text() == "Report details", "Previous did not go back")
+    page.get_by_role("button", name="Next: coverage").click()
+    require(page.locator("#reports-root h3").inner_text() == "Choose coverage", "Next did not return to coverage")
     # Releases tab: a card per release with a checkbox; checking one adds it to the report.
     require(page.get_by_role("tab", name="Releases", exact=False).count() == 1, "Releases tab")
     page.get_by_role("tab", name="Releases").click()
@@ -131,6 +139,7 @@ def run(base, context, page, problems):
 
     # Report: preview is a clean document.
     page.get_by_role("button", name="Next: report").click()
+    require(page.get_by_role("button", name="Previous: organize").count() == 1, "The report step has a Previous button")
     doc = page.locator("#report-document")
     require(doc.locator("h1").inner_text() == "Marin Media Coverage and Outreach Report", "Preview title")
     require(doc.locator("h2").count() >= 5, "Preview sections")

@@ -659,3 +659,32 @@
   align-items: center;
   gap: 0.4rem;
 }
+
+/* Each report step ends with Previous and Next. Next is the solid main action and ends with an arrow; Previous is a
+   quiet icon button like Copy and Download, 44 px square. The shell sizes declarative icons only inside .action-button,
+   so size the arrow on the solid Next button here until it also does for a solid button. */
+.mm-rp-actions {
+  align-items: center;
+}
+
+.mm-rp-actions .action-button[data-icon="arrow-left"] {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+}
+
+.mm-rp-actions .primary[data-icon-end] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.mm-rp-actions .primary[data-icon-end] > svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

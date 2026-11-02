@@ -55,17 +55,20 @@
   }
 
   // A quiet action button. extra.icon (a bundled icon name) makes it icon-only, named by its label; extra.danger turns
-  // it red on hover; extra.primary makes it the one solid button of the stage.
+  // it red on hover; extra.primary makes it the one solid button of the stage; extra.endIcon draws a bundled icon after the label.
   function button(label, key, handler, extra) {
     const options = Object.assign({}, extra || {});
     const icon = options.icon;
     const danger = options.danger;
     const primary = options.primary;
+    const endIcon = options.endIcon;
     delete options.icon;
     delete options.danger;
     delete options.primary;
+    delete options.endIcon;
     const classes = primary ? 'primary' : 'action-button' + (danger ? ' is-danger' : '');
     const attrs = Object.assign({ type: 'button', class: classes, 'data-key': key }, options);
+    if (endIcon) attrs['data-icon-end'] = endIcon;
     if (icon) {
       attrs['data-icon'] = icon;
       attrs.title = label;
@@ -192,6 +195,19 @@
     let next = ui.report;
     next.sections.forEach((sec) => { if (sec.type === 'stats') next = Core.updateSection(next, sec.id, { stats: ui.host.stats(next.period) }); });
     if (next !== ui.report) { ui.report = next; saveDraft(); }
+  }
+
+  // The Previous and Next buttons that end a step. Next is the solid main action; Previous is a quiet icon button with a left arrow, named by its label.
+  function stepActions(previousId, nextId) {
+    const label = (id) => STAGES.find((s) => s.id === id).label.toLowerCase();
+    const items = [];
+    if (previousId) {
+      items.push(button('Previous: ' + label(previousId), 'previous-' + previousId, () => enterStage(previousId), { icon: 'arrow-left' }));
+    }
+    if (nextId) {
+      items.push(button('Next: ' + label(nextId), 'next-' + nextId, () => enterStage(nextId), { primary: true, endIcon: 'arrow-right' }));
+    }
+    return h('div', { class: 'mm-rp-actions' }, items);
   }
 
   function enterStage(stage) {
@@ -420,7 +436,7 @@
     root.append(status('period'));
     root.append(field('Notes (optional)', textarea(r.footer, (v) => quietChange(Core.updateDetails(ui.report, { footer: v })), 4),
       'Shown at the end of the report. Leave blank for none.'));
-    root.append(h('div', { class: 'mm-rp-actions' }, [button('Next: coverage', 'next-coverage', () => { ui.stage = 'coverage'; render('stage-heading'); }, { primary: true })]));
+    root.append(stepActions(null, 'coverage'));
     return root;
   }
 
@@ -541,7 +557,7 @@
         });
         panel.append(list);
       }
-      root.append(h('div', { class: 'mm-rp-actions' }, [button('Next: organize', 'next-organize', () => enterStage('organize'), { primary: true })]));
+      root.append(stepActions('details', 'organize'));
       return root;
     }
 
@@ -617,7 +633,7 @@
       panel.append(list);
       if (rows.length > shown.length) panel.append(button('Show all ' + rows.length, 'show-all-rows', () => { ui.showAllRows = true; render('show-all-rows'); }));
     }
-    root.append(h('div', { class: 'mm-rp-actions' }, [button('Next: organize', 'next-organize', () => enterStage('organize'), { primary: true })]));
+    root.append(stepActions('details', 'organize'));
     return root;
   }
 
@@ -786,7 +802,7 @@
       button('Add section', 'add-section', () => {
         setReport(Core.addSection(ui.report, newType, newTitle), 'add-section');
       })]));
-    root.append(h('div', { class: 'mm-rp-actions' }, [button('Next: report', 'next-report', () => enterStage('report'), { primary: true })]));
+    root.append(stepActions('coverage', 'report'));
     return root;
   }
 
@@ -816,6 +832,7 @@
     const r = ui.report;
     const root = h('div', {});
     root.append(h('h3', { id: 'rp-heading', tabindex: '-1', 'data-key': 'stage-heading', text: 'Your report' }));
+    root.append(stepActions('organize', null));
     root.append(h('div', { class: 'mm-rp-actions' }, [
       button('Copy for Word', 'copy-report', () => copyReport('copy-report')),
       button('Download HTML', 'download-html', () => { download(fileName('html'), 'text/html', Render.standaloneHtml(r)); say('copy-report', 'Downloaded the report as an HTML file.'); }),
