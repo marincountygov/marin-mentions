@@ -649,6 +649,29 @@ a.app-title-row {
   box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
 }
 
+/* Secondary card: the same card, quieter. A smaller icon, title and description,
+   for a second-level list (a department among departments, a help item). */
+.app-card--secondary {
+  padding: 0.875rem 1rem;
+}
+
+.app-card--secondary .app-card__icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.app-card--secondary h3,
+.app-card--secondary h4 {
+  margin-bottom: 0.25rem;
+  font-size: 1.125rem;
+}
+
+.app-card--secondary p {
+  margin-bottom: 0;
+  font-size: 0.875rem;
+}
+
 .app-toolbar {
   display: flex;
   justify-content: space-between;
@@ -781,6 +804,19 @@ a.app-title-row {
   .app-status[data-status="beta"] {
     color: var(--app-accent);
   }
+}
+
+/* The TEST banner: a full-width yellow line directly under the header, for an app or a section that is a design test with
+   data that has not been fully reviewed. The County's black-on-gold pairing (about 11:1) in both themes. Shown in print too. */
+.app-test-banner {
+  margin: 0;
+  padding: 0.5rem 1rem;
+  background: var(--app-warning);
+  color: var(--marin-black);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
 }
 
 .app-empty {
@@ -1321,6 +1357,67 @@ th[aria-sort="descending"] .sort-button::after {
 
 .docs-grid > .app-card {
   margin-bottom: 0;
+}
+
+/* A grid with a set number of columns, for a short list of cards that should fill their rows
+   (show a multiple of the columns). One column on a narrow screen. */
+.docs-grid--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.search-results-list.search-results-list--2,
+.search-results-list.search-results-list--3 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.search-results-list.search-results-list--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 48rem) {
+  .docs-grid--3,
+  .search-results-list.search-results-list--2,
+  .search-results-list.search-results-list--3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Dashboard: a tight look at each of a page's tabs, one section per row, set apart by a bottom border. */
+.org-dashboard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.org-dash {
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.org-dash:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.org-dash h2 {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.org-dash__list {
+  margin: 0 0 0.5rem;
+  padding-left: 1.25rem;
+}
+
+.org-dash__more {
+  margin: 0.5rem 0 0;
+  font-weight: 600;
+}
+
+.org-dash .org-facts {
+  margin-bottom: 0.5rem;
 }
 
 .docs-layout {
@@ -1988,7 +2085,7 @@ th[aria-sort="descending"] .sort-button::after {
   stroke-linejoin: round;
 }
 
-/* Marin App Shell 1.23.0: component integration only.
+/* Marin App Shell 1.24.0: component integration only.
    General visual rules come from the locked, unmodified Marin UI input. */
 marin-os-banner,
 marin-app-header,
