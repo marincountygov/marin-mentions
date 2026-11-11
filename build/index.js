@@ -10,6 +10,7 @@ const { normalizeItem, hostnameOf } = require("./normalize");
 const { matchItems, buildContextRules } = require("./match");
 const { dedupeItems } = require("./dedupe");
 const { buildFeeds } = require("./feeds");
+const { buildMonitorData } = require("./monitor-data");
 
 const PRUNE_DAYS = 60;
 
@@ -249,6 +250,16 @@ async function buildOnce({ previousSnapshotPath, outPath, env = process.env }) {
       outDir: path.join(path.dirname(outPath), "feeds"),
     });
     console.log(`Wrote ${feedResults.length} RSS feeds to feeds/`);
+
+    // One small JSON file per monitor (monitors/ next to data.json), for pages on
+    // other sites that show a single monitor's recent mentions.
+    const monitorFiles = buildMonitorData({
+      items: pruned,
+      monitors,
+      generatedAt: output.generatedAt,
+      outDir: path.join(path.dirname(outPath), "monitors"),
+    });
+    console.log(`Wrote ${monitorFiles.length} monitor files to monitors/`);
   }
 
   return output;

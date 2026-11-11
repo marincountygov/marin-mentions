@@ -507,6 +507,144 @@ monitors:
       - Marin Transit
       - Marin Transit District
 
+  # --- Divisions ---
+  # One monitor per division in the master list (marin-links/data/agencies.json).
+  # Phrases are deliberately narrow, with "Marin" in an AND clause; tune after seeing real matches.
+  - id: marin-awm-agriculture
+    name: Marin County Agriculture Division
+    group: Divisions
+    include:
+      - Marin County Agricultural Commissioner
+      - [word:Marin, agricultural commissioner]
+
+  - id: marin-awm-weights-and-measures
+    name: Marin County Weights and Measures Division
+    group: Divisions
+    include:
+      - Marin County Weights and Measures
+      - [word:Marin, weights and measures]
+
+  - id: marin-cda-building-and-safety
+    name: Marin County Building and Safety Division
+    group: Divisions
+    include:
+      - Marin County Building and Safety
+      - [word:Marin, building and safety division]
+
+  - id: marin-cda-environmental-health-services
+    name: Marin County Environmental Health Services
+    group: Divisions
+    include:
+      - Marin County Environmental Health
+      - [word:Marin, environmental health services]
+
+  - id: marin-cda-planning
+    name: Marin County Planning Division
+    group: Divisions
+    include:
+      - Marin County Planning Division
+      - [word:Marin, county planning division]
+
+  - id: marin-cda-housing-and-grants
+    name: Marin County Housing and Grants Division
+    group: Divisions
+    include:
+      - Marin County Housing and Grants
+      - [word:Marin, housing and grants]
+
+  - id: marin-hhs-general-administration
+    name: Marin HHS General Administration
+    group: Divisions
+    include:
+      - [Marin, Health and Human Services, general administration]
+
+  - id: marin-hhs-bhrs
+    name: Marin Behavioral Health and Recovery Services
+    group: Divisions
+    include:
+      - Marin Behavioral Health and Recovery Services
+      - Marin County Behavioral Health
+      - [word:Marin, word:BHRS]
+
+  - id: marin-hhs-homelessness-and-coordinated-care
+    name: Marin Homelessness and Coordinated Care
+    group: Divisions
+    include:
+      - Marin Homelessness and Coordinated Care
+      - [word:Marin, homelessness and coordinated care]
+
+  - id: marin-hhs-public-health
+    name: Marin County Public Health
+    group: Divisions
+    include:
+      - Marin County Public Health
+      - Marin Public Health
+      - [word:Marin, public health officer]
+
+  - id: marin-hhs-social-services
+    name: Marin County Social Services
+    group: Divisions
+    include:
+      - Marin County Social Services
+      - Marin Social Services
+
+  - id: marin-hr-classification-compensation
+    name: Marin HR Classification and Compensation
+    group: Divisions
+    include:
+      - [Marin County, classification and compensation]
+
+  - id: marin-hr-employee-benefits-wellness
+    name: Marin HR Employee Benefits and Wellness
+    group: Divisions
+    include:
+      - [Marin County, employee benefits and wellness]
+
+  - id: marin-hr-employee-and-labor-relations
+    name: Marin HR Employee and Labor Relations
+    group: Divisions
+    include:
+      - [Marin County, employee and labor relations]
+
+  - id: marin-hr-equal-opportunity
+    name: Marin HR Equal Opportunity
+    group: Divisions
+    include:
+      - [Marin County, Human Resources, equal opportunity]
+
+  - id: marin-hr-internships-and-volunteers
+    name: Marin HR Internships and Volunteers
+    group: Divisions
+    include:
+      - [Marin County, Human Resources, internship]
+      - [Marin County, Human Resources, volunteer]
+
+  - id: marin-hr-learning-and-organizational-development
+    name: Marin HR Learning and Organizational Development
+    group: Divisions
+    include:
+      - [Marin County, learning and organizational development]
+
+  - id: marin-hr-leaves
+    name: Marin HR Leaves
+    group: Divisions
+    include:
+      - [Marin County, Human Resources, leave of absence]
+      - [Marin County, Human Resources, leaves]
+
+  - id: marin-hr-recruitment
+    name: Marin HR Recruitment
+    group: Divisions
+    include:
+      - [Marin County, Human Resources, recruitment]
+
+  - id: marin-hr-risk-management
+    name: Marin County Risk Management
+    group: Divisions
+    include:
+      - Marin County Risk Management
+      - [Marin County, Human Resources, risk management]
+
   # --- Services ---
   - id: fixitmarin
     name: FixItMarin

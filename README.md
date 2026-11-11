@@ -68,6 +68,10 @@ build/normalize.js  ->  build/match.js  ->  build/dedupe.js
 
 \* disabled by default; see "Reddit" and "Nextdoor" below.
 
+## Monitor data files
+
+`build/monitor-data.js` writes one small file per monitor, `monitors/<id>.json`, next to `data.json`, from the same item list. Each has the monitor, how many items matched, and up to 50 of the newest (title, source, link, date). Marin Docs reads them to show a department's recent mentions without downloading all of `data.json`. To make them from an existing `data.json`: `node build/monitor-data.js`.
+
 ## RSS feeds
 
 An RSS reader fetches a URL and parses XML — it can't run `assets/app.js`, so a feed can only ever be one of a finite set of files built in advance, not an arbitrary combination of whatever's currently selected in the console. `build/feeds.js` builds three kinds of feed, all from the exact same matched/deduped/pruned item list that becomes `data.json`, written to `feeds/` next to it:
