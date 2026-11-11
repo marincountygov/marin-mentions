@@ -6,8 +6,8 @@
     return;
   }
 
-  const SHELL_VERSION = "1.23.0";
-  const MARIN_UI_VERSION = "1.33.0";
+  const SHELL_VERSION = "1.24.0";
+  const MARIN_UI_VERSION = "1.34.0";
   const MARINOS_URL = "https://marincountygov.github.io/marin-os/";
   const MARINOS_STATUS_URL = `${MARINOS_URL}#status`;
   const CATALOG_URL = `${MARINOS_URL}catalog.json`;
@@ -1745,6 +1745,8 @@
       const target = status || container.querySelector(".doc-action-status") || document.querySelector("#app-status-message");
       if (target) target.textContent = message;
     };
+    // A page whose content changes (tabs) sets data-file-name as it does, so the file is named for what it holds.
+    const nameNow = () => container.dataset.fileName || fileName;
     wireMenus(container);
     container.addEventListener("click", async (event) => {
       const button = event.target instanceof Element ? event.target.closest("[data-copy-format], [data-download-format]") : null;
@@ -1759,9 +1761,9 @@
       if (copy === "text") (await copyRich(formats.text, formats.html)) ? say("Copied rich text.") : failed(formats.text);
       else if (copy === "html") (await copyText(formats.html)) ? say("Copied HTML.") : failed(formats.html);
       else if (copy === "markdown") (await copyText(formats.markdown)) ? say("Copied Markdown.") : failed(formats.markdown);
-      else if (save === "text") { downloadFile({ content: formats.text, name: `${fileName}.txt` }); say("Text file downloaded."); }
-      else if (save === "html") { downloadFile({ content: formats.html, name: `${fileName}.html` }); say("HTML file downloaded."); }
-      else if (save === "markdown") { downloadFile({ content: formats.markdown, name: `${fileName}.md` }); say("Markdown file downloaded."); }
+      else if (save === "text") { downloadFile({ content: formats.text, name: `${nameNow()}.txt` }); say("Text file downloaded."); }
+      else if (save === "html") { downloadFile({ content: formats.html, name: `${nameNow()}.html` }); say("HTML file downloaded."); }
+      else if (save === "markdown") { downloadFile({ content: formats.markdown, name: `${nameNow()}.md` }); say("Markdown file downloaded."); }
     });
   }
 
@@ -1904,7 +1906,7 @@
       tabSections.forEach((section) => {
         section.hidden = section.dataset.tabSection !== activeName;
       });
-      if (owner) target.scrollIntoView();
+      if (owner && !target.hasAttribute("data-subtab")) target.scrollIntoView();
       if (tabNav) {
         tabNav.querySelectorAll('a[href^="#"]').forEach((link) => {
           if (link.getAttribute("href") === `#${activeName}`) link.setAttribute("aria-current", "page");
@@ -1916,6 +1918,36 @@
     showTabFromHash();
     window.addEventListener("hashchange", showTabFromHash);
   }
+
+  // Sub-tabs: a [data-subtabs] group inside a tab section holds a [data-subtabs-nav]
+  // of links (#panel-id) and [data-subtab] panels. One panel shows at a time: the one
+  // the hash names (or contains an element it names), else the first. The nav marks
+  // the current link with aria-current, as #app-nav does. A hash on a panel opens its
+  // tab section without scrolling to it, so the page stays at the tabs.
+  document.querySelectorAll("[data-subtabs]").forEach((group) => {
+    const panels = [...group.querySelectorAll("[data-subtab]")];
+    const nav = group.querySelector("[data-subtabs-nav]");
+    if (!panels.length) return;
+    function showSubtab() {
+      const target = window.location.hash ? document.getElementById(window.location.hash.slice(1)) : null;
+      const owner = target ? target.closest("[data-subtab]") : null;
+      const active = panels.includes(owner) ? owner : panels[0];
+      panels.forEach((panel) => {
+        panel.hidden = panel !== active;
+      });
+      if (nav) {
+        nav.querySelectorAll('a[href^="#"]').forEach((link) => {
+          const to = document.getElementById(link.getAttribute("href").slice(1));
+          // A link to the tab section itself (not to a panel) is the first panel's.
+          const current = to && panels.includes(to) ? to === active : active === panels[0];
+          if (current) link.setAttribute("aria-current", "page");
+          else link.removeAttribute("aria-current");
+        });
+      }
+    }
+    showSubtab();
+    window.addEventListener("hashchange", showSubtab);
+  });
 
   // Updates: any [data-updates-repo="repo"] section lazy-loads that repo's
   // 10 most recent commits from the GitHub API the first time it becomes
@@ -2114,6 +2146,618 @@
     new MutationObserver(() => {
       if (!section.hidden) loadUpdates();
     }).observe(section, { attributes: true, attributeFilter: ["hidden"] });
+  });
+
+  // Records from another app: [data-record-list], [data-key-numbers] and [data-chart]
+  // draw another app's published JSON as the same cards, numbers and charts that app
+  // shows, so one app's records can appear on another app's page without a copy of that
+  // app's code. Each one loads its file the first time it becomes visible (the `hidden`
+  // attribute of the nearest [data-tab-section], or of the element itself, watched the
+  // same way as Updates), so a page with many tabs fetches only what is opened.
+  //
+  // Shared attributes
+  //   data-src       required. JSON address; may be on another site. {date:-29} becomes the UTC
+  //                  date 29 days ago (YYYY-MM-DD) and {date:0} today.
+  //   data-records   optional. Dot path to the array of records (default: the file itself).
+  //   data-match     optional. Field to compare, with data-value. An array field matches when it
+  //                  contains the value. Without it every record is used.
+  //   data-app-name  optional. Names the source in the status lines.
+  //   data-noun      optional. What the records are called (default "records").
+  // Field names may be dot paths ("place.address.locality"). Values are set as text, never
+  // as HTML; only http(s) addresses become links or images.
+  const recordFiles = new Map();
+  const dayMs = 86400000;
+  const pickPath = (value, path) => String(path || "").split(".").filter(Boolean).reduce((found, key) => (found == null ? found : found[key]), value);
+  const expandDates = (src) => src.replace(/\{date:(-?\d+)\}/g, (_, offset) => new Date(Date.now() + Number(offset) * dayMs).toISOString().slice(0, 10));
+  const isWebAddress = (value) => /^https?:\/\//.test(value);
+
+  // A YYYY-MM-DD value is a long date; a full date and time is the short form the
+  // console shows on its cards ("Nov 2, 4:12 PM"), in Pacific time.
+  const asText = (value) => {
+    if (Array.isArray(value)) return value.map(asText).filter(Boolean).join(", ");
+    if (value == null) return "";
+    const text = String(value);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+      const date = new Date(`${text}T00:00:00Z`);
+      if (!Number.isNaN(date.getTime())) return date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
+    }
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(text)) {
+      const date = new Date(text);
+      if (!Number.isNaN(date.getTime())) return date.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/Los_Angeles" });
+    }
+    return text;
+  };
+
+  // The day a record falls on, in Pacific time, as YYYY-MM-DD.
+  const dayOf = (value) => {
+    const text = String(value ?? "");
+    if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
+    const date = new Date(text);
+    return Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString("en-CA", { timeZone: "America/Los_Angeles" });
+  };
+
+  function fetchJson(src) {
+    if (!recordFiles.has(src)) {
+      recordFiles.set(src, fetch(expandDates(src), { cache: "no-store", credentials: "omit" }).then((response) => {
+        if (!response.ok) throw new Error(`${src}: ${response.status}`);
+        return response.json();
+      }));
+      recordFiles.get(src).catch(() => recordFiles.delete(src));
+    }
+    return recordFiles.get(src);
+  }
+
+  async function fetchRecords(el) {
+    // data-src may name several files, separated by spaces; their records are joined, and a record
+    // found in more than one file (same data-unique field) is kept once. One missing file is skipped.
+    const sources = el.dataset.src.split(/\s+/).filter(Boolean);
+    const loaded = await Promise.allSettled(sources.map((src) => fetchJson(src)));
+    if (loaded.every((one) => one.status === "rejected")) throw loaded[0].reason;
+    const lists = loaded.filter((one) => one.status === "fulfilled").map((one) => pickPath(one.value, el.dataset.records));
+    if (!lists.every(Array.isArray)) throw new Error(`${el.dataset.src}: no list of records`);
+    let records = lists.flat();
+    if (el.dataset.unique) {
+      const seen = new Set();
+      records = records.filter((record) => {
+        const key = pickPath(record, el.dataset.unique);
+        if (key == null || !seen.has(key)) { seen.add(key); return true; }
+        return false;
+      });
+    }
+    if (el.dataset.match) {
+      records = records.filter((record) => {
+        const found = pickPath(record, el.dataset.match);
+        return Array.isArray(found) ? found.includes(el.dataset.value) : found === el.dataset.value;
+      });
+    }
+    if (el.dataset.exclude) {
+      // "field=value": drop the records whose field equals the value (or lists it).
+      const [field, ...rest] = el.dataset.exclude.split("=");
+      const value = rest.join("=");
+      records = records.filter((record) => {
+        const found = pickPath(record, field);
+        return !(Array.isArray(found) ? found.includes(value) : found === value);
+      });
+    }
+    return records;
+  }
+
+  // Runs `load` once, the first time the element's tab section is shown.
+  function whenShown(el, load) {
+    const gates = [el.closest("[data-tab-section]"), el.closest("[data-subtab]")].filter(Boolean);
+    if (!gates.length) gates.push(el);
+    let started = false;
+    const start = () => {
+      if (started || gates.some((gate) => gate.hidden)) return;
+      started = true;
+      load();
+    };
+    start();
+    if (!started) gates.forEach((gate) => new MutationObserver(start).observe(gate, { attributes: true, attributeFilter: ["hidden"] }));
+  }
+
+  const statusLine = (name) => {
+    const status = document.createElement("p");
+    status.setAttribute("role", "status");
+    status.className = "app-help-text";
+    status.dataset[name] = "";
+    return status;
+  };
+
+  // Record lists: the app's result cards.
+  //   data-title     required. Field shown as each card's heading.
+  //   data-link      optional. Field holding an http(s) address; the heading links to it.
+  //   data-link-template optional. Instead of data-link: an address with {field} parts filled from the record.
+  //   data-meta      optional. Comma-separated fields shown under the heading, joined by " — ".
+  //                  "field:words" adds words after the value ("redirects:visits" reads "5 visits").
+  //   data-hidden-path  optional. Dot path to a flag; when true nothing is drawn and
+  //                  data-hidden-text is shown (a service that hides small counts).
+  //   data-text      optional. Field shown as a short description under the byline.
+  //   data-image     optional. Field holding an http(s) address of a picture.
+  //   data-badge     optional. Field shown as a badge above the heading.
+  //   data-sort      optional. Field to sort by; data-sort-order is "desc" (default) or "asc".
+  //   data-limit     optional. Most cards drawn (default 24).
+  //   data-empty-text optional. Shown instead of "No {noun} found." when no record is left to draw.
+  //   data-src       may name several files separated by spaces; data-unique is the field that makes a record the same
+  //                  record when it is in more than one of them (an agency and its divisions).
+  //   data-columns   optional. 2 or 3: cards in that many columns on a wide screen (one on a narrow one).
+  //   data-group    optional. Field to group by (an array field counts each value). The list then draws one card for each
+  //                  value, not one for each record: the value as the heading, how many records it has, and the dates
+  //                  they span. data-group-link is the address the heading links to, with {value} replaced by the value
+  //                  (a campaign's page of records, filtered); data-group-date is the date field for the span.
+  //   data-timeframe optional. Field holding each record's date; the status line then says how far back the
+  //                  records go: "(last week)", "(last month)", "(last 3 months)" or "(since Jan 5, 2026)".
+  document.querySelectorAll("[data-record-list]").forEach((list) => {
+    if (!list.dataset.src || !list.dataset.title) return;
+    const appName = list.dataset.appName || "records";
+    const noun = list.dataset.noun || "records";
+    const limit = Number.parseInt(list.dataset.limit || "24", 10) || 24;
+    const status = statusLine("recordListStatus");
+    const cards = document.createElement("ul");
+    cards.className = "search-results-list";
+    if (["2", "3"].includes(list.dataset.columns)) cards.classList.add(`search-results-list--${list.dataset.columns}`);
+    cards.setAttribute("aria-label", noun);
+    list.replaceChildren(status, cards);
+
+    const field = (record, name) => asText(pickPath(record, name));
+
+    function draw(records) {
+      records.slice(0, limit).forEach((record) => {
+        const card = document.createElement("li");
+        card.className = "app-card mm-card";
+        const imageAddress = list.dataset.image ? field(record, list.dataset.image) : "";
+        if (isWebAddress(imageAddress)) {
+          const image = document.createElement("img");
+          image.className = "mm-card__image";
+          image.src = imageAddress;
+          image.alt = "";
+          image.loading = "lazy";
+          card.append(image);
+        }
+        const body = document.createElement("div");
+        body.className = "mm-card__body";
+        const badge = list.dataset.badge ? field(record, list.dataset.badge) : "";
+        if (badge) {
+          const row = document.createElement("div");
+          row.className = "mm-card__meta";
+          const tag = document.createElement("span");
+          tag.className = "app-badge";
+          tag.textContent = badge.charAt(0).toUpperCase() + badge.slice(1);
+          row.append(tag);
+          body.append(row);
+        }
+        const heading = document.createElement("h3");
+        heading.className = "mm-card__title";
+        // data-link names a field holding the address; data-link-template builds it from fields: "https://x.org/?id={id}".
+        const address = list.dataset.linkTemplate
+          ? list.dataset.linkTemplate.replace(/\{([^}]+)\}/g, (_, name) => encodeURIComponent(pickPath(record, name) ?? ""))
+          : list.dataset.link ? field(record, list.dataset.link) : "";
+        if (isWebAddress(address)) {
+          const anchor = document.createElement("a");
+          anchor.href = address;
+          anchor.target = "_blank";
+          anchor.rel = "noreferrer";
+          anchor.textContent = field(record, list.dataset.title);
+          heading.append(anchor);
+        } else {
+          heading.textContent = field(record, list.dataset.title);
+        }
+        body.append(heading);
+        // "field:words" adds the words after the value ("redirects:visits" reads "5 visits").
+        const meta = (list.dataset.meta || "").split(",").map((entry) => {
+          const [name, words] = entry.trim().split(":");
+          const value = field(record, name);
+          return value && words ? `${value} ${words}` : value;
+        }).filter(Boolean).join(" — ");
+        if (meta) {
+          const byline = document.createElement("p");
+          byline.className = "mm-card__byline";
+          byline.textContent = meta;
+          body.append(byline);
+        }
+        const text = list.dataset.text ? field(record, list.dataset.text) : "";
+        if (text) {
+          const description = document.createElement("p");
+          description.className = "mm-card__text";
+          description.textContent = text;
+          body.append(description);
+        }
+        card.append(body);
+        cards.append(card);
+      });
+    }
+
+    whenShown(list, async () => {
+      status.textContent = `Loading ${appName}…`;
+      try {
+        if (list.dataset.hiddenPath && pickPath(await fetchJson(list.dataset.src.split(/\s+/)[0]), list.dataset.hiddenPath) === true) {
+          status.textContent = list.dataset.hiddenText || "Too few to show.";
+          return;
+        }
+        let records = await fetchRecords(list);
+        if (list.dataset.sort) {
+          const direction = list.dataset.sortOrder === "asc" ? 1 : -1;
+          records = [...records].sort((a, b) => direction * String(pickPath(a, list.dataset.sort) ?? "").localeCompare(String(pickPath(b, list.dataset.sort) ?? ""), "en", { numeric: true }));
+        }
+        if (!records.length) {
+          status.textContent = list.dataset.emptyText || `No ${noun} found.`;
+          return;
+        }
+        if (list.dataset.group) {
+          // One card for each value of the field: its name, how many records it has, and the dates they span.
+          const groups = new Map();
+          records.forEach((record) => {
+            const found = pickPath(record, list.dataset.group);
+            (Array.isArray(found) ? found : [found]).filter((value) => value != null && value !== "").forEach((value) => {
+              if (!groups.has(String(value))) groups.set(String(value), []);
+              groups.get(String(value)).push(record);
+            });
+          });
+          const span = (members) => {
+            const days = members.map((record) => dayOf(pickPath(record, list.dataset.groupDate))).filter(Boolean).sort();
+            if (!days.length) return { last: "", text: "" };
+            const part = (day, withYear) => new Date(`${day}T00:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", ...(withYear ? { year: "numeric" } : {}), timeZone: "UTC" });
+            const [first, last] = [days[0], days[days.length - 1]];
+            const text = first === last ? part(first, true) : first.slice(0, 4) === last.slice(0, 4) ? `${part(first, false)} – ${part(last, true)}` : `${part(first, true)} – ${part(last, true)}`;
+            return { last, text };
+          };
+          const entries = [...groups].map(([value, members]) => ({ value, members, ...span(members) }))
+            .sort((a, b) => (b.last || "").localeCompare(a.last || "") || a.value.localeCompare(b.value, "en"));
+          entries.slice(0, limit).forEach((entry) => {
+            const card = document.createElement("li");
+            card.className = "app-card mm-card";
+            const body = document.createElement("div");
+            body.className = "mm-card__body";
+            const heading = document.createElement("h3");
+            heading.className = "mm-card__title";
+            const address = (list.dataset.groupLink || "").replace("{value}", encodeURIComponent(entry.value));
+            if (isWebAddress(address)) {
+              const anchor = document.createElement("a");
+              anchor.href = address;
+              anchor.target = "_blank";
+              anchor.rel = "noreferrer";
+              anchor.textContent = entry.value;
+              heading.append(anchor);
+            } else {
+              heading.textContent = entry.value;
+            }
+            const byline = document.createElement("p");
+            byline.className = "mm-card__byline";
+            const unit = list.dataset.groupNoun || "records";
+            byline.textContent = [`${entry.members.length} ${entry.members.length === 1 ? unit.replace(/s$/, "") : unit}`, entry.text].filter(Boolean).join(" — ");
+            body.append(heading, byline);
+            card.append(body);
+            cards.append(card);
+          });
+          // A count of everything drawn says nothing a person cannot see; only a cut-off list says how much is left out.
+          status.textContent = entries.length > limit ? `Showing ${limit} of ${entries.length} ${noun}.` : "";
+          return;
+        }
+        draw(records);
+        // How far back the records go, from the oldest one, in Pacific days.
+        let span = "";
+        if (list.dataset.timeframe) {
+          const days = records.map((record) => dayOf(pickPath(record, list.dataset.timeframe))).filter(Boolean).sort();
+          if (days.length) {
+            const today = dayOf(new Date().toISOString());
+            const ago = Math.round((Date.parse(`${today}T00:00:00Z`) - Date.parse(`${days[0]}T00:00:00Z`)) / dayMs);
+            span = ago <= 7 ? "last week" : ago <= 31 ? "last month" : ago <= 93 ? "last 3 months" : `since ${asText(days[0])}`.replace(/(\w+) (\d+), (\d+)/, (_, m, d, y) => `${m.slice(0, 3)} ${d}, ${y}`);
+          }
+        }
+        // A plain count of everything drawn is left out; a cut-off list, or one with a timeframe, says so.
+        const counted = records.length > limit ? `Showing ${limit} of ${records.length} ${noun}` : `${records.length} ${noun}`;
+        status.textContent = records.length > limit || span ? `${counted}${span ? ` (${span})` : ""}.` : "";
+      } catch (error) {
+        console.error(error);
+        status.textContent = `${appName} could not be loaded right now.`;
+      }
+    });
+  });
+
+  // Key numbers: the app's stat cards. Either numbers a service already added up, or
+  // numbers counted from the records.
+  //   data-fields       "field:Label,field:Label"; each field is a dot path under data-path
+  //                     (default "data") of the service's answer.
+  //   data-compute      instead of data-fields, a JSON list counted from the records:
+  //                     ["count","Label"], ["count","Label","field","value"] (records where the
+  //                     field equals the value), or ["unique","Label","field"] (different values).
+  //   data-hidden-path  optional. Dot path to a flag; when true the numbers are withheld and
+  //                     data-hidden-text is shown instead (a service that hides small counts).
+  document.querySelectorAll("[data-key-numbers]").forEach((box) => {
+    if (!box.dataset.src) return;
+    const fields = (box.dataset.fields || "")
+      .split(",")
+      .map((pair) => pair.split(":"))
+      .filter(([field, label]) => field && label)
+      .map(([field, label]) => [field.trim(), label.trim()]);
+    let compute = [];
+    try {
+      compute = box.dataset.compute ? JSON.parse(box.dataset.compute) : [];
+    } catch (error) {
+      console.error(error);
+    }
+    if (!fields.length && !compute.length) return;
+    const appName = box.dataset.appName || "numbers";
+    const status = statusLine("keyNumbersStatus");
+    const grid = document.createElement("div");
+    grid.className = "mm-stats-kpis";
+    box.replaceChildren(status, grid);
+
+    const add = (label, value) => {
+      const card = document.createElement("div");
+      card.className = "mm-stats-kpi";
+      const name = document.createElement("p");
+      name.className = "app-help-text";
+      name.textContent = label;
+      const number = document.createElement("p");
+      number.className = "mm-stats-kpi__value";
+      number.textContent = value.toLocaleString("en-US");
+      card.append(name, number);
+      grid.append(card);
+    };
+
+    whenShown(box, async () => {
+      status.textContent = `Loading ${appName}…`;
+      try {
+        if (compute.length) {
+          const records = await fetchRecords(box);
+          compute.forEach(([kind, label, field, value]) => {
+            if (kind === "unique") add(label, new Set(records.map((record) => pickPath(record, field)).filter((v) => v != null && v !== "")).size);
+            else add(label, field ? records.filter((record) => pickPath(record, field) === value).length : records.length);
+          });
+          status.textContent = "";
+          return;
+        }
+        const body = await fetchJson(box.dataset.src);
+        if (box.dataset.hiddenPath && pickPath(body, box.dataset.hiddenPath) === true) {
+          status.textContent = box.dataset.hiddenText || "Too few to show.";
+          return;
+        }
+        const data = pickPath(body, box.dataset.path || "data");
+        if (!data || typeof data !== "object") throw new Error(`${box.dataset.src}: no numbers`);
+        fields.forEach(([field, label]) => {
+          const value = pickPath(data, field);
+          if (typeof value === "number") add(label, value);
+        });
+        status.textContent = grid.children.length ? "" : `No ${appName} numbers found.`;
+      } catch (error) {
+        console.error(error);
+        status.textContent = `${appName} could not be loaded right now.`;
+      }
+    });
+  });
+
+  // Charts: the app's chart cards, drawn with Chart.js from the page's own copy.
+  //   data-chart-lib    required. Address of chart.min.js, loaded when the first chart is shown.
+  //   data-chart-title  required. The card's heading.
+  //   data-kind         "line" (default; counts per day, or per month) or "bar" (ranked, horizontal).
+  //   data-date         line. Field holding each record's date; data-bucket is "day" (default) or "month".
+  //   data-group        bar. Field to rank; an array field counts each of its values.
+  //   data-sum          optional. Field to add up instead of counting records (rows a service
+  //                     already added up by day).
+  //   data-top          bar. Most bars drawn (default 10).
+  //   data-hidden-path  optional. As for key numbers.
+  // Amounts the page already holds (a budget): data-inline names a <script type="application/json"> in the
+  // page, { labels: [...], series: [{ name, values: [...] }], format: "currency" | "number", summary: "..." },
+  // instead of data-src. Then data-kind is "columns" (vertical), "bars" (horizontal) or "pie" (the first series as shares of a whole), data-stacked stacks
+  // the series, and nothing is fetched except Chart.js.
+  const chartLoads = new Map();
+  const loadChartLib = (src) => {
+    if (typeof window.Chart !== "undefined") return Promise.resolve();
+    if (!chartLoads.has(src)) {
+      chartLoads.set(src, new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = () => reject(new Error(`${src}: could not load the chart library`));
+        document.head.append(script);
+      }));
+    }
+    return chartLoads.get(src);
+  };
+
+  document.querySelectorAll("[data-chart]").forEach((box) => {
+    if ((!box.dataset.src && !box.dataset.inline) || !box.dataset.chartLib || !box.dataset.chartTitle) return;
+    const appName = box.dataset.appName || "chart";
+    const inlineKind = ["columns", "bars", "pie"].includes(box.dataset.kind) ? box.dataset.kind : "";
+    const kind = box.dataset.kind === "bar" ? "bar" : "line";
+    const card = document.createElement("section");
+    card.className = "app-card";
+    const heading = document.createElement("h3");
+    heading.textContent = box.dataset.chartTitle;
+    const status = statusLine("chartStatus");
+    const canvas = document.createElement("canvas");
+    canvas.setAttribute("role", "img");
+    canvas.setAttribute("aria-label", box.dataset.chartTitle);
+    canvas.hidden = true;
+    card.append(heading, status, canvas);
+    box.replaceChildren(card);
+
+    const monthOf = (day) => day.slice(0, 7);
+    function tally(records) {
+      const sum = (record) => (box.dataset.sum ? Number(pickPath(record, box.dataset.sum)) || 0 : 1);
+      const counts = new Map();
+      if (kind === "bar") {
+        records.forEach((record) => {
+          const found = pickPath(record, box.dataset.group);
+          (Array.isArray(found) ? found : [found]).filter((v) => v != null && v !== "").forEach((v) => counts.set(String(v), (counts.get(String(v)) || 0) + sum(record)));
+        });
+        return [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, Number.parseInt(box.dataset.top || "10", 10) || 10);
+      }
+      const byMonth = box.dataset.bucket === "month";
+      records.forEach((record) => {
+        const day = dayOf(pickPath(record, box.dataset.date));
+        if (!day) return;
+        const key = byMonth ? monthOf(day) : day;
+        counts.set(key, (counts.get(key) || 0) + sum(record));
+      });
+      const keys = [...counts.keys()].sort();
+      if (!keys.length) return [];
+      // Keep the quiet days and months on the line, so a gap looks like a gap.
+      const filled = [];
+      const step = (key) => {
+        const [year, month, day] = key.split("-").map(Number);
+        const next = byMonth ? new Date(Date.UTC(year, month, 1)) : new Date(Date.UTC(year, month - 1, day + 1));
+        return next.toISOString().slice(0, byMonth ? 7 : 10);
+      };
+      for (let key = keys[0], guard = 0; key <= keys[keys.length - 1] && guard < 800; key = step(key), guard += 1) filled.push([key, counts.get(key) || 0]);
+      return filled;
+    }
+
+    const labelFor = (key) => {
+      if (kind === "bar") return key;
+      const date = new Date(`${key.length === 7 ? `${key}-01` : key}T00:00:00Z`);
+      return date.toLocaleDateString("en-US", key.length === 7 ? { month: "short", year: "numeric", timeZone: "UTC" } : { month: "short", day: "numeric", timeZone: "UTC" });
+    };
+
+    // Colors that stay apart for people who see color differently (Okabe and Ito); the series are also named
+    // in the legend, so color is never the only signal.
+    const seriesColors = ["#0072B2", "#E69F00", "#009E73", "#D55E00", "#CC79A7", "#56B4E9", "#8c6d1f", "#555555", "#999999"];
+    const amountText = (value, format, short) => {
+      if (format === "currency") {
+        const sign = value < 0 ? "−" : "";
+        const abs = Math.abs(value);
+        if (short && abs >= 1e6) return `${sign}$${(abs / 1e6).toFixed(abs >= 1e8 ? 0 : 1).replace(/\.0$/, "")}M`;
+        if (short && abs >= 1e3) return `${sign}$${Math.round(abs / 1e3)}K`;
+        return `${sign}$${abs.toLocaleString("en-US")}`;
+      }
+      return value.toLocaleString("en-US", { maximumFractionDigits: 2 });
+    };
+    async function drawInline() {
+      const holder = document.getElementById(box.dataset.inline);
+      const spec = holder ? JSON.parse(holder.textContent) : null;
+      await loadChartLib(box.dataset.chartLib);
+      if (!spec || !Array.isArray(spec.labels) || !spec.labels.length || !Array.isArray(spec.series) || !spec.series.length) {
+        status.textContent = box.dataset.emptyText || "Nothing to show yet.";
+        return;
+      }
+      const format = spec.format || "number";
+      if (inlineKind === "pie") {
+        // One series as shares of a whole: slices from the largest, each named in the legend with its share, and its
+        // amount and percentage in the tooltip. A zero or negative value has no slice.
+        const slices = spec.labels.map((label, index) => [label, Number(spec.series[0].values[index]) || 0]).filter(([, value]) => value > 0).sort((a, b) => b[1] - a[1]);
+        const whole = slices.reduce((sum, [, value]) => sum + value, 0);
+        if (!slices.length) {
+          status.textContent = box.dataset.emptyText || "Nothing to show yet.";
+          return;
+        }
+        const share = (value) => `${((value / whole) * 100).toFixed(value / whole < 0.1 ? 1 : 0)}%`;
+        canvas.setAttribute("aria-label", `${box.dataset.chartTitle}. ${spec.summary || `${slices[0][0]} is the largest share, ${share(slices[0][1])} of ${amountText(whole, format)}.`}`);
+        window.Chart.defaults.color = getComputedStyle(card).color;
+        window.Chart.defaults.borderColor = getComputedStyle(card).borderTopColor;
+        const wrapPie = document.createElement("div");
+        wrapPie.style.position = "relative";
+        // Many slices: the legend goes underneath, in as many rows as it needs, so no name is cut off.
+        const many = slices.length > 8;
+        wrapPie.style.height = many ? `${300 + slices.length * 14}px` : "320px";
+        canvas.replaceWith(wrapPie);
+        wrapPie.append(canvas);
+        status.hidden = true;
+        canvas.hidden = false;
+        new window.Chart(canvas, {
+          type: "pie",
+          data: { labels: slices.map(([label]) => label), datasets: [{ data: slices.map(([, value]) => value), backgroundColor: slices.map((_, index) => seriesColors[index % seriesColors.length]), borderColor: getComputedStyle(card).backgroundColor, borderWidth: 2 }] },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: true, position: many ? "bottom" : "right", labels: { generateLabels: (chart) => chart.data.labels.map((label, index) => ({ text: `${label}, ${share(chart.data.datasets[0].data[index])}`, fillStyle: chart.data.datasets[0].backgroundColor[index], strokeStyle: chart.data.datasets[0].backgroundColor[index], hidden: false, index })) } },
+              tooltip: { callbacks: { label: (item) => `${item.label}: ${amountText(item.parsed, format)} (${share(item.parsed)})` } },
+            },
+          },
+        });
+        return;
+      }
+      const horizontal = inlineKind === "bars";
+      const stacked = box.hasAttribute("data-stacked");
+      const many = spec.series.length > 1;
+      let summary = spec.summary;
+      if (!summary) {
+        const first = spec.series[0];
+        const top = first.values.indexOf(Math.max(...first.values));
+        summary = many
+          ? `${spec.series.map((one) => `${one.name} totals ${amountText(one.values.reduce((a, b) => a + b, 0), format)}`).join("; ")}.`
+          : `Largest: ${spec.labels[top]} at ${amountText(first.values[top], format)}, of ${spec.labels.length} shown.`;
+      }
+      canvas.setAttribute("aria-label", `${box.dataset.chartTitle}. ${summary}`);
+      window.Chart.defaults.color = getComputedStyle(card).color;
+      window.Chart.defaults.borderColor = getComputedStyle(card).borderTopColor;
+      // Horizontal bars get a row each; the chart's box grows with them.
+      const wrap = document.createElement("div");
+      wrap.style.position = "relative";
+      wrap.style.height = horizontal ? `${Math.max(160, spec.labels.length * (many && !stacked ? 20 * spec.series.length : 28) + 64)}px` : "320px";
+      canvas.replaceWith(wrap);
+      wrap.append(canvas);
+      status.hidden = true;
+      canvas.hidden = false;
+      const valueAxis = { beginAtZero: true, stacked, ticks: { callback: (value) => amountText(value, format, true) } };
+      const labelAxis = { stacked, grid: { display: false } };
+      new window.Chart(canvas, {
+        type: "bar",
+        data: {
+          labels: spec.labels,
+          datasets: spec.series.map((one, index) => ({ label: one.name, data: one.values, backgroundColor: seriesColors[index % seriesColors.length], borderColor: seriesColors[index % seriesColors.length] })),
+        },
+        options: {
+          indexAxis: horizontal ? "y" : "x",
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: many, position: "bottom" },
+            tooltip: { callbacks: { label: (item) => `${item.dataset.label}: ${amountText(item.parsed[horizontal ? "x" : "y"], format)}` } },
+          },
+          scales: horizontal ? { x: valueAxis, y: labelAxis } : { x: labelAxis, y: valueAxis },
+        },
+      });
+    }
+
+    whenShown(box, async () => {
+      status.textContent = `Loading ${appName}…`;
+      try {
+        if (inlineKind) {
+          await drawInline();
+          return;
+        }
+        const [body] = await Promise.all([fetchJson(box.dataset.src.split(/\s+/)[0]), loadChartLib(box.dataset.chartLib)]);
+        if (box.dataset.hiddenPath && pickPath(body, box.dataset.hiddenPath) === true) {
+          // The key numbers beside it already say why; a second card saying it again adds nothing.
+          box.hidden = true;
+          return;
+        }
+        const records = await fetchRecords(box);
+        const entries = tally(records);
+        if (!entries.length) {
+          if ("hideEmpty" in box.dataset) {
+            box.hidden = true;
+            return;
+          }
+          status.textContent = box.dataset.emptyText || "Nothing to show yet.";
+          return;
+        }
+        const labels = entries.map(([key]) => labelFor(key));
+        const values = entries.map(([, count]) => count);
+        const peak = values.indexOf(Math.max(...values));
+        canvas.setAttribute("aria-label", kind === "bar"
+          ? `${box.dataset.chartTitle}. Top: ${labels[0]} with ${values[0]}, of ${labels.length} shown.`
+          : `${box.dataset.chartTitle}. ${values.reduce((a, b) => a + b, 0)} total, peaking at ${values[peak]} on ${labels[peak]}.`);
+        // Chart.js draws its own text and grid, so give it the page's colors.
+        window.Chart.defaults.color = getComputedStyle(card).color;
+        window.Chart.defaults.borderColor = getComputedStyle(card).borderTopColor;
+        status.hidden = true;
+        canvas.hidden = false;
+        canvas.style.maxHeight = "320px";
+        new window.Chart(canvas, {
+          type: kind,
+          data: { labels, datasets: [{ data: values, borderColor: "#0777cf", backgroundColor: "#0777cf", tension: 0 }] },
+          options: kind === "bar"
+            ? { indexAxis: "y", responsive: true, plugins: { legend: { display: false } }, scales: { x: { ticks: { precision: 0 } } } }
+            : { responsive: true, plugins: { legend: { display: false } }, scales: { y: { ticks: { precision: 0 }, beginAtZero: true } } },
+        });
+      } catch (error) {
+        console.error(error);
+        status.textContent = `${appName} could not be loaded right now.`;
+      }
+    });
   });
 
   // Security: any [data-security-json="path"] section lazy-loads that path
