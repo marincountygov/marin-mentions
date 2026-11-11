@@ -129,3 +129,14 @@ test("look-alike words and other places no longer match the real monitors", () =
   assert.deepEqual(ids("Marin to the SF Civic Center, no Karl", "youtube"), []);
   assert.ok(ids("Events this week at the Marin County Civic Center").includes("civic-center"));
 });
+
+test("a post from an account blocked in config/context.yaml is dropped, even when it matches a monitor", () => {
+  const real = buildContextRules(loadContext());
+  const monitor = [{ id: "child-support", group: "Departments", include: ["child support"] }];
+  const blocked = post("if she gets pregnant, get ready to pay child support", { handle: "steeltitan.bsky.social" });
+  applyMonitors(blocked, monitor, real);
+  assert.deepEqual(blocked.matchedMonitors, []);
+  const other = post("Marin County child support office hours", { handle: "someone.bsky.social" });
+  applyMonitors(other, monitor, real);
+  assert.deepEqual(other.matchedMonitors, ["child-support"]);
+});

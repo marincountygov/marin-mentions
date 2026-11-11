@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Reports view: the report builder, toggled by #reports-toggle beside Stats. Like Stats it
     // replaces the mention list in place, and the sidebar filters choose its coverage.
     reportsView: false,
-    time: "24h",
+    time: "60d",
     selectedSources: new Set(),
     sourceSortKey: "name",
     sourceSortDirection: "ascending",
@@ -146,6 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
     "Board & Courts",
     "Districts",
     "Departments",
+    "Divisions",
     "Associations",
     "People",
   ];
@@ -173,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (state.selectedMonitors.size > 0) params.set("monitors", Array.from(state.selectedMonitors).join(","));
     if (state.selectedFeedSources.size > 0) params.set("sources", Array.from(state.selectedFeedSources).join(","));
     if (state.contentType !== "all") params.set("type", state.contentType);
-    if (state.time !== "24h") params.set("time", state.time);
+    if (state.time !== "60d") params.set("time", state.time);
     if (state.statsView) params.set("view", "stats");
     if (state.reportsView) params.set("view", "reports");
 
@@ -2183,8 +2184,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (elements.searchInput) elements.searchInput.value = "";
     state.selectedMonitors = new Set();
     state.selectedFeedSources = new Set();
-    state.time = "24h";
-    if (elements.timeSelect) elements.timeSelect.value = state.reportsView ? "report" : "24h";
+    state.time = "60d";
+    if (elements.timeSelect) elements.timeSelect.value = state.reportsView ? "report" : "60d";
     state.contentType = "all";
     state.statsView = false;
     elements.contentTabs?.querySelectorAll("[data-content-type]").forEach((tab) => {
@@ -2215,7 +2216,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const count =
         button.dataset.filterToggle === "sources"
           ? state.selectedSources.size
-          : state.selectedMonitors.size + state.selectedFeedSources.size + (state.search ? 1 : 0) + (state.time !== "24h" ? 1 : 0);
+          : state.selectedMonitors.size + state.selectedFeedSources.size + (state.search ? 1 : 0) + (state.time !== "60d" ? 1 : 0);
       button.dataset.filterActive = String(count);
     });
   }
