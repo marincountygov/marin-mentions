@@ -25,9 +25,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -48,9 +48,11 @@ jobs:
             --out=dist/data.json \
             --previous="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/data.json"
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
+          # The site includes .well-known/security.txt. Version 4 and later leave out folders that start with a dot unless asked.
+          include-hidden-files: true
 
   deploy:
     needs: build
@@ -60,4 +62,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
