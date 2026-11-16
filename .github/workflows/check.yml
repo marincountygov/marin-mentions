@@ -13,7 +13,7 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           path: marin-mentions
       # marin-data.lock names the marin-data commit this repo last synced. It is checked out next to this repo,
@@ -22,16 +22,16 @@ jobs:
         id: lock
         run: |
           if [ -f marin-mentions/marin-data.lock ]; then echo "sha=$(tr -d '[:space:]' < marin-mentions/marin-data.lock)" >> "$GITHUB_OUTPUT"; fi
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         if: steps.lock.outputs.sha != ''
         with:
           repository: marincountygov/marin-data
           ref: ${{ steps.lock.outputs.sha }}
           path: marin-data
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: npm ci
