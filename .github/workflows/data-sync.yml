@@ -1,0 +1,77 @@
+name: Data sync
+
+# Once a day, looks for changes to the shared County data in marin-data. When something this repo copies has
+# changed, it updates the copies, runs the checks, and pushes a branch called data-sync with the result.
+# It never merges anything. Open the compare link in the run summary to review the change and start a pull request.
+
+on:
+  schedule:
+    - cron: "23 13 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: marin-mentions
+      - uses: actions/checkout@v4
+        with:
+          repository: marincountygov/marin-data
+          ref: main
+          path: marin-data
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: npm ci
+        working-directory: marin-mentions
+      - name: Update from marin-data
+        id: sync
+        run: bash marin-data/scripts/data_sync.sh marin-mentions
+
+      - name: Push the data-sync branch
+        if: steps.sync.outputs.changed == 'true'
+        working-directory: marin-mentions
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c data-sync
+          git add -A
+          git commit -m "Update shared County data" -m "The shared County data has changed. This updates the copies kept here and rebuilds what depends on them."
+          git push --force origin data-sync
+
+      - name: Summary
+        if: always()
+        env:
+          CHANGED: ${{ steps.sync.outputs.changed }}
+          OUTCOME: ${{ steps.sync.outcome }}
+        run: |
+          {
+            if [ "$OUTCOME" != "success" ]; then
+              echo "### Data sync failed"
+              echo "The update or its checks failed, so nothing was pushed. Open the log above for the reason."
+            elif [ "$CHANGED" = "true" ]; then
+              echo "### Data sync found changes"
+              echo "The branch **data-sync** was pushed. Review it and open a pull request:"
+              echo
+              echo "https://github.com/${{ github.repository }}/compare/data-sync?expand=1"
+              echo
+              echo "The checks run when the pull request is opened."
+            else
+              echo "### Data sync found nothing new"
+              echo "This repo is up to date with marin-data."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
