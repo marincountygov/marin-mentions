@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Browser test of the collapsible filter panels over HTTP. Needs Playwright for Python and a data.json
-next to index.html (run `npm run dev` or download the live one). Run: python3 tests/browser_filters.py"""
+"""Browser test of the collapsible filter panels over HTTP. Needs Playwright for Python. It serves tests/fixtures/data.json
+as /data.json, so it needs no live data and no network. Run: python3 tests/browser_filters.py"""
 from __future__ import annotations
 
 from functools import partial
@@ -12,10 +12,16 @@ from threading import Thread
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
+FIXTURE = ROOT / "tests" / "fixtures" / "data.json"  # served as /data.json
 LOOK = "el => { const c = getComputedStyle(el); return [c.borderTopWidth, c.borderTopColor, c.borderRadius]; }"
 
 
 class Handler(SimpleHTTPRequestHandler):
+    def translate_path(self, path):
+        if path.split("?", 1)[0] == "/data.json":
+            return str(FIXTURE)
+        return super().translate_path(path)
+
     def log_message(self, *args):
         pass
 
@@ -122,9 +128,7 @@ def run(base, page):
 
 
 def main():
-    if not (ROOT / "data.json").exists():
-        print("SKIP: data.json not found (run npm run dev, or download the live data.json)")
-        return
+    require(FIXTURE.exists(), f"Missing {FIXTURE.relative_to(ROOT)}")
     server = ThreadingHTTPServer(("127.0.0.1", 0), partial(Handler, directory=str(ROOT)))
     Thread(target=server.serve_forever, daemon=True).start()
     base = f"http://127.0.0.1:{server.server_port}/"
@@ -136,6 +140,7 @@ def main():
                 context = browser.new_context(color_scheme=scheme, viewport={"width": 1280, "height": 1000}, accept_downloads=True)
                 context.grant_permissions(["clipboard-read", "clipboard-write"], origin=base.rstrip("/"))
                 page = context.new_page()
+                page.route(lambda url: not url.startswith(base), lambda route: route.fulfill(status=200, content_type="image/png", body=b""))  # no network
                 page.on("pageerror", lambda e: problems.append(str(e)))
                 page.on("console", lambda m: problems.append(m.text) if m.type == "error" and "lighthouse" not in m.text and "localhost:8935" not in m.text else None)
                 run(base, page)

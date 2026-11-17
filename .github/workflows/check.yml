@@ -36,5 +36,9 @@ jobs:
           python-version: "3.12"
       - run: npm ci
         working-directory: marin-mentions
-      - run: bash scripts/check.sh
+      - run: python -m pip install -r tests/requirements.txt
+        working-directory: marin-mentions
+      - run: python -m playwright install --with-deps chromium
+        working-directory: marin-mentions
+      - run: bash scripts/check.sh --browser
         working-directory: marin-mentions
