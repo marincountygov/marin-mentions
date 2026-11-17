@@ -1,0 +1,4 @@
+# Python package for the browser tests: bash scripts/check.sh --browser
+# Then install the browser once: python -m playwright install chromium
+# (on a bare Linux machine: python -m playwright install --with-deps chromium)
+playwright==1.65.2
