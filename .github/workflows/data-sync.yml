@@ -1,12 +1,13 @@
 name: Data sync
 
-# Once a day, looks for changes to the shared County data in marin-data. When something this repo copies has
+# Every hour, looks for changes to the shared County data in marin-data. (GitHub starts scheduled runs late and
+# skips many of them, so one run a day was often missed. A run with nothing to do takes about 20 seconds.) When something this repo copies has
 # changed, it updates the copies, runs the checks, and pushes a branch called data-sync with the result.
 # It never merges anything. Open the compare link in the run summary to review the change and start a pull request.
 
 on:
   schedule:
-    - cron: "23 13 * * *"
+    - cron: "23 * * * *"
   workflow_dispatch: {}
 
 permissions:
@@ -43,6 +44,7 @@ jobs:
         run: bash marin-data/scripts/data_sync.sh marin-mentions
 
       - name: Push the data-sync branch
+        id: push
         if: steps.sync.outputs.changed == 'true'
         working-directory: marin-mentions
         run: |
@@ -51,18 +53,32 @@ jobs:
           git switch -c data-sync
           git add -A
           git commit -m "Update shared County data" -m "The shared County data has changed. This updates the copies kept here and rebuilds what depends on them."
-          git push --force origin data-sync
+          # This runs every hour. If the data-sync branch on GitHub already holds exactly this result, leave it
+          # alone, so an open pull request is not rewritten, and its checks rerun, every hour.
+          if git fetch --quiet --depth=1 origin data-sync 2>/dev/null && [ "$(git rev-parse 'HEAD^{tree}')" = "$(git rev-parse 'FETCH_HEAD^{tree}')" ]; then
+            echo "pushed=false" >> "$GITHUB_OUTPUT"
+            echo "The data-sync branch already has this result. Nothing pushed."
+          else
+            git push --force origin data-sync
+            echo "pushed=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Summary
         if: always()
         env:
           CHANGED: ${{ steps.sync.outputs.changed }}
+          PUSHED: ${{ steps.push.outputs.pushed }}
           OUTCOME: ${{ steps.sync.outcome }}
         run: |
           {
             if [ "$OUTCOME" != "success" ]; then
               echo "### Data sync failed"
               echo "The update or its checks failed, so nothing was pushed. Open the log above for the reason."
+            elif [ "$CHANGED" = "true" ] && [ "$PUSHED" = "false" ]; then
+              echo "### Data sync: the data-sync branch is already up to date"
+              echo "It already holds this result, so nothing was pushed. If you have not yet, review it and open a pull request:"
+              echo
+              echo "https://github.com/${{ github.repository }}/compare/data-sync?expand=1"
             elif [ "$CHANGED" = "true" ]; then
               echo "### Data sync found changes"
               echo "The branch **data-sync** was pushed. Review it and open a pull request:"
