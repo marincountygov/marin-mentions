@@ -141,6 +141,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const MONITOR_GROUP_ORDER = [
     "Topics",
     "Services",
+    "Projects",
     "Events & Places",
     "Towns",
     "Board & Courts",

@@ -27,6 +27,10 @@
 # effect on matching either way.
 #
 # Add a new monitor by adding an entry here.
+#
+# Do not add monitors for projects here. They come from the shared list of projects in marin-data
+# (config/projects.json is a copy, put here by scripts/sync-projects.py): each project with a mentions
+# entry gets a monitor in the Projects group, named "project-" plus the project id.
 
 monitors:
   # --- Board & Courts ---
