@@ -99,6 +99,12 @@ sources:
     region: bay-area
     url: "https://www.nbcbayarea.com/?rss=y"
     enabled: true
+    # This feed often puts another story's body under a headline (one tanker story
+    # sat under 50+ unrelated ones) and its bodies end in related-story links.
+    # So: drop text that does not fit the headline, and match only the headline
+    # plus the first 300 characters of text.
+    checkTextMatchesTitle: true
+    matchTextChars: 300
 
   - id: cbs-bay-area
     name: CBS News Bay Area / KPIX

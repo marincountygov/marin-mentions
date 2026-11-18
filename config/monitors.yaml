@@ -109,7 +109,7 @@ monitors:
       - Greenbrae
       - Kent Woodlands
       - Oak Manor
-      - [Marin, Sleepy Hollow]
+      - [word:Marin, Sleepy Hollow]
 
   - id: marin-district-3
     name: Marin District 3
@@ -128,11 +128,11 @@ monitors:
       - Almonte
       - [word:Alto, word:Marin]
       - Alto-Sutton Manor
-      - [Marin, Strawberry]
+      - [word:Marin, Strawberry]
       - [Tiburon, word:Marin]
       - [Belvedere, word:Marin]
       - Paradise Cay
-      - [Marin, floating homes]
+      - [word:Marin, floating homes]
 
   - id: marin-district-4
     name: Marin District 4
@@ -145,9 +145,9 @@ monitors:
 
       # West Marin
       - Dillon Beach
-      - [Marin, Fallon]
+      - [word:Marin, Fallon]
       - Tomales
-      - [Marin, Marshall]
+      - [word:Marin, word:Marshall]
       - Inverness
       - Inverness Park
       - Point Reyes Station
@@ -156,7 +156,7 @@ monitors:
       - Tocaloma
       - Nicasio
       - Chileno Valley
-      - [Marin, Dogtown]
+      - [word:Marin, Dogtown]
       - Bolinas
       - Stinson Beach
       - Muir Beach
@@ -194,12 +194,12 @@ monitors:
       - word:Novato
       - "#Novato"
       - Bel Marin Keys
-      - [Marin, Loma Verde]
-      - [Marin, Black Point]
-      - [Marin, Green Point]
+      - [word:Marin, Loma Verde]
+      - [word:Marin, Black Point]
+      - [word:Marin, Green Point]
       - Rush Creek
       - Atherton Corridor
-      - [Marin, Indian Valley]
+      - [word:Marin, Indian Valley]
 
   # --- Departments ---
   - id: marin-oem
@@ -500,9 +500,9 @@ monitors:
     include:
       - Marin UC Cooperative Extension
       - UC Cooperative Extension Marin
-      - [Marin, word:UCCE]
-      - [Marin, Farm Advisor]
-      - [Marin, Master Gardeners]
+      - [word:Marin, word:UCCE]
+      - [word:Marin, Farm Advisor]
+      - [word:Marin, Master Gardeners]
 
   - id: marin-transit
     name: Marin Transit
@@ -560,7 +560,7 @@ monitors:
     name: Marin HHS General Administration
     group: Divisions
     include:
-      - [Marin, Health and Human Services, general administration]
+      - [word:Marin, Health and Human Services, general administration]
 
   - id: marin-hhs-bhrs
     name: Marin Behavioral Health and Recovery Services
@@ -663,8 +663,8 @@ monitors:
     include:
       - AlertMarin
       - Alert Marin
-      - [Marin, reverse 911]
-      - [Marin, emergency notifications]
+      - [word:Marin, reverse 911]
+      - [word:Marin, emergency notifications]
 
   - id: readymarin
     name: ReadyMarin
@@ -678,7 +678,7 @@ monitors:
     group: Services
     include:
       - Engage Marin
-      - [Marin, engagement, portal]
+      - [word:Marin, engagement, portal]
 
   # --- Events & Places ---
   - id: civic-center
@@ -692,8 +692,8 @@ monitors:
     include:
       - Marin Civic Center
       - Marin County Civic Center
-      - [Marin, civic center]
-      - [Marin, county, offices]
+      - [word:Marin, civic center]
+      - [word:Marin, county, offices]
       # The Civic Center is Frank Lloyd Wright's Marin building, and a headline
       # often says "Frank Lloyd Wright landmark" without naming it. Added
       # 2026-10-19 after "New Marin exhibit brings eco-friendly fashion to Frank
@@ -708,8 +708,8 @@ monitors:
       - Marin Showcase Theater
       - Marin Exhibit Hall
       - Marin Veterans' Memorial Auditorium
-      - [Marin, Veterans Memorial Auditorium]
-      - [Marin, word:VMA]
+      - [word:Marin, Veterans Memorial Auditorium]
+      - [word:Marin, word:VMA]
 
   - id: marin-county-fair
     name: Marin County Fair
@@ -731,7 +731,7 @@ monitors:
     group: Events & Places
     include:
       - Marin Cultural Association
-      - [word:MCA, Marin]
+      - [word:MCA, word:Marin]
 
   - id: holiday-light-spectacular
     name: Holiday Light Spectacular
@@ -1219,7 +1219,7 @@ monitors:
     group: Associations
     include:
       - Marin County Management Employees' Association
-      - [MCMEA, Marin]
+      - [MCMEA, word:Marin]
 
   - id: marin-deputy-sheriffs-association
     name: Marin County Deputy Sheriffs' Association
@@ -1227,17 +1227,17 @@ monitors:
     include:
       - Marin County Deputy Sheriffs' Association
       - Marin Deputy Sheriffs' Association
-      - [Marin, word:DSA]
-      - [Marin, deputies union]
+      - [word:Marin, word:DSA]
+      - [word:Marin, deputies union]
 
   - id: marin-firefighters-association
     name: Marin County Firefighters' Association
     group: Associations
     include:
-      - [Marin, Firefighters' Association]
-      - [Marin, firefighters Association]
-      - [Marin, word:MCFA]
-      - [Marin, firefighters union]
+      - [word:Marin, Firefighters' Association]
+      - [word:Marin, firefighters Association]
+      - [word:Marin, word:MCFA]
+      - [word:Marin, firefighters union]
       - IAFF Local 1775
 
   - id: marin-fire-battalion-chiefs-association
@@ -1246,7 +1246,7 @@ monitors:
     include:
       - Marin County Fire Battalion Chiefs' Association
       - Marin Fire Battalion Chiefs Association
-      - [Marin, word:FBCA]
+      - [word:Marin, word:FBCA]
 
   - id: marin-sheriffs-staff-officers-association
     name: Marin County Sheriff's Staff Officers' Association
@@ -1254,7 +1254,7 @@ monitors:
     include:
       - Marin County Sheriff's Staff Officers' Association
       - Marin Sheriff's Staff Officers' Association
-      - [Marin, word:SSOA]
+      - [word:Marin, word:SSOA]
 
   - id: marin-probation-managers-association
     name: Marin County Probation Managers' Association
@@ -1262,7 +1262,7 @@ monitors:
     include:
       - Marin County Probation Managers' Association
       - Marin Probation Managers' Association
-      - [Marin, word:PMA]
+      - [word:Marin, word:PMA]
 
   - id: teamsters-local-856
     name: Teamsters Local 856
@@ -1270,14 +1270,14 @@ monitors:
     include:
       - Teamsters Local 856
       - Teamsters 856
-      - [Marin, Teamsters]
+      - [word:Marin, Teamsters]
 
   - id: iatse-local-16
     name: IATSE Local 16
     group: Associations
     include:
       - IATSE Local 16
-      - [Marin, IATSE]
+      - [word:Marin, IATSE]
 
   # --- Towns ---
   # Marin County incorporated cities and towns plus commonly recognized
@@ -1315,13 +1315,13 @@ monitors:
     name: Belvedere
     group: Towns
     include:
-      - [Marin, Belvedere]
+      - [word:Marin, Belvedere]
 
   - id: black-point
     name: Black Point
     group: Towns
     include:
-      - [Marin, Black Point]
+      - [word:Marin, Black Point]
 
   - id: bolinas
     name: Bolinas
@@ -1345,19 +1345,19 @@ monitors:
     name: Dogtown
     group: Towns
     include:
-      - [Marin, Dogtown]
+      - [word:Marin, Dogtown]
 
   - id: fairfax
     name: Fairfax
     group: Towns
     include:
-      - [Marin, Fairfax]
+      - [word:Marin, Fairfax]
 
   - id: fallon
     name: Fallon
     group: Towns
     include:
-      - [Marin, Fallon]
+      - [word:Marin, Fallon]
 
   - id: forest-knolls
     name: Forest Knolls
@@ -1375,7 +1375,7 @@ monitors:
     name: Green Point
     group: Towns
     include:
-      - [Marin, Green Point]
+      - [word:Marin, Green Point]
 
   - id: homestead-valley
     name: Homestead Valley
@@ -1387,13 +1387,13 @@ monitors:
     name: Ignacio
     group: Towns
     include:
-      - [Marin, Ignacio]
+      - [word:Marin, Ignacio]
 
   - id: indian-valley
     name: Indian Valley
     group: Towns
     include:
-      - [Marin, Indian Valley]
+      - [word:Marin, Indian Valley]
 
   - id: inverness
     name: Inverness
@@ -1429,7 +1429,7 @@ monitors:
     name: Larkspur
     group: Towns
     include:
-      - [Marin, Larkspur]
+      - [word:Marin, Larkspur]
 
   - id: las-gallinas
     name: Las Gallinas
@@ -1441,7 +1441,7 @@ monitors:
     name: Loma Verde
     group: Towns
     include:
-      - [Marin, Loma Verde]
+      - [word:Marin, Loma Verde]
 
   - id: lucas-valley
     name: Lucas Valley
@@ -1465,7 +1465,7 @@ monitors:
     name: Marshall
     group: Towns
     include:
-      - [Marin, Marshall]
+      - [word:Marin, word:Marshall]
 
   - id: mill-valley
     name: Mill Valley
@@ -1557,21 +1557,21 @@ monitors:
     name: Seadrift
     group: Towns
     include:
-      - [Marin, Seadrift]
+      - [word:Marin, Seadrift]
 
   - id: sleepy-hollow
     name: Sleepy Hollow
     group: Towns
     include:
-      - [Marin, Sleepy Hollow]
+      - [word:Marin, Sleepy Hollow]
 
   - id: st-vincents
     name: St. Vincent's
     group: Towns
     include:
-      - [Marin, St. Vincent's]
-      - [Marin, St Vincents]
-      - [Marin, St. Vincent]
+      - [word:Marin, St. Vincent's]
+      - [word:Marin, St Vincents]
+      - [word:Marin, St. Vincent]
 
   - id: stinson-beach
     name: Stinson Beach
@@ -1583,7 +1583,7 @@ monitors:
     name: Strawberry
     group: Towns
     include:
-      - [Marin, Strawberry]
+      - [word:Marin, Strawberry]
 
   - id: tamalpais-valley
     name: Tamalpais Valley
@@ -1596,7 +1596,7 @@ monitors:
     name: Tiburon
     group: Towns
     include:
-      - [Marin, Tiburon]
+      - [word:Marin, Tiburon]
 
   - id: tocaloma
     name: Tocaloma

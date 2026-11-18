@@ -140,3 +140,43 @@ test("a post from an account blocked in config/context.yaml is dropped, even whe
   applyMonitors(other, monitor, real);
   assert.deepEqual(other.matchedMonitors, ["child-support"]);
 });
+
+const { dropMismatchedText } = require("../build/text-check");
+
+test("Marin in a compound entry matches the whole word only", () => {
+  const m = [{ id: "marshall", include: [["word:Marin", "word:Marshall"]] }];
+  const run = (text) => { const it = { text, matchedTerms: [], matchedMonitors: [] }; applyMonitors(it, m, null); return it.matchedMonitors; };
+  assert.deepEqual(run("Tracked on MarineTraffic, flagged in the Marshall Islands"), []);
+  assert.deepEqual(run("Marin County, Marshall"), ["marshall"]);
+  assert.deepEqual(run("Marshall news #larkspurcitymarincounty"), ["marshall"]);
+  assert.deepEqual(run("Marshall at the Berkeley Marina"), []);
+});
+
+test("matchTextChars ignores related-story text at the end of a body", () => {
+  const m = [{ id: "general", include: ["word:Marin"] }];
+  const body = "A storm hit the coast. " + "x".repeat(400) + " Marin County flooded by high tides";
+  const early = { title: "Storm", text: body, _matchChars: 300, matchedTerms: [], matchedMonitors: [] };
+  const all = { title: "Storm", text: body, matchedTerms: [], matchedMonitors: [] };
+  applyMonitors(all, m, null);
+  assert.deepEqual(all.matchedMonitors, ["general"]);
+  applyMonitors(early, m, null);
+  assert.deepEqual(early.matchedMonitors, []);
+});
+
+test("text that belongs to another story is dropped", () => {
+  const tanker = "Just hours after a tanker in New Orleans lost its steering and slammed into a cruise boat.";
+  const items = [
+    { url: "a", title: "Vallarta Supermarkets to open its first San Jose location", text: tanker },
+    { url: "b", title: "Fire breaks out at abandoned warehouse in San Francisco", text: tanker },
+    { url: "c", title: "Marin County sheriff warns of scam calls", text: "The Marin County sheriff's office warned residents about scam calls." },
+  ];
+  assert.equal(dropMismatchedText(items), 2);
+  assert.equal(items[0].text, "");
+  assert.equal(items[1].text, "");
+  assert.notEqual(items[2].text, "");
+});
+
+test("a lone story whose text has no title words is dropped", () => {
+  const items = [{ url: "a", title: "Denny's reinstalls plaque honoring former Nvidia CEO", text: "Outages affecting Apple services were resolved Tuesday night." }];
+  assert.equal(dropMismatchedText(items), 1);
+});

@@ -13,8 +13,13 @@ function normalizeForMatch(text) {
     .trim();
 }
 
+// item._matchChars (set by build/index.js from a source's matchTextChars) limits
+// matching to the title plus the first N characters of the text. Full article
+// bodies end in related-story links, captions and photo credits that name other
+// places; the start of the text is what the story is about. Not written to output.
 function textFieldsOf(item) {
-  return [item.title, item.text].filter(Boolean).join(" ");
+  const text = item._matchChars > 0 ? String(item.text || "").slice(0, item._matchChars) : item.text;
+  return [item.title, text].filter(Boolean).join(" ");
 }
 
 // Opt-in prefix for a single term: "word:MCA" matches "MCA" only as a whole
@@ -29,10 +34,16 @@ function escapeRegExp(text) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+// Extra spellings that count as a whole-word match. Local accounts tag posts with
+// place hashtags like #larkspurcitymarincounty; as one run-together word they would
+// miss word:Marin, though they are clearly about Marin.
+const WORD_ALIASES = { marin: /#\w*marincounty\b/ };
+
 function singleTermMatches(term, haystack) {
   if (typeof term === "string" && term.startsWith(WORD_BOUNDARY_PREFIX)) {
     const word = normalizeForMatch(term.slice(WORD_BOUNDARY_PREFIX.length));
-    return new RegExp(`\\b${escapeRegExp(word)}\\b`).test(haystack);
+    if (new RegExp(`\\b${escapeRegExp(word)}\\b`).test(haystack)) return true;
+    return Boolean(WORD_ALIASES[word] && WORD_ALIASES[word].test(haystack));
   }
   return haystack.includes(normalizeForMatch(term));
 }
