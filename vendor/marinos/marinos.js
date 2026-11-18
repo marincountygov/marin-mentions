@@ -6,8 +6,8 @@
     return;
   }
 
-  const SHELL_VERSION = "1.24.0";
-  const MARIN_UI_VERSION = "1.34.0";
+  const SHELL_VERSION = "1.25.1";
+  const MARIN_UI_VERSION = "1.35.1";
   const MARINOS_URL = "https://marincountygov.github.io/marin-os/";
   const MARINOS_STATUS_URL = `${MARINOS_URL}#status`;
   const CATALOG_URL = `${MARINOS_URL}catalog.json`;
@@ -1181,7 +1181,7 @@
   // panel-right-open icon while the panel is open and panel-left-open while it is hidden (unless the button holds
   // its own SVGs marked data-filter-icon="open" and "closed"), sets aria-expanded, data-open on the panel and
   // data-filters ("open" or "closed") on the layout, starts open on wide screens (a choice made there is remembered
-  // per app and toggle in this browser) and closed up to 850px, names the button "Filters" (or data-filter-label)
+  // per app and toggle in this browser) and closed up to 850px, names the button "Filter" (or data-filter-label)
   // plus ", N active" from data-filter-active, and dispatches a bubbling "marin-filters-change" event
   // ({ detail: { open, button, panel } }) so an app can resize anything sized by the results. Hiding the panel
   // never changes a filter. The button has no visible text, so its name is its label.
@@ -1224,7 +1224,7 @@
 
     function nameFilterToggle(button) {
       const count = Number(button.dataset.filterActive) || 0;
-      const base = button.dataset.filterLabel || "Filters";
+      const base = button.dataset.filterLabel || "Filter";
       const name = count ? `${base}, ${count} active` : base;
       button.setAttribute("aria-label", name);
       button.title = name;

@@ -42,7 +42,7 @@ def run(base, page):
     page.wait_for_selector("#media-feed > li")
     # Icon only, first in the column, white, and open on wide screens.
     require(page.inner_text("#filter-toggle").strip() == "", "The Filters button shows an icon and no text")
-    require(page.get_attribute("#filter-toggle", "aria-label") == "Filters, 1 active", page.get_attribute("#filter-toggle", "aria-label"))  # the time range is not the default
+    require(page.get_attribute("#filter-toggle", "aria-label") == "Filter, 1 active", page.get_attribute("#filter-toggle", "aria-label"))  # the time range is not the default
     require(page.evaluate("document.querySelector('#filters .search-side').firstElementChild.id") == "filter-toggle", "The button is first in the filter column")
     require(page.is_visible("#filter-panel") and page.get_attribute("#filter-toggle", "aria-expanded") == "true", "Filters start open on wide screens")
     require(page.is_visible("#filter-toggle [data-filter-icon=open]") and not page.is_visible("#filter-toggle [data-filter-icon=closed]"), "Open filters show the panel-right-open icon")
@@ -54,7 +54,7 @@ def run(base, page):
     # An active filter is counted in the name, and hiding the panel keeps it applied.
     page.fill("#filter-search", "marin")
     page.wait_for_timeout(600)
-    require(page.get_attribute("#filter-toggle", "aria-label") == "Filters, 2 active", page.get_attribute("#filter-toggle", "aria-label"))
+    require(page.get_attribute("#filter-toggle", "aria-label") == "Filter, 2 active", page.get_attribute("#filter-toggle", "aria-label"))
     shown, summary, width_open = mentions(page), page.inner_text("#active-filters"), page.evaluate("document.querySelector('#filters .search-results').offsetWidth")
     page.focus("#filter-toggle")
     page.keyboard.press("Enter")
