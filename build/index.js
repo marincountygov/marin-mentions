@@ -9,6 +9,7 @@ const { fetchSource, refreshIntervalFor } = require("./connectors");
 const { normalizeItem, hostnameOf } = require("./normalize");
 const { matchItems, buildContextRules } = require("./match");
 const { dedupeItems } = require("./dedupe");
+const { dropMismatchedText } = require("./text-check");
 const { buildFeeds } = require("./feeds");
 const { buildMonitorData } = require("./monitor-data");
 
@@ -206,6 +207,18 @@ async function buildOnce({ previousSnapshotPath, outPath, env = process.env }) {
 
   reattributeBySourceDomain(allItems, buildDomainIndex(sources));
 
+  // Per-source text rules (config/sources.yaml). Applied to every retained item
+  // too, so a rule change also cleans up what was stored under the old rules.
+  for (const source of sources) {
+    if (!source.checkTextMatchesTitle && !(source.matchTextChars > 0)) continue;
+    const own = allItems.filter((item) => item.sourceId === source.id);
+    if (source.checkTextMatchesTitle) {
+      const changed = dropMismatchedText(own);
+      if (changed) console.log(`[${source.id}] dropped mismatched text on ${changed} items`);
+    }
+    if (source.matchTextChars > 0) own.forEach((item) => { item._matchChars = source.matchTextChars; });
+  }
+
   // Mirrors assets/app.js's computeOfficialSourceIds() — an official
   // source's items bypass matchItems()'s phrase-matching requirement (see
   // that function's own comment for why).
@@ -221,6 +234,7 @@ async function buildOnce({ previousSnapshotPath, outPath, env = process.env }) {
   pruned.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
   pruned.forEach((item) => {
     delete item._contentId;
+    delete item._matchChars;
   });
 
   const output = {
