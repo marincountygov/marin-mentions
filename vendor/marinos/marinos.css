@@ -1051,6 +1051,36 @@ th[aria-sort="descending"] .sort-button::after {
   align-self: start;
 }
 
+/* The filter column scrolls on its own. It is as tall as the window at most, and a long panel scrolls inside
+   itself instead of making the whole page scroll before the panel moves. The Filter title and Reset button stay
+   at the top while the fields scroll, on the page background so nothing shows through it. Narrow screens stack the
+   panel above the results and let the page scroll it, so this is wide screens only. The side and bottom padding
+   keeps focus rings from being clipped at the scroll edge. */
+@media (min-width: 851px) {
+  .search-side {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 2rem);
+  }
+
+  .search-side > .search-sidebar {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 0 0.25rem 0.25rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .search-side .search-panel-header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: 0.25rem 0 0.5rem;
+    margin-bottom: 0.5rem;
+    background: var(--app-bg-soft);
+  }
+}
+
 .search-results {
   min-width: 0;
 }
@@ -1096,7 +1126,7 @@ th[aria-sort="descending"] .sort-button::after {
 
 /* Pico's <li> rule carries 8px of top and bottom padding. The row spacing comes from the small margin instead. */
 .search-facet-list li {
-  margin: 0 0 0.45rem;
+  margin: 0 0 0.6rem;
   padding: 0;
   list-style: none;
 }
@@ -1130,17 +1160,23 @@ th[aria-sort="descending"] .sort-button::after {
 
 /* A filter is a collapsed group that opens to its checkboxes. */
 .mm-facet-group {
-  margin-bottom: 0.125rem;
+  margin-bottom: 0.25rem;
 }
 
 .mm-facet-group summary {
   cursor: pointer;
   font-weight: 400;
-  padding: 0.25rem 0;
+  padding: 0.5rem 0;
 }
 
+.mm-facet-group summary:focus-visible {
+  outline: 2px solid var(--app-accent);
+  outline-offset: 2px;
+}
+
+/* An open group's checkboxes start a little below its name and leave room before the next group. */
 .mm-facet-group .search-facet-list {
-  margin-top: 0.25rem;
+  margin: 0.25rem 0 0.75rem;
 }
 
 .filter-toggle {
@@ -2085,7 +2121,7 @@ th[aria-sort="descending"] .sort-button::after {
   stroke-linejoin: round;
 }
 
-/* Marin App Shell 1.24.0: component integration only.
+/* Marin App Shell 1.25.1: component integration only.
    General visual rules come from the locked, unmodified Marin UI input. */
 marin-os-banner,
 marin-app-header,

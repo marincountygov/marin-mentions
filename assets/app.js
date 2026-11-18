@@ -948,7 +948,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const groups = groupBy(sources, (s) => s.type);
     elements.sourceFilter.innerHTML =
-      "<legend>Filter by source</legend>" +
+      "<legend>Sources</legend>" +
       sortedGroupEntries(groups, (type) => SOURCE_TYPE_LABELS[type] || type)
         .map(([, groupLabel, groupSources]) => {
           return `
@@ -2208,7 +2208,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Filter panel buttons ---
   // The shell (Marin UI 1.28.0 and later) runs the Filters buttons: icons, the open and closed state, the remembered
   // wide-screen choice per panel and the name. The app only keeps each button's active count current
-  // (data-filter-active), which the shell turns into "Filters, N active". Hiding a panel never changes a filter, and
+  // (data-filter-active), which the shell turns into "Filter, N active". Hiding a panel never changes a filter, and
   // Chart.js resizes its canvases on its own.
   const filterToggles = Array.from(document.querySelectorAll("[data-filter-toggle]"));
 
