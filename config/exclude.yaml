@@ -1,0 +1,6 @@
+# Posts whose title contains any of these phrases are left out of the app and
+# its feeds. Matching ignores upper and lower case. The rule runs on every
+# build, over new items and over the ones already kept, so adding a phrase
+# here also clears what is already stored.
+excludeTitles:
+  - Sports in Marin

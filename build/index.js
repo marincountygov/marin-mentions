@@ -4,12 +4,13 @@
 const fs = require("fs");
 const path = require("path");
 
-const { loadSources, loadMonitors, loadContext } = require("./config");
+const { loadSources, loadMonitors, loadContext, loadExcludedTitles } = require("./config");
 const { fetchSource, refreshIntervalFor } = require("./connectors");
 const { normalizeItem, hostnameOf } = require("./normalize");
 const { matchItems, buildContextRules } = require("./match");
 const { dedupeItems } = require("./dedupe");
 const { dropMismatchedText } = require("./text-check");
+const { filterExcludedTitles } = require("./exclude");
 const { buildFeeds } = require("./feeds");
 const { buildMonitorData } = require("./monitor-data");
 
@@ -206,6 +207,14 @@ async function buildOnce({ previousSnapshotPath, outPath, env = process.env }) {
   }
 
   reattributeBySourceDomain(allItems, buildDomainIndex(sources));
+
+  // Title exclusions (config/exclude.yaml), applied to new and retained items.
+  const keptItems = filterExcludedTitles(allItems, loadExcludedTitles());
+  if (keptItems.length !== allItems.length) {
+    console.log(`Left out ${allItems.length - keptItems.length} items by title`);
+    allItems.length = 0;
+    allItems.push(...keptItems);
+  }
 
   // Per-source text rules (config/sources.yaml). Applied to every retained item
   // too, so a rule change also cleans up what was stored under the old rules.

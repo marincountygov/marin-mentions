@@ -50,4 +50,12 @@ function loadContext() {
   return yaml.load(fs.readFileSync(file, "utf8")) || null;
 }
 
-module.exports = { loadSources, loadMonitors, loadProjectMonitors, loadContext };
+// Optional: title phrases to leave out (config/exclude.yaml). A missing file means none.
+function loadExcludedTitles() {
+  const file = path.join(CONFIG_DIR, "exclude.yaml");
+  if (!fs.existsSync(file)) return [];
+  const raw = yaml.load(fs.readFileSync(file, "utf8")) || {};
+  return raw.excludeTitles || [];
+}
+
+module.exports = { loadSources, loadMonitors, loadProjectMonitors, loadContext, loadExcludedTitles };
