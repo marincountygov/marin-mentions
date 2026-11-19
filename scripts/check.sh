@@ -32,7 +32,7 @@ python3 "$ROOT_DIR/scripts/sync-people.py" --check
 python3 "$ROOT_DIR/scripts/sync-projects.py" --check
 if command -v node >/dev/null 2>&1; then
   node --check "$ROOT_DIR/assets/app.js"
-  (cd "$ROOT_DIR" && node --test tests/match.test.js tests/reports.test.js tests/org-links.test.js tests/place-links.test.js tests/event-links.test.js tests/person-links.test.js tests/place-districts.test.js tests/project-monitors.test.js)
+  (cd "$ROOT_DIR" && node --test tests/match.test.js tests/reports.test.js tests/org-links.test.js tests/place-links.test.js tests/event-links.test.js tests/person-links.test.js tests/place-districts.test.js tests/place-aliases.test.js tests/project-monitors.test.js)
 else
   printf 'SKIP: Node is unavailable; JavaScript syntax and unit tests were not run.\n' >&2
 fi

@@ -88,10 +88,69 @@ function groupMonitors(rawMonitors, fromData) {
   });
 }
 
+// A place, facility, event or person that marin-data describes is watched by its name, its other names and its
+// search hints (config/places.json, events.json and people.json; see marin-data's place_lib.py). Each hint says how
+// to look for a name: beside the word Marin (needsContext), as a whole word (insideWords), with a hashtag
+// (hashtags), or as a different record's name (confusableNames, which are left out). A phrase may join words
+// with " & ", and then every word must be there. A short abbreviation (D3, VMA) is watched only when it needs
+// context, so it cannot match everything. config/match-options.yaml holds what only Marin Mentions needs.
+function loadDataMonitors() {
+  const read = (name) => fs.readFileSync(path.join(CONFIG_DIR, name), "utf8");
+  const { places, facilities } = JSON.parse(read("places.json"));
+  const rows = [
+    ...places.filter((p) => p.kind !== "district"),
+    ...facilities,
+    ...JSON.parse(read("events.json")).events,
+    ...JSON.parse(read("people.json")).people,
+  ];
+  return monitorsFromRows(rows, yaml.load(read("match-options.yaml")) || {});
+}
+
+const ABBREVIATION = /^[A-Z0-9]{2,4}$/;
+
+// One name or phrase as a match entry, following its hints.
+function entryFor(phrase, hints) {
+  const terms = phrase.split(" & ").map((term) => (hints.insideWords.has(phrase) ? `word:${term}` : term));
+  if (hints.needsContext.has(phrase)) return ["word:Marin", ...terms];
+  return terms.length > 1 ? terms : terms[0];
+}
+
+function monitorsFromRows(rows, options = {}) {
+  const ids = new Set(rows.map((row) => row.monitorId));
+  for (const id of Object.keys(options)) {
+    if (!ids.has(id)) throw new Error(`config/match-options.yaml: "${id}" is not a place, facility, event or person in marin-data.`);
+  }
+  return rows.map((row) => {
+    const include = [];
+    const own = {
+      needsContext: new Set(row.needsContext || []),
+      insideWords: new Set(row.insideWords || []),
+    };
+    const addNames = (names, hints) => {
+      // A name that contains another name of the same record adds nothing ("Town of Fairfax" holds "Fairfax").
+      const kept = names.filter((name, i) => !names.some((other, j) => j !== i && other.length < name.length && name.toLowerCase().includes(other.toLowerCase())));
+      for (const name of kept) {
+        if (ABBREVIATION.test(name) && !hints.needsContext.has(name)) continue;
+        include.push(entryFor(name, hints));
+      }
+    };
+    addNames([row.name, ...(row.alternateNames || [])], own);
+    for (const phrase of row.searchPhrases || []) include.push(entryFor(phrase, own));
+    for (const part of row.parts || []) {
+      addNames([part.name, ...(part.alternateNames || [])], { needsContext: new Set(part.needsContext || []), insideWords: new Set(part.insideWords || []) });
+    }
+    for (const tag of row.hashtags || []) include.push(tag);
+    const monitor = { id: row.monitorId, include, ...(options[row.monitorId] || {}) };
+    if (row.confusableNames && row.confusableNames.length) monitor.exclude = row.confusableNames;
+    return monitor;
+  });
+}
+
 function loadMonitors() {
   const raw = yaml.load(fs.readFileSync(path.join(CONFIG_DIR, "monitors.yaml"), "utf8"));
-  const own = groupMonitors(raw.monitors || [], loadDataFor());
-  const monitors = [...own, ...loadProjectMonitors()];
+  const fromData = loadDataFor();
+  const own = groupMonitors(raw.monitors || [], fromData);
+  const monitors = [...own, ...groupMonitors(loadDataMonitors(), fromData), ...loadProjectMonitors()];
   const seen = new Set();
   for (const monitor of monitors) {
     if (seen.has(monitor.id)) throw new Error(`Two monitors have the id "${monitor.id}". A project monitor's id is "project-" plus the project's id.`);
@@ -116,4 +175,4 @@ function loadExcludedTitles() {
   return raw.excludeTitles || [];
 }
 
-module.exports = { loadSources, loadMonitors, loadProjectMonitors, loadPlaces, loadPeople, loadDataFor, groupMonitors, loadContext, loadExcludedTitles };
+module.exports = { loadSources, loadMonitors, loadProjectMonitors, loadPlaces, loadPeople, loadDataMonitors, monitorsFromRows, loadDataFor, groupMonitors, loadContext, loadExcludedTitles };

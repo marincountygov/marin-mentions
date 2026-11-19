@@ -1,0 +1,7 @@
+# What only Marin Mentions needs to know about a place, facility, event or person that marin-data describes.
+# Names, other names and how to look for them are in marin-data (config/places.json, events.json, people.json),
+# so they are not repeated here. Listed by monitor id.
+#
+# youtubeSearch: also search YouTube for the name, not only the feeds that are already followed.
+civic-center:
+  youtubeSearch: true
