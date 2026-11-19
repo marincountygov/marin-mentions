@@ -39,7 +39,7 @@ function loadPlaces() {
     throw new Error("config/places.json is missing. It is copied from marin-data: python3 scripts/sync-places.py");
   }
   const { places } = JSON.parse(fs.readFileSync(file, "utf8"));
-  return new Map(places.map((p) => [p.monitorId, { kind: p.kind, governmentLevel: p.governmentLevel }]));
+  return new Map(places.map((p) => [p.monitorId, { kind: p.kind, governmentLevel: p.governmentLevel, ...(p.districts ? { districts: p.districts } : {}) }]));
 }
 
 // Which monitors are about a person (config/people.json, a copy of marin-data's organizations/people.json),
@@ -53,9 +53,45 @@ function loadPeople() {
   return new Map(people.map((p) => [p.monitorId, { ...(p.role ? { role: p.role } : {}), ...(p.district ? { district: p.district } : {}) }]));
 }
 
+// What marin-data says about each monitor it describes, by monitor id: the group the sidebar puts it in and the
+// name it is shown by. The group is the plural name of its kind (organizations/place-kinds.json, copied into
+// places.json): a district is in Districts, a city or town in Cities and towns, a community in Communities, a
+// facility in Facilities and an event in Events. A person is in People.
+function loadDataFor() {
+  const read = (name) => JSON.parse(fs.readFileSync(path.join(CONFIG_DIR, name), "utf8"));
+  const { kinds, places, facilities } = read("places.json");
+  const plural = new Map(kinds.map((k) => [k.key, k.plural]));
+  const found = new Map();
+  const add = (row, kind) => {
+    if (!plural.has(kind)) throw new Error(`config/places.json: "${row.monitorId}" has the kind "${kind}", which place-kinds.json does not list.`);
+    found.set(row.monitorId, { group: plural.get(kind), name: row.label });
+  };
+  places.forEach((p) => add(p, p.kind));
+  facilities.forEach((f) => add(f, f.kind));
+  read("events.json").events.forEach((e) => add(e, e.kind));
+  read("people.json").people.forEach((p) => found.set(p.monitorId, { group: "People", name: p.label }));
+  return found;
+}
+
+// A monitor that marin-data describes gets its group and its name from there. monitors.yaml leaves both out for
+// it, and the build stops if either one is written there and disagrees. fromData is the map from loadDataFor().
+function groupMonitors(rawMonitors, fromData) {
+  return rawMonitors.map((monitor) => {
+    const data = fromData.get(monitor.id);
+    if (!data) return monitor;
+    for (const field of ["group", "name"]) {
+      if (monitor[field] && monitor[field] !== data[field]) {
+        throw new Error(`Monitor "${monitor.id}" has the ${field} "${monitor[field]}" in monitors.yaml, but marin-data says "${data[field]}". Remove its ${field} line from monitors.yaml.`);
+      }
+    }
+    return { ...monitor, group: data.group, name: data.name };
+  });
+}
+
 function loadMonitors() {
   const raw = yaml.load(fs.readFileSync(path.join(CONFIG_DIR, "monitors.yaml"), "utf8"));
-  const monitors = [...(raw.monitors || []), ...loadProjectMonitors()];
+  const own = groupMonitors(raw.monitors || [], loadDataFor());
+  const monitors = [...own, ...loadProjectMonitors()];
   const seen = new Set();
   for (const monitor of monitors) {
     if (seen.has(monitor.id)) throw new Error(`Two monitors have the id "${monitor.id}". A project monitor's id is "project-" plus the project's id.`);
@@ -80,4 +116,4 @@ function loadExcludedTitles() {
   return raw.excludeTitles || [];
 }
 
-module.exports = { loadSources, loadMonitors, loadProjectMonitors, loadPlaces, loadPeople, loadContext, loadExcludedTitles };
+module.exports = { loadSources, loadMonitors, loadProjectMonitors, loadPlaces, loadPeople, loadDataFor, groupMonitors, loadContext, loadExcludedTitles };
