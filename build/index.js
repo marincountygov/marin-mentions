@@ -4,7 +4,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const { loadSources, loadMonitors, loadContext, loadExcludedTitles } = require("./config");
+const { loadSources, loadMonitors, loadPlaces, loadPeople, loadContext, loadExcludedTitles } = require("./config");
 const { fetchSource, refreshIntervalFor } = require("./connectors");
 const { normalizeItem, hostnameOf } = require("./normalize");
 const { matchItems, buildContextRules } = require("./match");
@@ -122,6 +122,8 @@ function reattributeBySourceDomain(items, domainIndex) {
 async function buildOnce({ previousSnapshotPath, outPath, env = process.env }) {
   const sources = loadSources();
   const monitors = loadMonitors();
+  const places = loadPlaces();
+  const people = loadPeople();
   const previous = await loadPrevious(previousSnapshotPath);
   const now = Date.now();
 
@@ -252,6 +254,8 @@ async function buildOnce({ previousSnapshotPath, outPath, env = process.env }) {
       id: m.id,
       name: m.name,
       group: m.group || "General",
+      ...(places.has(m.id) ? { place: places.get(m.id) } : {}),
+      ...(people.has(m.id) ? { person: people.get(m.id) } : {}),
       include: m.include,
       exclude: m.exclude || [],
     })),

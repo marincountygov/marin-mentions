@@ -26,10 +26,13 @@ python3 "$ROOT_DIR/vendor/marinos/audit-buttons.py" "$ROOT_DIR" --fail
 # Lists copy, download, file reading and upload code the app does itself; it must list nothing.
 python3 "$ROOT_DIR/vendor/marinos/audit-shared-helpers.py" "$ROOT_DIR" --fail
 python3 "$ROOT_DIR/scripts/sync-orgs.py" --check
+python3 "$ROOT_DIR/scripts/sync-places.py" --check
+python3 "$ROOT_DIR/scripts/sync-events.py" --check
+python3 "$ROOT_DIR/scripts/sync-people.py" --check
 python3 "$ROOT_DIR/scripts/sync-projects.py" --check
 if command -v node >/dev/null 2>&1; then
   node --check "$ROOT_DIR/assets/app.js"
-  (cd "$ROOT_DIR" && node --test tests/match.test.js tests/reports.test.js tests/org-links.test.js tests/project-monitors.test.js)
+  (cd "$ROOT_DIR" && node --test tests/match.test.js tests/reports.test.js tests/org-links.test.js tests/place-links.test.js tests/event-links.test.js tests/person-links.test.js tests/project-monitors.test.js)
 else
   printf 'SKIP: Node is unavailable; JavaScript syntax and unit tests were not run.\n' >&2
 fi

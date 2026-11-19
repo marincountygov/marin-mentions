@@ -456,13 +456,13 @@ monitors:
 
   - id: gnoss-field-airport
     name: Gnoss Field Airport
-    group: Departments
+    group: Facilities
     include:
       - Gnoss Field Airport
 
   - id: gallinas-creek
     name: Gallinas Creek
-    group: Departments
+    group: Facilities
     include:
       - Gallinas Creek
 
@@ -680,10 +680,11 @@ monitors:
       - Engage Marin
       - [word:Marin, engagement, portal]
 
-  # --- Events & Places ---
+  # --- Events and Facilities ---
+  # Groups Facilities and Events. Which monitor is which comes from marin-data (config/places.json, config/events.json).
   - id: civic-center
     name: Marin County Civic Center
-    group: Events & Places
+    group: Facilities
     youtubeSearch: true
     # San Francisco's Civic Center is not Marin's. Added 2026-10-26 after "Marin to the SF Civic Center".
     exclude:
@@ -702,7 +703,7 @@ monitors:
 
   - id: marin-center
     name: Marin Center
-    group: Events & Places
+    group: Facilities
     include:
       - Marin Center
       - Marin Showcase Theater
@@ -713,7 +714,7 @@ monitors:
 
   - id: marin-county-fair
     name: Marin County Fair
-    group: Events & Places
+    group: Events
     include:
       - Marin County Fair
       - Marin Fair
@@ -721,27 +722,27 @@ monitors:
 
   - id: marin-farmers-markets
     name: Marin Farmers Markets
-    group: Events & Places
+    group: Events
     include:
       - Marin Farmers Market
       - Marin County Farmers Market
 
   - id: marin-cultural-association
     name: Marin Cultural Association
-    group: Events & Places
+    group: Associations
     include:
       - Marin Cultural Association
       - [word:MCA, word:Marin]
 
   - id: holiday-light-spectacular
     name: Holiday Light Spectacular
-    group: Events & Places
+    group: Events
     include:
       - Holiday Light Spectacular
 
   - id: roller-disco-daze
     name: Roller Disco Daze
-    group: Events & Places
+    group: Events
     include:
       - Roller Disco Daze
 
@@ -1567,7 +1568,7 @@ monitors:
 
   - id: st-vincents
     name: St. Vincent's
-    group: Towns
+    group: Facilities
     include:
       - [word:Marin, St. Vincent's]
       - [word:Marin, St Vincents]
