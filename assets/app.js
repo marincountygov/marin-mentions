@@ -142,7 +142,8 @@ document.addEventListener("DOMContentLoaded", () => {
     "Topics",
     "Services",
     "Projects",
-    "Events & Places",
+    "Events",
+    "Facilities",
     "Towns",
     "Board & Courts",
     "Districts",
@@ -285,7 +286,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const key = weekly ? days[index - (index % 7)] : days[index];
         buckets.set(key, (buckets.get(key) || 0) + 1);
       });
-      const placeIds = new Set((state.data?.monitors || []).filter((m) => m.group === "Towns" || m.group === "Districts").map((m) => m.id));
+      const placeIds = new Set((state.data?.monitors || []).filter((m) => m.place).map((m) => m.id));
       const authors = (type) => topCounts(items.filter((i) => i.sourceType === type && i.author && i.author.trim()).map((i) => i.author));
       return {
         basis: `Mentions from ${Core.formatDate(period.start)} to ${Core.formatDate(period.end)} · ${describeActiveFilters(true)}`,
@@ -1211,6 +1212,7 @@ document.addEventListener("DOMContentLoaded", () => {
             (monitor) => `
           <article class="app-card">
             <h4><button type="button" class="mm-monitor-name" data-button-kind="content" data-goto-monitor="${escapeHtml(monitor.id)}">${escapeHtml(monitor.name)}</button></h4>
+            ${monitor.person && (monitor.person.role || monitor.person.district) ? `<p class="app-help-text">${escapeHtml([monitor.person.role, monitor.person.district].filter(Boolean).join(", "))}</p>` : ""}
             <p class="app-help-text">Include</p>
             ${renderTermList(monitor.include)}
             ${monitor.exclude.length ? `<p class="app-help-text">Exclude</p>${renderTermList(monitor.exclude)}` : ""}
@@ -1285,13 +1287,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /** An item matches a monitor if ANY of its include terms are found — so
-   * filtering to a handful of Events & Places monitors (say) still returns
+   * filtering to a handful of Events monitors (say) still returns
    * items whose matchedMonitors also includes unrelated ones that happened
    * to match the same text (the County-wide "General" catch-all, a town,
    * etc.). Top Monitors/Trending Topics are about breaking down coverage
    * *among the monitors you picked*, not surfacing whatever else tagged
    * along — confirmed directly as a real point of confusion (a filtered
-   * Events & Places view surfacing Districts/Towns having nothing to do
+   * Events view surfacing Districts/Towns having nothing to do
    * with the selected monitors). With no monitor filter active, there's
    * nothing to scope to, so every matched monitor still counts, same as
    * before. */
@@ -1433,7 +1435,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderBarChart("socialAccounts", elements.statsSocialCanvas, socialAccountCounts);
 
     const placeMonitorIds = new Set(
-      state.data.monitors.filter((m) => m.group === "Towns" || m.group === "Districts").map((m) => m.id)
+      state.data.monitors.filter((m) => m.place).map((m) => m.id)
     );
     const placeCounts = topCounts(
       items.flatMap((item) => item.matchedMonitors.filter((id) => placeMonitorIds.has(id)))

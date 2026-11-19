@@ -31,6 +31,28 @@ function loadProjectMonitors() {
     }));
 }
 
+// Which monitors are about a place (config/places.json, a copy of marin-data's organizations/places.json),
+// by monitor id. kind is district, municipality or community.
+function loadPlaces() {
+  const file = path.join(CONFIG_DIR, "places.json");
+  if (!fs.existsSync(file)) {
+    throw new Error("config/places.json is missing. It is copied from marin-data: python3 scripts/sync-places.py");
+  }
+  const { places } = JSON.parse(fs.readFileSync(file, "utf8"));
+  return new Map(places.map((p) => [p.monitorId, { kind: p.kind, governmentLevel: p.governmentLevel }]));
+}
+
+// Which monitors are about a person (config/people.json, a copy of marin-data's organizations/people.json),
+// by monitor id: the seat they hold and the district it represents, when there is one.
+function loadPeople() {
+  const file = path.join(CONFIG_DIR, "people.json");
+  if (!fs.existsSync(file)) {
+    throw new Error("config/people.json is missing. It is copied from marin-data: python3 scripts/sync-people.py");
+  }
+  const { people } = JSON.parse(fs.readFileSync(file, "utf8"));
+  return new Map(people.map((p) => [p.monitorId, { ...(p.role ? { role: p.role } : {}), ...(p.district ? { district: p.district } : {}) }]));
+}
+
 function loadMonitors() {
   const raw = yaml.load(fs.readFileSync(path.join(CONFIG_DIR, "monitors.yaml"), "utf8"));
   const monitors = [...(raw.monitors || []), ...loadProjectMonitors()];
@@ -58,4 +80,4 @@ function loadExcludedTitles() {
   return raw.excludeTitles || [];
 }
 
-module.exports = { loadSources, loadMonitors, loadProjectMonitors, loadContext, loadExcludedTitles };
+module.exports = { loadSources, loadMonitors, loadProjectMonitors, loadPlaces, loadPeople, loadContext, loadExcludedTitles };
