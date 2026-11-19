@@ -14,7 +14,7 @@ const ids = new Set(monitors.map((m) => m.id));
 const linked = new Set(links.places.map((p) => p.monitorId));
 const facilities = new Set(links.facilities.map((f) => f.monitorId));
 const notPlaces = new Set(links.notPlaces.map((p) => p.monitorId));
-const PLACE_GROUPS = new Set(["Districts", "Cities and towns", "Communities"]);
+const PLACE_GROUPS = new Set(["Districts", "Cities and towns", "Communities", "Regions"]);
 
 test("every place link names a monitor that exists", () => {
   const missing = [...linked].filter((id) => !ids.has(id));
@@ -26,7 +26,7 @@ test("every monitor listed as not a place exists", () => {
   assert.deepEqual(missing, [], `listed in marin-data but not in monitors.yaml: ${missing}`);
 });
 
-test("every Districts, Cities and towns and Communities monitor is linked to a place or listed as not one", () => {
+test("every Districts, Cities and towns, Communities and Regions monitor is linked to a place or listed as not one", () => {
   const loose = monitors.filter((m) => PLACE_GROUPS.has(m.group) && !linked.has(m.id) && !notPlaces.has(m.id)).map((m) => m.id);
   assert.deepEqual(loose, [], `add a jurisdiction in marin-data, or list as not a place: ${loose}`);
 });

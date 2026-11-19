@@ -146,6 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
     "Facilities",
     "Cities and towns",
     "Communities",
+    "Regions",
     "Board & Courts",
     "Districts",
     "Departments",
