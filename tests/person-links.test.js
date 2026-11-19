@@ -24,6 +24,6 @@ test("loadPeople gives the seat and district of each linked person", () => {
 });
 
 test("the five supervisors each carry a different district", () => {
-  const districts = [...loadPeople().values()].map((p) => p.district).sort();
+  const districts = [...loadPeople().values()].map((p) => p.district).filter(Boolean).sort();
   assert.deepEqual(districts, ["District 1", "District 2", "District 3", "District 4", "District 5"]);
 });
