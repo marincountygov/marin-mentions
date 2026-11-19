@@ -163,4 +163,22 @@ function matchItems(items, monitors, officialSourceIds = new Set(), contextRules
   return items.filter((item) => applyMonitors(item, monitors, contextRules) || officialSourceIds.has(item.sourceId));
 }
 
-module.exports = { matchItems, applyMonitors, normalizeForMatch, buildContextRules, hasLocalContext };
+/** A district is matched by every place in it. places is the map from config.js's loadPlaces(): each place may
+ * list the districts it is in. An item that matched a place also matches those districts, so the places in a
+ * district are kept in marin-data and not repeated in the district's own phrases. monitors gives the order the
+ * matched list keeps. Call after matchItems(); it adds to item.matchedMonitors and never removes. */
+function addDistrictsFromPlaces(items, places, monitors) {
+  const order = new Map(monitors.map((monitor, index) => [monitor.id, index]));
+  for (const item of items) {
+    const found = new Set(item.matchedMonitors);
+    for (const id of item.matchedMonitors) {
+      for (const district of (places.get(id) || {}).districts || []) found.add(district.monitorId);
+    }
+    if (found.size !== item.matchedMonitors.length) {
+      item.matchedMonitors = [...found].sort((a, b) => (order.get(a) ?? 0) - (order.get(b) ?? 0));
+    }
+  }
+  return items;
+}
+
+module.exports = { addDistrictsFromPlaces, matchItems, applyMonitors, normalizeForMatch, buildContextRules, hasLocalContext };

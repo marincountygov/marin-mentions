@@ -7,7 +7,7 @@ const path = require("path");
 const { loadSources, loadMonitors, loadPlaces, loadPeople, loadContext, loadExcludedTitles } = require("./config");
 const { fetchSource, refreshIntervalFor } = require("./connectors");
 const { normalizeItem, hostnameOf } = require("./normalize");
-const { matchItems, buildContextRules } = require("./match");
+const { matchItems, addDistrictsFromPlaces, buildContextRules } = require("./match");
 const { dedupeItems } = require("./dedupe");
 const { dropMismatchedText } = require("./text-check");
 const { filterExcludedTitles } = require("./exclude");
@@ -235,6 +235,8 @@ async function buildOnce({ previousSnapshotPath, outPath, env = process.env }) {
   // that function's own comment for why).
   const officialSourceIds = new Set(sources.filter((source) => source.official).map((source) => source.id));
   const matched = matchItems(allItems, monitors, officialSourceIds, buildContextRules(loadContext()));
+  // A district is also matched by the places in it, which marin-data says (config/places.json).
+  addDistrictsFromPlaces(matched, places, monitors);
   const deduped = dedupeItems(matched);
 
   const cutoff = now - PRUNE_DAYS * 24 * 60 * 60 * 1000;

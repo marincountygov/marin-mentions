@@ -144,7 +144,8 @@ document.addEventListener("DOMContentLoaded", () => {
     "Projects",
     "Events",
     "Facilities",
-    "Towns",
+    "Cities and towns",
+    "Communities",
     "Board & Courts",
     "Districts",
     "Departments",
@@ -1293,7 +1294,7 @@ document.addEventListener("DOMContentLoaded", () => {
    * etc.). Top Monitors/Trending Topics are about breaking down coverage
    * *among the monitors you picked*, not surfacing whatever else tagged
    * along — confirmed directly as a real point of confusion (a filtered
-   * Events view surfacing Districts/Towns having nothing to do
+   * Events view surfacing Districts, cities and communities having nothing to do
    * with the selected monitors). With no monitor filter active, there's
    * nothing to scope to, so every matched monitor still counts, same as
    * before. */

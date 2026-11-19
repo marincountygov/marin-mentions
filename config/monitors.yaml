@@ -26,6 +26,10 @@
 # alphabetical and sorts after every explicitly ordered one. `group` has no
 # effect on matching either way.
 #
+# A monitor that marin-data describes (a place, facility, event or person in config/places.json, events.json or
+# people.json) takes its group and its name from there: leave its `group` and `name` lines out. The build stops if one
+# written here disagrees with marin-data. The group is the plural name of its kind (marin-data's place-kinds.json).
+#
 # Add a new monitor by adding an entry here.
 #
 # Do not add monitors for projects here. They come from the shared list of projects in marin-data
@@ -62,81 +66,40 @@ monitors:
       - Marin Grand Jury
 
   # --- Districts ---
-  # "District <N>" and "<N>th District" are too generic alone (school
-  # districts, fire districts, voting districts elsewhere all use the same
-  # phrasing) — paired with "Marin" as a compound AND clause to stay
-  # scoped to these five Board of Supervisors districts specifically. Each
-  # district's representative name is added as its own standalone term
-  # (already unambiguous, no Marin pairing needed) so a story naming just
-  # the supervisor still surfaces under their district. Expanded 2026-10-01
-  # with the actual towns/places each district covers; most are distinctive
-  # enough as bare phrases (matching the Towns section's own convention
-  # below), but a handful are common words/names that collide with
-  # something unrelated (a car model, a vodka brand, a Lee Enterprises
-  # paper's Google-News-covered "Palo Alto", a Scottish city already
-  # treated as safe-bare elsewhere in this file, etc.) — those are paired
-  # with a word:Marin AND clause instead, same as this section already does
-  # for "District 1"/"1st District" above and as the Towns section already
-  # does for e.g. Strawberry/Marshall/Sleepy Hollow.
+  # A district is also matched by every place in it, from marin-data (config/places.json): a story that
+  # matches Greenbrae matches District 2. So the towns and communities of a district are not listed here.
+  # What is listed is what marin-data does not say: the district's own name, its supervisor, and areas that
+  # are not places in marin-data. "District <N>" and "<N>th District" are too generic alone (school
+  # districts, fire districts, voting districts elsewhere use the same phrasing), so they are paired with
+  # "Marin". The supervisor's name needs no pairing, so a story naming only the supervisor still surfaces.
+  # These monitors have no group or name line: marin-data puts them in Districts and names them District 1 to 5.
   - id: marin-district-1
-    name: Marin District 1
-    group: Districts
     supervisor: Mary Sackett
     include:
       - [District 1, word:Marin]
       - [1st District, word:Marin]
       - Mary Sackett
-      - [San Rafael, word:Marin]
-      - Lucas Valley
-      - Marinwood
-      - Santa Venetia
 
   - id: marin-district-2
-    name: Marin District 2
-    group: Districts
     supervisor: Brian Colbert
     include:
       - [District 2, word:Marin]
       - [2nd District, word:Marin]
       - Brian Colbert
-      - [Fairfax, word:Marin]
-      - San Anselmo
-      - [word:Ross, word:Marin]
-      - [Larkspur, word:Marin]
-      - [San Rafael, word:Marin]
       - Southwest San Rafael
-      - Kentfield
-      - Greenbrae
-      - Kent Woodlands
       - Oak Manor
-      - [word:Marin, Sleepy Hollow]
 
   - id: marin-district-3
-    name: Marin District 3
-    group: Districts
     supervisor: Stephanie Moulton-Peters
     include:
       - [District 3, word:Marin]
       - [3rd District, word:Marin]
       - Stephanie Moulton-Peters
-      - Sausalito
-      - Marin City
-      - Mill Valley
-      - Tamalpais Valley
       - Tam Valley
-      - Homestead Valley
-      - Almonte
-      - [word:Alto, word:Marin]
       - Alto-Sutton Manor
-      - [word:Marin, Strawberry]
-      - [Tiburon, word:Marin]
-      - [Belvedere, word:Marin]
-      - Paradise Cay
       - [word:Marin, floating homes]
 
   - id: marin-district-4
-    name: Marin District 4
-    group: Districts
     supervisor: Dennis Rodoni
     include:
       - [District 4, word:Marin]
@@ -144,62 +107,25 @@ monitors:
       - Dennis Rodoni
 
       # West Marin
-      - Dillon Beach
-      - [word:Marin, Fallon]
-      - Tomales
-      - [word:Marin, word:Marshall]
-      - Inverness
-      - Inverness Park
-      - Point Reyes Station
-      - word:Olema
-      - "#Olema"
-      - Tocaloma
-      - Nicasio
       - Chileno Valley
-      - [word:Marin, Dogtown]
-      - Bolinas
-      - Stinson Beach
-      - Muir Beach
       - West Marin
 
       # San Geronimo Valley
-      - Forest Knolls
-      - Lagunitas
-      - San Geronimo
       - San Geronimo Valley
-      - Woodacre
 
       # Other District 4 areas
-      # word: keeps "innovator" from matching Novato (and "Coleman" from matching Olema); the
-      # "#" forms keep hashtags like #NovatoMarinCounty, which word: would miss.
-      - word:Novato
-      - "#Novato"
       - West Novato
-      - [San Rafael, word:Marin]
       - East San Rafael
-      - San Quentin
-      - Corte Madera
-      - [Larkspur, word:Marin]
-      - Mill Valley
 
   - id: marin-district-5
-    name: Marin District 5
-    group: Districts
     supervisor: Eric Lucan
     include:
       - [District 5, word:Marin]
       - [5th District, word:Marin]
       - Eric Lucan
       - Magali Limeta
-      - word:Novato
-      - "#Novato"
-      - Bel Marin Keys
-      - [word:Marin, Loma Verde]
-      - [word:Marin, Black Point]
-      - [word:Marin, Green Point]
       - Rush Creek
       - Atherton Corridor
-      - [word:Marin, Indian Valley]
 
   # --- Departments ---
   - id: marin-oem
@@ -455,14 +381,10 @@ monitors:
       - Zero Waste Marin
 
   - id: gnoss-field-airport
-    name: Gnoss Field Airport
-    group: Facilities
     include:
       - Gnoss Field Airport
 
   - id: gallinas-creek
-    name: Gallinas Creek
-    group: Facilities
     include:
       - Gallinas Creek
 
@@ -683,8 +605,6 @@ monitors:
   # --- Events and Facilities ---
   # Groups Facilities and Events. Which monitor is which comes from marin-data (config/places.json, config/events.json).
   - id: civic-center
-    name: Marin County Civic Center
-    group: Facilities
     youtubeSearch: true
     # San Francisco's Civic Center is not Marin's. Added 2026-10-26 after "Marin to the SF Civic Center".
     exclude:
@@ -702,8 +622,6 @@ monitors:
       - [Frank Lloyd Wright, word:Marin]
 
   - id: marin-center
-    name: Marin Center
-    group: Facilities
     include:
       - Marin Center
       - Marin Showcase Theater
@@ -713,16 +631,12 @@ monitors:
       - [word:Marin, word:VMA]
 
   - id: marin-county-fair
-    name: Marin County Fair
-    group: Events
     include:
       - Marin County Fair
       - Marin Fair
       - Marin Fairgrounds
 
   - id: marin-farmers-markets
-    name: Marin Farmers Markets
-    group: Events
     include:
       - Marin Farmers Market
       - Marin County Farmers Market
@@ -735,14 +649,10 @@ monitors:
       - [word:MCA, word:Marin]
 
   - id: holiday-light-spectacular
-    name: Holiday Light Spectacular
-    group: Events
     include:
       - Holiday Light Spectacular
 
   - id: roller-disco-daze
-    name: Roller Disco Daze
-    group: Events
     include:
       - Roller Disco Daze
 
@@ -765,7 +675,7 @@ monitors:
   # that used either of the other two. word:Marin catches all three, since
   # each one contains the standalone word "Marin" somewhere in it. This same
   # change was made to every `[Marin County, ...]` AND-clause throughout this
-  # file (Departments, Districts, Towns), not just Topics.
+  # file (Departments, Districts, Cities and towns, Communities), not just Topics.
   #
   # Organized below (2026-10-01) around the County's first strategic plan in
   # 25+ years, built on 6 named priority areas — each gets a comment banner
@@ -1280,7 +1190,7 @@ monitors:
       - IATSE Local 16
       - [word:Marin, IATSE]
 
-  # --- Towns ---
+  # --- Cities, towns and communities ---
   # Marin County incorporated cities and towns plus commonly recognized
   # unincorporated communities and places.
   #
@@ -1295,331 +1205,225 @@ monitors:
   # already is in Districts — it's a common place name outside Marin too
   # (there's a San Rafael in Argentina, Guatemala, and elsewhere).
   - id: almonte
-    name: Almonte
-    group: Towns
     include:
       - Almonte
 
   - id: alto
-    name: Alto
-    group: Towns
     include:
       - [word:Alto, word:Marin]
 
   - id: bel-marin-keys
-    name: Bel Marin Keys
-    group: Towns
     include:
       - Bel Marin Keys
 
   - id: belvedere
-    name: Belvedere
-    group: Towns
     include:
       - [word:Marin, Belvedere]
 
   - id: black-point
-    name: Black Point
-    group: Towns
     include:
       - [word:Marin, Black Point]
 
   - id: bolinas
-    name: Bolinas
-    group: Towns
     include:
       - Bolinas
 
   - id: corte-madera
-    name: Corte Madera
-    group: Towns
     include:
       - Corte Madera
 
   - id: dillon-beach
-    name: Dillon Beach
-    group: Towns
     include:
       - Dillon Beach
 
   - id: dogtown
-    name: Dogtown
-    group: Towns
     include:
       - [word:Marin, Dogtown]
 
   - id: fairfax
-    name: Fairfax
-    group: Towns
     include:
       - [word:Marin, Fairfax]
 
   - id: fallon
-    name: Fallon
-    group: Towns
     include:
       - [word:Marin, Fallon]
 
   - id: forest-knolls
-    name: Forest Knolls
-    group: Towns
     include:
       - Forest Knolls
 
   - id: greenbrae
-    name: Greenbrae
-    group: Towns
     include:
       - Greenbrae
 
   - id: green-point
-    name: Green Point
-    group: Towns
     include:
       - [word:Marin, Green Point]
 
   - id: homestead-valley
-    name: Homestead Valley
-    group: Towns
     include:
       - Homestead Valley
 
   - id: ignacio
-    name: Ignacio
-    group: Towns
     include:
       - [word:Marin, Ignacio]
 
   - id: indian-valley
-    name: Indian Valley
-    group: Towns
     include:
       - [word:Marin, Indian Valley]
 
   - id: inverness
-    name: Inverness
-    group: Towns
     include:
       - Inverness
 
   - id: inverness-park
-    name: Inverness Park
-    group: Towns
     include:
       - Inverness Park
 
   - id: kentfield
-    name: Kentfield
-    group: Towns
     include:
       - Kentfield
 
   - id: kent-woodlands
-    name: Kent Woodlands
-    group: Towns
     include:
       - Kent Woodlands
 
   - id: lagunitas
-    name: Lagunitas
-    group: Towns
     include:
       - Lagunitas
 
   - id: larkspur
-    name: Larkspur
-    group: Towns
     include:
       - [word:Marin, Larkspur]
 
   - id: las-gallinas
-    name: Las Gallinas
-    group: Towns
     include:
       - Las Gallinas
 
   - id: loma-verde
-    name: Loma Verde
-    group: Towns
     include:
       - [word:Marin, Loma Verde]
 
   - id: lucas-valley
-    name: Lucas Valley
-    group: Towns
     include:
       - Lucas Valley
 
   - id: marin-city
-    name: Marin City
-    group: Towns
     include:
       - Marin City
 
   - id: marinwood
-    name: Marinwood
-    group: Towns
     include:
       - Marinwood
 
   - id: marshall
-    name: Marshall
-    group: Towns
     include:
       - [word:Marin, word:Marshall]
 
   - id: mill-valley
-    name: Mill Valley
-    group: Towns
     include:
       - Mill Valley
 
   - id: muir-beach
-    name: Muir Beach
-    group: Towns
     include:
       - Muir Beach
 
   - id: nicasio
-    name: Nicasio
-    group: Towns
     include:
       - Nicasio
 
   - id: novato
-    name: Novato
-    group: Towns
     include:
       - word:Novato
       - "#Novato"
 
   - id: olema
-    name: Olema
-    group: Towns
     include:
       - word:Olema
       - "#Olema"
 
   - id: paradise-cay
-    name: Paradise Cay
-    group: Towns
     include:
       - Paradise Cay
 
   - id: point-reyes-station
-    name: Point Reyes Station
-    group: Towns
     include:
       - Point Reyes Station
 
   - id: ross
-    name: Ross
-    group: Towns
     include:
       - [word:Ross, word:Marin]
 
   - id: san-anselmo
-    name: San Anselmo
-    group: Towns
     include:
       - San Anselmo
 
   - id: san-geronimo
-    name: San Geronimo
-    group: Towns
     include:
       - San Geronimo
 
   - id: san-quentin
-    name: San Quentin
-    group: Towns
     include:
       - San Quentin
 
   - id: san-rafael
-    name: San Rafael
-    group: Towns
     include:
       - [San Rafael, word:Marin]
 
   - id: santa-venetia
-    name: Santa Venetia
-    group: Towns
     include:
       - Santa Venetia
 
   - id: sausalito
-    name: Sausalito
-    group: Towns
     include:
       - Sausalito
 
   - id: seadrift
-    name: Seadrift
-    group: Towns
     include:
       - [word:Marin, Seadrift]
 
   - id: sleepy-hollow
-    name: Sleepy Hollow
-    group: Towns
     include:
       - [word:Marin, Sleepy Hollow]
 
   - id: st-vincents
-    name: St. Vincent's
-    group: Facilities
     include:
       - [word:Marin, St. Vincent's]
       - [word:Marin, St Vincents]
       - [word:Marin, St. Vincent]
 
   - id: stinson-beach
-    name: Stinson Beach
-    group: Towns
     include:
       - Stinson Beach
 
   - id: strawberry
-    name: Strawberry
-    group: Towns
     include:
       - [word:Marin, Strawberry]
 
   - id: tamalpais-valley
-    name: Tamalpais Valley
-    group: Towns
     include:
       - Tamalpais Valley
       - Tam Valley
 
   - id: tiburon
-    name: Tiburon
-    group: Towns
     include:
       - [word:Marin, Tiburon]
 
   - id: tocaloma
-    name: Tocaloma
-    group: Towns
     include:
       - Tocaloma
 
   - id: tomales
-    name: Tomales
-    group: Towns
     include:
       - Tomales
 
   - id: west-marin
     name: West Marin
-    group: Towns
+    group: Communities
     include:
       - West Marin
 
   - id: woodacre
-    name: Woodacre
-    group: Towns
     include:
       - Woodacre
 
@@ -1636,32 +1440,22 @@ monitors:
       - Derek Johnson
 
   - id: mary-sackett
-    name: Mary Sackett
-    group: People
     include:
       - Mary Sackett
 
   - id: brian-colbert
-    name: Brian Colbert
-    group: People
     include:
       - Brian Colbert
 
   - id: stephanie-moulton-peters
-    name: Stephanie Moulton-Peters
-    group: People
     include:
       - Stephanie Moulton-Peters
 
   - id: dennis-rodoni
-    name: Dennis Rodoni
-    group: People
     include:
       - Dennis Rodoni
 
   - id: eric-lucan
-    name: Eric Lucan
-    group: People
     include:
       - Eric Lucan
 
