@@ -77,5 +77,5 @@ test("the groups are the plural names in place-kinds.json", () => {
   const plural = Object.fromEntries(kinds.map((k) => [k.key, k.plural]));
   assert.equal(plural.city, "Cities and towns");
   assert.equal(plural.community, "Communities");
-  for (const [, p] of places) assert.ok(["district", "city", "community"].includes(p.kind), p.kind);
+  for (const [, p] of places) assert.ok(["district", "city", "community", "region"].includes(p.kind), p.kind);
 });

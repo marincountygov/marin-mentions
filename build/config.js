@@ -98,7 +98,7 @@ function loadDataMonitors() {
   const read = (name) => fs.readFileSync(path.join(CONFIG_DIR, name), "utf8");
   const { places, facilities } = JSON.parse(read("places.json"));
   const rows = [
-    ...places.filter((p) => p.kind !== "district"),
+    ...places,
     ...facilities,
     ...JSON.parse(read("events.json")).events,
     ...JSON.parse(read("people.json")).people,
@@ -136,6 +136,8 @@ function monitorsFromRows(rows, options = {}) {
     };
     addNames([row.name, ...(row.alternateNames || [])], own);
     for (const phrase of row.searchPhrases || []) include.push(entryFor(phrase, own));
+    // The people who hold a district's seat are watched by name.
+    for (const person of row.people || []) include.push(person);
     for (const part of row.parts || []) {
       addNames([part.name, ...(part.alternateNames || [])], { needsContext: new Set(part.needsContext || []), insideWords: new Set(part.insideWords || []) });
     }

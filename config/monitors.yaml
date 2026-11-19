@@ -66,66 +66,9 @@ monitors:
       - Marin Grand Jury
 
   # --- Districts ---
-  # A district is also matched by every place in it, from marin-data (config/places.json): a story that
-  # matches Greenbrae matches District 2. So the towns and communities of a district are not listed here.
-  # What is listed is what marin-data does not say: the district's own name, its supervisor, and areas that
-  # are not places in marin-data. "District <N>" and "<N>th District" are too generic alone (school
-  # districts, fire districts, voting districts elsewhere use the same phrasing), so they are paired with
-  # "Marin". The supervisor's name needs no pairing, so a story naming only the supervisor still surfaces.
-  # These monitors have no group or name line: marin-data puts them in Districts and names them District 1 to 5.
-  - id: marin-district-1
-    supervisor: Mary Sackett
-    include:
-      - [District 1, word:Marin]
-      - [1st District, word:Marin]
-      - Mary Sackett
-
-  - id: marin-district-2
-    supervisor: Brian Colbert
-    include:
-      - [District 2, word:Marin]
-      - [2nd District, word:Marin]
-      - Brian Colbert
-      - Southwest San Rafael
-      - Oak Manor
-
-  - id: marin-district-3
-    supervisor: Stephanie Moulton-Peters
-    include:
-      - [District 3, word:Marin]
-      - [3rd District, word:Marin]
-      - Stephanie Moulton-Peters
-      - Tam Valley
-      - Alto-Sutton Manor
-      - [word:Marin, floating homes]
-
-  - id: marin-district-4
-    supervisor: Dennis Rodoni
-    include:
-      - [District 4, word:Marin]
-      - [4th District, word:Marin]
-      - Dennis Rodoni
-
-      # West Marin
-      - Chileno Valley
-      - West Marin
-
-      # San Geronimo Valley
-      - San Geronimo Valley
-
-      # Other District 4 areas
-      - West Novato
-      - East San Rafael
-
-  - id: marin-district-5
-    supervisor: Eric Lucan
-    include:
-      - [District 5, word:Marin]
-      - [5th District, word:Marin]
-      - Eric Lucan
-      - Magali Limeta
-      - Rush Creek
-      - Atherton Corridor
+  # Districts are not listed here: marin-data describes them and Marin Mentions watches for their names, their
+  # supervisor and the areas in them (config/places.json). A district is also matched by every place in it, so a
+  # story that matches Greenbrae matches District 2.
 
   # --- Departments ---
   - id: marin-oem
@@ -1139,15 +1082,6 @@ monitors:
     include:
       - IATSE Local 16
       - [word:Marin, IATSE]
-
-  # --- Regions ---
-  # Cities, towns and communities are not listed here: marin-data describes them and Marin Mentions watches for
-  # their names and search hints (config/places.json). West Marin is a region, not a place in marin-data yet.
-  - id: west-marin
-    name: West Marin
-    group: Communities
-    include:
-      - West Marin
 
   # --- People ---
   # People are not listed here: each person in marin-data is watched by name, one monitor per person (not one
