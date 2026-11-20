@@ -134,8 +134,8 @@ def run(base, context, page, problems):
     require("Stats" not in page.locator("section.mm-rp-section > h4").all_inner_texts(), "No Stats section until one is ticked")
     stats_card.get_by_label("Totals").check()
     stats_card.get_by_label("Top news sources").check()
-    stats_card.get_by_label("Top monitors").check()
-    stats_card.get_by_label("Top monitors").uncheck()
+    stats_card.get_by_label("Top subjects").check()
+    stats_card.get_by_label("Top subjects").uncheck()
     require(page.locator("section[aria-labelledby=stats-title]").count() == 1, "Still one Stats box")
     titles = page.locator("section.mm-rp-section > h4").all_inner_texts()
     require(titles[0] == "Stats", f"Stats starts at the top: {titles}")
@@ -154,7 +154,7 @@ def run(base, context, page, problems):
     require("Coming up" not in doc.inner_text(), "Hidden section leaked into the report")
     require(doc.locator("a[href^='http']").count() >= 3, "Links preserved")
     stat_headings = doc.locator("h3").all_inner_texts()
-    require(stat_headings[:1] == ["Totals"] and "Top news sources" in stat_headings and "Top monitors" not in stat_headings, f"Stats charts: {stat_headings}")
+    require(stat_headings[:1] == ["Totals"] and "Top news sources" in stat_headings and "Top subjects" not in stat_headings, f"Stats charts: {stat_headings}")
 
     # Copy for Word puts HTML and plain text on the clipboard, with a message under the button.
     page.get_by_role("button", name="Copy for Word").click()

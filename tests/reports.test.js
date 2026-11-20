@@ -291,7 +291,7 @@ test("a Stats section keeps its chosen charts and renders them as plain tables",
   r = Core.updateSection(r, id, {
     charts: ["totals", "sources", "bogus"],
     stats: {
-      basis: "Mentions from Oct 1 to Oct 7 · All monitors",
+      basis: "Mentions from Oct 1 to Oct 7 · All subjects",
       totals: { mentions: 12, sources: 5, social: 2 },
       tables: { sources: [["KRON4 <b>", 7], ["Marin IJ", 3]], monitors: [["Topics", 9]] },
     },
@@ -301,7 +301,7 @@ test("a Stats section keeps its chosen charts and renders them as plain tables",
   assert.match(html, /<h3>Totals<\/h3>/);
   assert.match(html, /<td>Mentions<\/td><td>12<\/td>/);
   assert.match(html, /<td>KRON4 &lt;b&gt;<\/td><td>7<\/td>/);
-  assert.ok(!html.includes("Top monitors"), "unchecked charts stay out");
+  assert.ok(!html.includes("Top subjects"), "unchecked charts stay out");
   assert.ok(!/<(div|span|script|canvas)\b|class=|style=/.test(html));
   assert.match(Render.toPlainText(r, { onlySectionId: id }), /Top news sources\n {2}KRON4 <b>: 7/);
   const again = Core.parseJson(Core.toJson(r));
