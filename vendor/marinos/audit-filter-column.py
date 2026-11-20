@@ -48,6 +48,8 @@ def validate(schema: dict, value, root: dict, path: str = "") -> list[str]:
     found: list[str] = []
     if "const" in schema and value != schema["const"]:
         return [f"{where}: must be {json.dumps(schema['const'])}"]
+    if "enum" in schema and value not in schema["enum"]:
+        return [f"{where}: must be one of " + ", ".join(json.dumps(one) for one in schema["enum"])]
     kind = schema.get("type")
     if kind and kind_of(value) != kind and not (kind == "number" and kind_of(value) == "integer"):
         return [f"{where}: must be {kind}"]

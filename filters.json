@@ -2,7 +2,11 @@
   "$schema": "vendor/marinos/filter-panel.schema.json",
   "schemaVersion": "1.0.0",
   "search": {
-    "id": "filter-search"
+    "id": "filter-search",
+    "fields": [
+      "title",
+      "text"
+    ]
   },
   "groups": [
     {
@@ -60,7 +64,8 @@
       "separator": ",",
       "options": {
         "app": true
-      }
+      },
+      "field": "matchedMonitors"
     },
     {
       "type": "nested-checkbox",
@@ -73,7 +78,8 @@
       "separator": ",",
       "options": {
         "app": true
-      }
+      },
+      "field": "sourceId"
     }
   ]
 }
