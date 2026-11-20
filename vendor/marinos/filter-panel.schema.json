@@ -26,6 +26,22 @@
       "properties": {
         "id": {
           "$ref": "#/$defs/id"
+        },
+        "fields": {
+          "description": "The record fields the search reads, as dot paths. With these the column can match records itself.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "match": {
+          "description": "\"phrase\" (default): the whole search must appear in the text. \"words\": every word must appear, in any order.",
+          "enum": [
+            "phrase",
+            "words"
+          ]
         }
       }
     },
@@ -112,6 +128,13 @@
               "description": "The record field that holds the value of another record in the same list: that record is listed under it (a division under its department). Choosing one does not choose the other.",
               "type": "string",
               "minLength": 1
+            },
+            "order": {
+              "description": "\"data\" keeps the choices in the order the file lists them; the default sorts them A to Z (numbers in order).",
+              "enum": [
+                "label",
+                "data"
+              ]
             }
           }
         },
@@ -209,6 +232,11 @@
           "enum": [
             ","
           ]
+        },
+        "field": {
+          "description": "The record field this group matches against, as a dot path (\"themes\", \"venue.name\"). A field holding a list counts as each of its values. Leave it out when the app applies the group itself (a time range, a tab).",
+          "type": "string",
+          "minLength": 1
         }
       },
       "if": {
@@ -259,6 +287,11 @@
         },
         "param": {
           "$ref": "#/$defs/id"
+        },
+        "field": {
+          "description": "The record field this group matches against, as a dot path (\"themes\", \"venue.name\"). A field holding a list counts as each of its values. Leave it out when the app applies the group itself (a time range, a tab).",
+          "type": "string",
+          "minLength": 1
         }
       }
     },
@@ -293,6 +326,11 @@
         },
         "default": {
           "description": "The value chosen on load and after Reset, or \"latest\".",
+          "type": "string",
+          "minLength": 1
+        },
+        "field": {
+          "description": "The record field this group matches against, as a dot path (\"themes\", \"venue.name\"). A field holding a list counts as each of its values. Leave it out when the app applies the group itself (a time range, a tab).",
           "type": "string",
           "minLength": 1
         }
@@ -331,6 +369,19 @@
         },
         "param": {
           "$ref": "#/$defs/id"
+        },
+        "fromParam": {
+          "description": "The address parameter for the From date, when links already used one (\"from\"). Default: the group's param and \"-from\".",
+          "$ref": "#/$defs/id"
+        },
+        "toParam": {
+          "description": "The address parameter for the To date (\"to\"). Default: the group's param and \"-to\".",
+          "$ref": "#/$defs/id"
+        },
+        "field": {
+          "description": "The record field this group matches against, as a dot path (\"themes\", \"venue.name\"). A field holding a list counts as each of its values. Leave it out when the app applies the group itself (a time range, a tab).",
+          "type": "string",
+          "minLength": 1
         }
       }
     },
@@ -401,6 +452,13 @@
                   "description": "The record field that holds the value of another record in the same list: that record is listed under it (a division under its department). Choosing one does not choose the other.",
                   "type": "string",
                   "minLength": 1
+                },
+                "order": {
+                  "description": "\"data\" keeps the choices in the order the file lists them; the default sorts them A to Z (numbers in order).",
+                  "enum": [
+                    "label",
+                    "data"
+                  ]
                 }
               }
             },
@@ -417,6 +475,11 @@
           "enum": [
             ","
           ]
+        },
+        "field": {
+          "description": "The record field this group matches against, as a dot path (\"themes\", \"venue.name\"). A field holding a list counts as each of its values. Leave it out when the app applies the group itself (a time range, a tab).",
+          "type": "string",
+          "minLength": 1
         }
       }
     },

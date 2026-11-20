@@ -420,16 +420,15 @@ document.addEventListener("DOMContentLoaded", () => {
     item,
     { skipMonitor = false, skipFeedSource = false, skipContentType = false, skipTime = false, timeRange = null } = {}
   ) {
-    if (
-      !skipMonitor &&
-      state.selectedMonitors.size > 0 &&
-      !item.matchedMonitors.some((id) => state.selectedMonitors.has(id))
-    ) {
-      return false;
-    }
-    if (!skipFeedSource && state.selectedFeedSources.size > 0 && !state.selectedFeedSources.has(item.sourceId)) {
-      return false;
-    }
+    // The search, Subjects and Sources belong to the filter column: filters.json names the item fields they look at
+    // (title and text, matchedMonitors, sourceId). The tab and the time range are this app's own, below.
+    const leaveOut = [...(skipMonitor ? ["monitor"] : []), ...(skipFeedSource ? ["source"] : [])];
+    if (elements.column?.matchesRecord && !elements.column.matchesRecord(item, { skip: leaveOut })) return false;
+    return passesAppFilters(item, { skipContentType, skipTime, timeRange });
+  }
+
+  /** The filters this app applies itself, beside the column's: the content-type tab and the time range. */
+  function passesAppFilters(item, { skipContentType = false, skipTime = false, timeRange = null } = {}) {
     // "All" means News + Video, not literally every sourceType — Social
     // (Bluesky/Reddit/Nextdoor) only ever shows up when the Social tab
     // itself is selected, never mixed into All/News/Video. "Official" isn't
@@ -468,10 +467,6 @@ document.addEventListener("DOMContentLoaded", () => {
     } else if (!skipTime && state.time !== "all") {
       const windowMs = TIME_WINDOWS_MS[state.time];
       if (Date.now() - new Date(item.publishedAt).getTime() > windowMs) return false;
-    }
-    if (state.search) {
-      const haystack = `${item.title || ""} ${item.text || ""}`.toLowerCase();
-      if (!haystack.includes(state.search.toLowerCase())) return false;
     }
     return true;
   }
@@ -540,40 +535,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateFacetCounts() {
-    if (!state.data || !elements.column?.setCounts) return;
-
-    // skipFeedSource too: a monitor's count is its total match count, not
-    // limited to whichever Sources checkboxes happen to be checked right
-    // now — otherwise unchecking a source would make a monitor look like
-    // it has fewer matches than it really does.
-    const forMonitors = state.data.items.filter((item) => passesFilters(item, { skipMonitor: true, skipFeedSource: true }));
-    const monitorCounts = {};
-    (state.data.monitors || []).forEach((monitor) => {
-      monitorCounts[monitor.id] = forMonitors.filter((item) => item.matchedMonitors.includes(monitor.id)).length;
+    if (!state.data || !elements.column?.updateCounts) return;
+    // The column counts each choice and each group's total: the items that would match, leaving out the choice's own
+    // group. A subject's count is not limited to the sources checked right now (so unchecking a source never makes a
+    // subject look like it has fewer matches than it does), hence skip. The tab and the time range are this app's own
+    // and apply to every count (extra).
+    elements.column.updateCounts(state.data.items, {
+      extra: (item) => passesAppFilters(item),
+      skip: { monitor: ["source"] },
     });
-    elements.column.setCounts("monitor", monitorCounts);
-
-    // A facet's or group's header count = items matching ANY monitor in it (not the number of monitors it contains).
-    const countFor = (ids) => forMonitors.filter((item) => item.matchedMonitors.some((id) => ids.has(id))).length;
-    const groupCounts = {};
-    monitorFacets().forEach((facet) => {
-      groupCounts[facet.label] = countFor(new Set(facet.members.map((m) => m.id)));
-      const { groups } = facetGroups(facet);
-      if (groups.length > 1) groups.forEach((group) => { groupCounts[`${facet.label} / ${group.name}`] = countFor(new Set(group.ids)); });
-    });
-    elements.column.setGroupCounts("monitor", groupCounts);
-
-    const forFeedSources = state.data.items.filter((item) => passesFilters(item, { skipFeedSource: true }));
-    const sourceCounts = {};
-    (state.data.sources || []).forEach((source) => {
-      sourceCounts[source.id] = forFeedSources.filter((item) => item.sourceId === source.id).length;
-    });
-    elements.column.setCounts("source", sourceCounts);
-    const typeCounts = {};
-    CONTENT_TYPE_GROUP_ORDER.forEach((key) => {
-      typeCounts[CONTENT_TYPE_GROUP_LABELS[key] || key] = forFeedSources.filter((item) => item.sourceType === key).length;
-    });
-    elements.column.setGroupCounts("source", typeCounts);
   }
 
   // Google's public favicon service — free, no key, works across every
@@ -766,9 +736,15 @@ document.addEventListener("DOMContentLoaded", () => {
       const countsText =
         `${items.length} mention${items.length === 1 ? "" : "s"} — ` +
         `News ${counts.news}, Video ${counts.video}, Social ${counts.social}`;
-      elements.activeFilters.innerHTML =
-        `Showing: ${escapeHtml(describeActiveFilters())} ` +
-        `<span class="mm-mention-counts">(${escapeHtml(countsText)})</span>`;
+      const line = document.createDocumentFragment();
+      line.append(`Showing: ${describeActiveFilters()} `);
+      const detail = document.createElement("span");
+      detail.className = "mm-mention-counts";
+      detail.textContent = `(${countsText})`;
+      line.append(detail);
+      // The Showing line is the one count: the column announces it, and offers Reset when nothing matches.
+      if (elements.column?.setResults) elements.column.setResults(items.length, line);
+      else elements.activeFilters.replaceChildren(line);
     }
 
     elements.feed.innerHTML = items.length

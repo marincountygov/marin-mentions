@@ -88,7 +88,7 @@ def run(base, page, scheme):
     page.wait_for_function("document.querySelector('[data-content-type=all]').getAttribute('aria-selected') === 'true'")
     require("monitors=" not in page.url and "type=" not in page.url and "view=" not in page.url, f"Reset clears the address: {page.url}")
     require(page.locator("#monitor-facet input:checked").count() == 0 and "selected" not in page.inner_text("#monitor-facet"), "Reset clears the choices and the selected counts")
-    page.wait_for_function("document.querySelector('#app-status-message').textContent.includes('Filters reset.')")
+    page.wait_for_function("document.getElementById('active-filters').textContent.startsWith('Filters reset. Showing:')")  # the Showing line is the results message; Filters reset. is said first, out of sight
 
     # A link written before the move (choices joined with commas) still works.
     load(page, base, f"?time=all&monitors={','.join(BUSY)}")
