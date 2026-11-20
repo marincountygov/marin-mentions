@@ -25,6 +25,8 @@ fi
 python3 "$ROOT_DIR/vendor/marinos/audit-buttons.py" "$ROOT_DIR" --fail
 # Lists copy, download, file reading and upload code the app does itself; it must list nothing.
 python3 "$ROOT_DIR/vendor/marinos/audit-shared-helpers.py" "$ROOT_DIR" --fail
+# The filter columns must come from filters.json and the shell, with no hand-written markup.
+python3 "$ROOT_DIR/vendor/marinos/audit-filter-column.py" "$ROOT_DIR" --fail
 # Every file marin-data gives this app is a copy. Skipped when marin-data is not next to this repo.
 if [[ -f "$ROOT_DIR/../marin-data/scripts/sync_copies.py" ]]; then
   python3 "$ROOT_DIR/../marin-data/scripts/sync_copies.py" "$ROOT_DIR" --check
@@ -40,6 +42,7 @@ fi
 
 if [[ "$RUN_BROWSER" == 1 ]]; then
   python3 "$ROOT_DIR/tests/browser_filters.py"
+  python3 "$ROOT_DIR/tests/browser_filter_column.py"
   python3 "$ROOT_DIR/tests/browser_reports.py"
 else
   printf 'SKIP: Browser tests not requested; run with --browser to include them.\n'

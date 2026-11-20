@@ -1,0 +1,18 @@
+{
+  "$schema": "vendor/marinos/filter-panel.schema.json",
+  "schemaVersion": "1.0.0",
+  "address": false,
+  "groups": [
+    {
+      "type": "nested-checkbox",
+      "id": "admin-source",
+      "label": "Sources",
+      "groupBy": [
+        "type"
+      ],
+      "options": {
+        "app": true
+      }
+    }
+  ]
+}

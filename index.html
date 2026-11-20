@@ -35,44 +35,7 @@
         <h2 class="visually-hidden">Latest</h2>
 
         <form id="filters" class="search-layout" aria-label="Filter">
-          <div class="search-side">
-            <button type="button" id="filter-toggle" class="filter-toggle" data-filter-toggle="latest" aria-controls="filter-panel"></button>
-          <aside id="filter-panel" class="search-sidebar" aria-labelledby="filter-panel-title" data-open="false">
-            <div class="search-panel-header">
-              <h2 class="search-panel-title" id="filter-panel-title">Filter</h2>
-              <button type="button" class="action-button" id="reset-filters-button" aria-label="Reset filters" title="Reset filters"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button>
-            </div>
-
-            <div class="search-input-field">
-              <label for="filter-search">Search</label>
-              <input type="search" id="filter-search" name="search" data-search-input placeholder="Search titles and text&hellip;" autocomplete="off">
-            </div>
-
-            <div class="search-input-field">
-              <label for="filter-time">Time</label>
-              <select id="filter-time" name="time">
-                <option value="24h">Past 24 hours</option>
-                <option value="1h">Past hour</option>
-                <option value="3d">Past 3 days</option>
-                <option value="7d">Past week</option>
-                <option value="30d">Past 30 days</option>
-                <option value="60d" selected>Past 60 days</option>
-                <option value="all">All available data</option>
-                <option value="report" hidden>Report dates</option>
-              </select>
-            </div>
-
-            <fieldset class="search-facet-group" id="monitor-chips" data-loading="true">
-              <legend class="visually-hidden">What the mentions are about</legend>
-              <p class="app-help-text">Loading Marin Mentions&hellip;</p>
-            </fieldset>
-
-            <fieldset class="search-facet-group" id="feed-source-filter" data-loading="true">
-              <legend>Sources</legend>
-              <p class="app-help-text">Loading Marin Mentions&hellip;</p>
-            </fieldset>
-          </aside>
-          </div>
+          <div class="search-side" data-filter-column="filters.json" data-filter-name="latest"></div>
 
           <div class="search-results">
             <div id="content-tab-row" class="tab-list">
@@ -207,15 +170,7 @@
         <p>Every configured source, its ingestion method, and its status as of the last build.</p>
 
         <div class="search-layout" id="sources-layout">
-          <div class="search-side">
-            <button type="button" id="source-filter-toggle" class="filter-toggle" data-filter-toggle="sources" aria-controls="source-filter-panel"></button>
-          <aside id="source-filter-panel" class="search-sidebar" aria-label="Filter" data-open="false">
-            <fieldset class="search-facet-group" id="source-filter" data-loading="true">
-              <legend>Sources</legend>
-              <p class="app-help-text">Loading Marin Mentions&hellip;</p>
-            </fieldset>
-          </aside>
-          </div>
+          <div class="search-side" data-filter-column="filters-sources.json" data-filter-name="sources"></div>
 
           <div class="search-results">
             <div id="sources-table-wrap" class="app-table-wrap"><p class="app-help-text" id="sources-status">Loading Marin Mentions&hellip;</p></div>

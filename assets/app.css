@@ -131,16 +131,6 @@
   list-style: none;
 }
 
-@media (max-width: 850px) {
-  /* The stacked layout and the Filters button are Marin UI's (.search-layout, .filter-toggle); this is the app's panel look. */
-  .search-sidebar {
-    padding: 1rem;
-    border: 1px solid var(--app-border);
-    border-radius: var(--pico-border-radius);
-    background: var(--app-surface);
-  }
-}
-
 #content-tab-row,
 #source-type-tabs {
   display: flex;

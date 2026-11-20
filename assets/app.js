@@ -39,8 +39,6 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const elements = {
-    monitorChips: document.querySelector("#monitor-chips"),
-    feedSourceFilter: document.querySelector("#feed-source-filter"),
     contentTabs: document.querySelector("#content-tabs"),
     contentTabRow: document.querySelector("#content-tab-row"),
     statsToggle: document.querySelector("#stats-toggle"),
@@ -52,10 +50,10 @@ document.addEventListener("DOMContentLoaded", () => {
     statsKpiSources: document.querySelector("#stats-kpi-sources"),
     statsKpiSocial: document.querySelector("#stats-kpi-social"),
     statsTrendingWrap: document.querySelector("#stats-trending-wrap"),
-    searchInput: document.querySelector("#filter-search"),
-    timeSelect: document.querySelector("#filter-time"),
     filtersForm: document.querySelector("#filters"),
-    resetButton: document.querySelector("#reset-filters-button"),
+    // The two filter columns are drawn by the shell from filters.json and filters-sources.json.
+    column: document.querySelector('[data-filter-column][data-filter-name="latest"]'),
+    sourcesColumn: document.querySelector('[data-filter-column][data-filter-name="sources"]'),
     lastUpdated: document.querySelector("#last-updated"),
     activeFilters: document.querySelector("#active-filters"),
     feed: document.querySelector("#media-feed"),
@@ -63,7 +61,6 @@ document.addEventListener("DOMContentLoaded", () => {
     selectAllField: document.querySelector("#select-all-field"),
     statusMessage: document.querySelector("#app-status-message"),
     sourcesWrap: document.querySelector("#sources-table-wrap"),
-    sourceFilter: document.querySelector("#source-filter"),
     monitorsList: document.querySelector("#monitors-list"),
     statsTimelineCanvas: document.querySelector("#stats-timeline-chart"),
     statsSourcesCanvas: document.querySelector("#stats-sources-chart"),
@@ -152,12 +149,12 @@ document.addEventListener("DOMContentLoaded", () => {
   // it. Only include a param when it differs from the default, so a link
   // with nothing special selected has no query string at all.
   function syncUrlFromState() {
-    const params = new URLSearchParams();
-    if (state.search) params.set("q", state.search);
-    if (state.selectedMonitors.size > 0) params.set("monitors", Array.from(state.selectedMonitors).join(","));
-    if (state.selectedFeedSources.size > 0) params.set("sources", Array.from(state.selectedFeedSources).join(","));
+    // The search, monitors, sources and time belong to the filter column, which keeps them in the address itself.
+    // The app keeps the content-type tab and the view, and leaves every other parameter as it found it.
+    const params = new URLSearchParams(window.location.search);
+    params.delete("type");
+    params.delete("view");
     if (state.contentType !== "all") params.set("type", state.contentType);
-    if (state.time !== "60d") params.set("time", state.time);
     if (state.statsView) params.set("view", "stats");
     if (state.reportsView) params.set("view", "reports");
 
@@ -220,25 +217,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // an extra click.
   function applyStateFromUrl() {
     const params = new URLSearchParams(window.location.search);
-    const validMonitorIds = new Set((state.data.monitors || []).map((m) => m.id));
-    const validSourceIds = new Set((state.data.sources || []).map((s) => s.id));
 
-    if (params.has("q")) state.search = params.get("q");
-    if (params.has("monitors")) {
-      state.selectedMonitors = new Set(params.get("monitors").split(",").filter((id) => validMonitorIds.has(id)));
-    }
-    if (params.has("sources")) {
-      state.selectedFeedSources = new Set(
-        params.get("sources").split(",").filter((id) => validSourceIds.has(id))
-      );
-    }
     if (params.has("type")) state.contentType = params.get("type");
-    if (params.has("time")) state.time = params.get("time");
     if (params.get("view") === "stats") state.statsView = true;
     if (params.get("view") === "reports") state.reportsView = true;
 
-    if (elements.searchInput) elements.searchInput.value = state.search;
-    if (elements.timeSelect) elements.timeSelect.value = state.time;
     elements.contentTabs?.querySelectorAll("[data-content-type]").forEach((tab) => {
       tab.setAttribute("aria-selected", String(tab.dataset.contentType === state.contentType));
     });
@@ -343,8 +326,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderAll() {
     renderLastUpdated();
-    renderMonitorChips();
-    renderFeedSourceFilter();
+    // The filter column is drawn once its own file has loaded, which can be before or after data.json arrives.
+    if (elements.column?.setOptions) offerFilterOptions();
+    else whenReady(elements.column, () => { offerFilterOptions(); renderFeed(); });
     renderFeed(); // also renders Stats, from the same filtered item list
     renderSourcesTable();
     renderMonitorsList();
@@ -395,9 +379,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // The filter's own name is the facet names inside it (Place, Organization, Person ...), so its legend is for assistive technology only.
-  const MONITOR_FILTER_LEGEND = '<legend class="visually-hidden">What the mentions are about</legend>';
-
   /** The facets the filter shows, in order (Place, Organization, Person ...), each with its monitors. A facet is the
    * schema type a monitor is about; marin-data names them and the build passes them in data.json. A monitor with no
    * facet goes under "Other". */
@@ -430,127 +411,6 @@ document.addEventListener("DOMContentLoaded", () => {
       children,
       groups: names.map((name) => ({ name, monitors: [...byGroup.get(name)].sort(byName), ids: byGroup.get(name).flatMap(withKids).map((m) => m.id) })),
     };
-  }
-
-  function renderMonitorItem(monitor, children) {
-    const id = `monitor-${monitor.id}`;
-    const checked = state.selectedMonitors.has(monitor.id);
-    const kids = children.get(monitor.id) || [];
-    return (
-      // No for="${id}" here — the input is already nested inside
-      // this label, so an explicit for pointing at the same id
-      // it's a descendant of creates two competing label
-      // associations for one control (WAVE: "multiple form
-      // labels"). The wrapping alone is a complete, unambiguous
-      // association.
-      `<li><label>` +
-      `<input type="checkbox" id="${id}" data-monitor-id="${escapeHtml(monitor.id)}" ${checked ? "checked" : ""}>` +
-      `${escapeHtml(monitor.name)} <span class="search-facet-count" data-monitor-count="${escapeHtml(monitor.id)}"></span>` +
-      `</label>` +
-      (kids.length ? `<ul class="search-facet-list">${kids.map((kid) => renderMonitorItem(kid, children)).join("")}</ul>` : "") +
-      `</li>`
-    );
-  }
-
-  function renderMonitorChips() {
-    if (!state.data || !elements.monitorChips) return;
-    const monitors = state.data.monitors || [];
-    elements.monitorChips.dataset.loading = "false";
-
-    if (monitors.length === 0) {
-      elements.monitorChips.innerHTML = `${MONITOR_FILTER_LEGEND}<p class="app-help-text">Nothing is being watched yet.</p>`;
-      return;
-    }
-
-    // One collapsed filter group for each facet (Place, Organization, Person ...), named for the schema type. A facet with
-    // more than one group (Place: Districts, Cities and towns ...) opens onto a collapsed group for each; a division is
-    // listed under its department.
-    elements.monitorChips.innerHTML = MONITOR_FILTER_LEGEND + monitorFacets()
-      .map((facet) => {
-        const { children, groups } = facetGroups(facet);
-        const body =
-          groups.length === 1
-            ? `<ul class="search-facet-list">${groups[0].monitors.map((m) => renderMonitorItem(m, children)).join("")}</ul>`
-            : groups
-                .map(
-                  (group) => `
-        <details class="mm-facet-group">
-          <summary>${escapeHtml(group.name)} <span class="app-help-text" data-group-count="${escapeHtml(group.name)}"></span></summary>
-          <ul class="search-facet-list">${group.monitors.map((m) => renderMonitorItem(m, children)).join("")}</ul>
-        </details>`
-                )
-                .join("");
-        return `
-        <details class="mm-facet-group">
-          <summary>${escapeHtml(facet.label)} <span class="app-help-text" data-group-count="facet:${escapeHtml(facet.key)}"></span></summary>
-          ${body}
-        </details>`;
-      })
-      .join("");
-
-    openGroupsWithSelections(elements.monitorChips);
-
-    elements.monitorChips.querySelectorAll("input[data-monitor-id]").forEach((checkbox) => {
-      checkbox.addEventListener("change", () => {
-        const id = checkbox.dataset.monitorId;
-        if (checkbox.checked) state.selectedMonitors.add(id);
-        else state.selectedMonitors.delete(id);
-        syncUrlFromState();
-        renderFeed();
-      });
-    });
-  }
-
-  // Two-level filter, same pattern as Monitors: a collapsed-by-default
-  // group per content type (News/Video/Social), expanding to every
-  // individual source in it — so you can narrow the feed to one specific
-  // outlet (e.g. just SF Chronicle) instead of only a whole category.
-  function renderFeedSourceFilter() {
-    if (!state.data || !elements.feedSourceFilter) return;
-    const sources = state.data.sources || [];
-    elements.feedSourceFilter.dataset.loading = "false";
-
-    const groups = groupBy(sources, (s) => CONTENT_TYPE_BY_CONNECTOR_TYPE[s.type] || "news");
-
-    elements.feedSourceFilter.innerHTML =
-      "<legend>Sources</legend>" +
-      sortedGroupEntries(groups, (key) => CONTENT_TYPE_GROUP_LABELS[key] || key, CONTENT_TYPE_GROUP_ORDER)
-        .map(([key, label, groupSources]) => {
-          return `
-        <details class="mm-facet-group">
-          <summary>${escapeHtml(label)} <span class="app-help-text" data-content-type-count="${key}"></span></summary>
-          <ul class="search-facet-list">
-            ${groupSources
-              .map((source) => {
-                const id = `feed-source-${source.id}`;
-                const checked = state.selectedFeedSources.has(source.id);
-                return (
-                  // No for="${id}" — see the identical fix/comment in
-                  // renderMonitorChips above.
-                  `<li><label>` +
-                  `<input type="checkbox" id="${id}" data-feed-source-id="${escapeHtml(source.id)}" ${checked ? "checked" : ""} ${source.enabled ? "" : "disabled"}>` +
-                  `${escapeHtml(source.name)} <span class="search-facet-count" data-feed-source-count="${escapeHtml(source.id)}"></span>` +
-                  `${source.enabled ? "" : ' <span class="app-help-text">(disabled)</span>'}` +
-                  `</label></li>`
-                );
-              })
-              .join("")}
-          </ul>
-        </details>`;
-        })
-        .join("");
-
-    openGroupsWithSelections(elements.feedSourceFilter);
-
-    elements.feedSourceFilter.querySelectorAll("input[data-feed-source-id]").forEach((checkbox) => {
-      checkbox.addEventListener("change", () => {
-        const id = checkbox.dataset.feedSourceId;
-        if (checkbox.checked) state.selectedFeedSources.add(id);
-        else state.selectedFeedSources.delete(id);
-        syncUrlFromState();
-        renderFeed();
-      });
-    });
   }
 
   // skipMonitor/skipPlatform let the facet-count logic ask "how many items
@@ -620,77 +480,100 @@ document.addEventListener("DOMContentLoaded", () => {
     return passesFilters(item);
   }
 
-  /** A filter group that holds a selection opens on its own, so a shared link
-   * or restored filter doesn't hide what's applied. Called only when a group
-   * list is (re)built, so it never reopens a group the person just closed. */
-  function openGroupsWithSelections(root) {
-    root?.querySelectorAll("details.mm-facet-group").forEach((details) => {
-      if (details.querySelector("input:checked")) details.open = true;
-    });
-  }
-
-  /** "(2 selected)" next to a group's name, so a collapsed group still shows
-   * that it's narrowing the list. */
-  function updateSelectedBadges() {
-    [elements.monitorChips, elements.feedSourceFilter].forEach((root) => {
-      root?.querySelectorAll("details.mm-facet-group").forEach((details) => {
-        const selected = details.querySelectorAll("input:checked").length;
-        let badge = details.querySelector(".mm-selected-count");
-        if (!badge) {
-          badge = document.createElement("span");
-          badge.className = "app-help-text mm-selected-count";
-          details.querySelector("summary")?.append(" ", badge);
-        }
-        badge.textContent = selected ? `(${selected} selected)` : "";
+  /** The choices the filter column offers for Subjects: each facet (Place, Organization, Person ...) is a group; a facet
+   * with more than one group (Place: Districts, Cities and towns ...) nests them; a division is listed under its
+   * department. The order is the data's own (facets, then marin-data's group order, then by name). */
+  function monitorOptions() {
+    const options = [];
+    monitorFacets().forEach((facet) => {
+      const { children, groups } = facetGroups(facet);
+      groups.forEach((group) => {
+        const path = groups.length === 1 ? [facet.label] : [facet.label, group.name];
+        const add = (monitor, parent) => {
+          options.push({ value: monitor.id, label: monitor.name, path, parent });
+          (children.get(monitor.id) || []).forEach((kid) => add(kid, monitor.id));
+        };
+        group.monitors.forEach((monitor) => add(monitor, ""));
       });
     });
+    return options;
+  }
+
+  /** The choices for Sources: one group for each content type (News, Video, Social), in this app's order. A source that
+   * is switched off is still listed, and says so, so it stays reachable by keyboard like every other choice. */
+  function feedSourceOptions() {
+    const groups = groupBy(state.data.sources || [], (s) => CONTENT_TYPE_BY_CONNECTOR_TYPE[s.type] || "news");
+    return sortedGroupEntries(groups, (key) => CONTENT_TYPE_GROUP_LABELS[key] || key, CONTENT_TYPE_GROUP_ORDER).flatMap(([, label, sources]) =>
+      sources.map((source) => ({ value: source.id, label: source.enabled ? source.name : `${source.name} (disabled)`, path: [label] }))
+    );
+  }
+
+  /** Hand the column its choices, then take back what the address already chose. Runs each time data.json loads. */
+  function offerFilterOptions() {
+    elements.column.setOptions("monitor", monitorOptions());
+    elements.column.setOptions("source", feedSourceOptions());
+    readColumn();
+  }
+
+  /** What the column holds becomes the app's own filter state. A "report" time range is only what the select shows
+   * while the report builder is open; it is not a filter. */
+  function readColumn() {
+    const chosen = elements.column?.filterState;
+    if (!chosen) return;
+    state.search = chosen.search.trim();
+    state.selectedMonitors = new Set(chosen.groups.monitor);
+    state.selectedFeedSources = new Set(chosen.groups.source);
+    if (chosen.groups.time !== "report") state.time = chosen.groups.time;
+  }
+
+  /** Runs once the column has been drawn: right away if it has, otherwise when it says it is ready. */
+  function whenReady(column, callback) {
+    if (!column) return;
+    if (column.setOptions) callback();
+    else column.addEventListener("marin-filter-ready", callback, { once: true });
+  }
+
+  /** The words for the Time choice now showing, for the "Showing: ..." line. */
+  function timeLabel() {
+    const select = document.getElementById("latest-filter-panel-time");
+    return Array.from(select?.options || []).find((option) => option.value === state.time)?.text;
   }
 
   function updateFacetCounts() {
-    if (!state.data) return;
+    if (!state.data || !elements.column?.setCounts) return;
 
     // skipFeedSource too: a monitor's count is its total match count, not
     // limited to whichever Sources checkboxes happen to be checked right
     // now — otherwise unchecking a source would make a monitor look like
     // it has fewer matches than it really does.
     const forMonitors = state.data.items.filter((item) => passesFilters(item, { skipMonitor: true, skipFeedSource: true }));
+    const monitorCounts = {};
     (state.data.monitors || []).forEach((monitor) => {
-      const count = forMonitors.filter((item) => item.matchedMonitors.includes(monitor.id)).length;
-      const el = elements.monitorChips?.querySelector(`[data-monitor-count="${monitor.id}"]`);
-      if (el) el.textContent = `(${count})`;
+      monitorCounts[monitor.id] = forMonitors.filter((item) => item.matchedMonitors.includes(monitor.id)).length;
     });
+    elements.column.setCounts("monitor", monitorCounts);
 
     // A facet's or group's header count = items matching ANY monitor in it (not the number of monitors it contains).
     const countFor = (ids) => forMonitors.filter((item) => item.matchedMonitors.some((id) => ids.has(id))).length;
-    const groupCountEls = Array.from(elements.monitorChips?.querySelectorAll("[data-group-count]") || []);
-    const setCount = (key, ids) => {
-      // Compared in JS, not as a CSS attribute-selector string — group
-      // names can contain "&", which some CSS selector engines mishandle
-      // even inside a quoted attribute value.
-      const el = groupCountEls.find((span) => span.dataset.groupCount === key);
-      if (el) el.textContent = `(${countFor(ids)})`;
-    };
+    const groupCounts = {};
     monitorFacets().forEach((facet) => {
-      setCount(`facet:${facet.key}`, new Set(facet.members.map((m) => m.id)));
-      facetGroups(facet).groups.forEach((group) => setCount(group.name, new Set(group.ids)));
+      groupCounts[facet.label] = countFor(new Set(facet.members.map((m) => m.id)));
+      const { groups } = facetGroups(facet);
+      if (groups.length > 1) groups.forEach((group) => { groupCounts[`${facet.label} / ${group.name}`] = countFor(new Set(group.ids)); });
     });
+    elements.column.setGroupCounts("monitor", groupCounts);
 
     const forFeedSources = state.data.items.filter((item) => passesFilters(item, { skipFeedSource: true }));
-    const feedSourceCountEls = Array.from(
-      elements.feedSourceFilter?.querySelectorAll("[data-feed-source-count]") || []
-    );
+    const sourceCounts = {};
     (state.data.sources || []).forEach((source) => {
-      const count = forFeedSources.filter((item) => item.sourceId === source.id).length;
-      const el = feedSourceCountEls.find((span) => span.dataset.feedSourceCount === source.id);
-      if (el) el.textContent = `(${count})`;
+      sourceCounts[source.id] = forFeedSources.filter((item) => item.sourceId === source.id).length;
     });
-
+    elements.column.setCounts("source", sourceCounts);
+    const typeCounts = {};
     CONTENT_TYPE_GROUP_ORDER.forEach((key) => {
-      const count = forFeedSources.filter((item) => item.sourceType === key).length;
-      const el = elements.feedSourceFilter?.querySelector(`[data-content-type-count="${key}"]`);
-      if (el) el.textContent = `(${count})`;
+      typeCounts[CONTENT_TYPE_GROUP_LABELS[key] || key] = forFeedSources.filter((item) => item.sourceType === key).length;
     });
-    updateSelectedBadges();
+    elements.column.setGroupCounts("source", typeCounts);
   }
 
   // Google's public favicon service — free, no key, works across every
@@ -821,8 +704,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const parts = [];
 
     if (!forReports) {
-      const timeLabel = elements.timeSelect?.options[elements.timeSelect.selectedIndex]?.text;
-      parts.push(timeLabel || state.time);
+      const label = timeLabel();
+      parts.push(label || state.time);
     }
 
     if (state.selectedMonitors.size > 0) {
@@ -894,7 +777,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     syncSelectAllCheckbox(items);
     updateFacetCounts();
-    updateFilterToggleNames();
     // Sync visibility first: Chart.js sizes a canvas at creation time, so
     // if a shared link opens straight into Stats (view=stats), the grid
     // needs to already be visible before renderStats() creates the charts
@@ -930,9 +812,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (elements.reportsToggle) elements.reportsToggle.setAttribute("aria-pressed", String(state.reportsView));
     // Reports builds its own date range, so the sidebar's Time filter does not apply there.
     // The select shows "Report dates" instead of a stale "Past 24 hours".
-    if (elements.timeSelect) {
-      elements.timeSelect.disabled = state.reportsView;
-      elements.timeSelect.value = state.reportsView ? "report" : state.time;
+    if (elements.column?.setValue) {
+      elements.column.setDisabled("time", state.reportsView);
+      const shown = state.reportsView ? "report" : state.time;
+      if (elements.column.filterState.groups.time !== shown) elements.column.setValue("time", shown);
     }
     // The "Showing: ..." line and the Copy / Link / CSV / RSS buttons describe the list, so
     // they step aside while the report builder is open.
@@ -974,50 +857,23 @@ document.addEventListener("DOMContentLoaded", () => {
   // checkboxes — so you can narrow to one or more specific sources, not
   // just a whole type at once.
   function renderSourceFilter(sources) {
-    if (!elements.sourceFilter) return;
-    elements.sourceFilter.dataset.loading = "false";
-
-    const groups = groupBy(sources, (s) => s.type);
-    elements.sourceFilter.innerHTML =
-      "<legend>Sources</legend>" +
-      sortedGroupEntries(groups, (type) => SOURCE_TYPE_LABELS[type] || type)
-        .map(([, groupLabel, groupSources]) => {
-          return `
-        <details class="mm-facet-group">
-          <summary>${escapeHtml(groupLabel)} <span class="app-help-text">(${groupSources.length})</span></summary>
-          <ul class="search-facet-list">
-            ${groupSources
-              .map((source) => {
-                const id = `source-${source.id}`;
-                const checked = state.selectedSources.has(source.id);
-                return (
-                  // No for="${id}" — see the identical fix/comment in
-                  // renderMonitorChips above.
-                  `<li><label>` +
-                  `<input type="checkbox" id="${id}" data-source-id="${escapeHtml(source.id)}" ${checked ? "checked" : ""}>` +
-                  `${escapeHtml(source.name)} <span class="app-help-text">(${source.itemCount || 0})</span>` +
-                  `</label></li>`
-                );
-              })
-              .join("")}
-          </ul>
-        </details>`;
-        })
-        .join("");
-
-    elements.sourceFilter.querySelectorAll("input[data-source-id]").forEach((checkbox) => {
-      checkbox.addEventListener("change", () => {
-        const id = checkbox.dataset.sourceId;
-        if (checkbox.checked) state.selectedSources.add(id);
-        else state.selectedSources.delete(id);
-        // Re-render just the table, not the whole filter panel — otherwise
-        // every checkbox click would collapse any <details> group you had
-        // open, since renderSourceFilter() redraws it from scratch.
-        renderSourceTableRows();
-        updateFilterToggleNames();
-      });
+    whenReady(elements.sourcesColumn, () => {
+      const groups = sortedGroupEntries(groupBy(sources, (s) => s.type), (type) => SOURCE_TYPE_LABELS[type] || type);
+      elements.sourcesColumn.setOptions(
+        "admin-source",
+        groups.flatMap(([, label, list]) => list.map((source) => ({ value: source.id, label: source.name, count: source.itemCount || 0, path: [label] })))
+      );
+      elements.sourcesColumn.setGroupCounts("admin-source", Object.fromEntries(groups.map(([, label, list]) => [label, list.length])));
+      state.selectedSources = new Set(elements.sourcesColumn.filterState.groups["admin-source"]);
+      renderSourceTableRows();
     });
   }
+
+  // Only the table is drawn again when a choice changes, so a group the person opened stays open.
+  elements.sourcesColumn?.addEventListener("marin-filter-change", (event) => {
+    state.selectedSources = new Set(event.detail.state.groups["admin-source"]);
+    renderSourceTableRows();
+  });
 
   function renderSourceTableRows() {
     if (!state.data || !elements.sourcesWrap) return;
@@ -1184,13 +1040,8 @@ document.addEventListener("DOMContentLoaded", () => {
    * sidebar's own checkboxes/open state so the UI doesn't show a filter
    * that's out of sync with what's actually applied. */
   function selectOnlyMonitor(monitorId) {
-    state.selectedMonitors = new Set([monitorId]);
-    elements.monitorChips?.querySelectorAll("input[data-monitor-id]").forEach((checkbox) => {
-      checkbox.checked = checkbox.dataset.monitorId === monitorId;
-    });
-    const checkbox = elements.monitorChips?.querySelector(`input[data-monitor-id="${monitorId}"]`);
-    const details = checkbox?.closest("details");
-    if (details) details.open = true;
+    elements.column?.setValue("monitor", [monitorId]);
+    readColumn();
     syncUrlFromState();
     renderFeed();
   }
@@ -1198,13 +1049,8 @@ document.addEventListener("DOMContentLoaded", () => {
   /** Same as selectOnlyMonitor, for the Console's feed-source filter —
    * used by the Sources page's "Filter" button. */
   function selectOnlyFeedSource(sourceId) {
-    state.selectedFeedSources = new Set([sourceId]);
-    elements.feedSourceFilter?.querySelectorAll("input[data-feed-source-id]").forEach((checkbox) => {
-      checkbox.checked = checkbox.dataset.feedSourceId === sourceId;
-    });
-    const checkbox = elements.feedSourceFilter?.querySelector(`input[data-feed-source-id="${sourceId}"]`);
-    const details = checkbox?.closest("details");
-    if (details) details.open = true;
+    elements.column?.setValue("source", [sourceId]);
+    readColumn();
     syncUrlFromState();
     renderFeed();
   }
@@ -1595,8 +1441,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // actually in the digest.
   function digestRangeLabel(items) {
     if (state.time !== "all") {
-      const timeLabel = elements.timeSelect?.options[elements.timeSelect.selectedIndex]?.text;
-      return `(${timeLabel || state.time})`;
+      const label = timeLabel();
+      return `(${label || state.time})`;
     }
     if (!items.length) return "";
     const oldest = items.reduce((min, item) => Math.min(min, new Date(item.publishedAt).getTime()), Infinity);
@@ -2195,19 +2041,17 @@ document.addEventListener("DOMContentLoaded", () => {
     renderFeed();
   });
 
-  let searchUrlSyncTimer;
-  elements.searchInput?.addEventListener("input", () => {
-    state.search = elements.searchInput.value.trim();
-    // Debounced: this fires on every keystroke, and replaceState() on
-    // every one of them is wasted work renderFeed() doesn't need to wait
-    // on — the URL just needs to catch up shortly after typing settles.
-    clearTimeout(searchUrlSyncTimer);
-    searchUrlSyncTimer = setTimeout(syncUrlFromState, 300);
-    renderFeed();
-  });
-
-  elements.timeSelect?.addEventListener("change", () => {
-    state.time = elements.timeSelect.value;
+  // Every change in the filter column (search, time, subjects, sources, Reset) lands here. Reset also puts the
+  // content-type tab back on All and leaves Stats; the column says "Filters reset." itself.
+  elements.column?.addEventListener("marin-filter-change", (event) => {
+    if (event.detail.source === "reset") {
+      state.contentType = "all";
+      state.statsView = false;
+      elements.contentTabs?.querySelectorAll("[data-content-type]").forEach((tab) => {
+        tab.setAttribute("aria-selected", String(tab.dataset.contentType === "all"));
+      });
+    }
+    readColumn();
     syncUrlFromState();
     renderFeed();
   });
@@ -2218,45 +2062,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   function resetFilters() {
-    state.search = "";
-    if (elements.searchInput) elements.searchInput.value = "";
-    state.selectedMonitors = new Set();
-    state.selectedFeedSources = new Set();
-    state.time = "60d";
-    if (elements.timeSelect) elements.timeSelect.value = state.reportsView ? "report" : "60d";
-    state.contentType = "all";
-    state.statsView = false;
-    elements.contentTabs?.querySelectorAll("[data-content-type]").forEach((tab) => {
-      tab.setAttribute("aria-selected", String(tab.dataset.contentType === "all"));
-    });
-    // Full re-render, not just renderFeed(): the monitor/platform sidebars
-    // need to redraw too, since resetting to empty Sets means "recompute
-    // the default selection," and the monitor groups should collapse back
-    // to closed the same way they start on first load.
-    renderMonitorChips();
-    renderFeedSourceFilter();
-    syncUrlFromState();
-    renderFeed();
-    announce("Filters reset.");
-  }
-
-  elements.resetButton?.addEventListener("click", resetFilters);
-
-  // --- Filter panel buttons ---
-  // The shell (Marin UI 1.28.0 and later) runs the Filters buttons: icons, the open and closed state, the remembered
-  // wide-screen choice per panel and the name. The app only keeps each button's active count current
-  // (data-filter-active), which the shell turns into "Filter, N active". Hiding a panel never changes a filter, and
-  // Chart.js resizes its canvases on its own.
-  const filterToggles = Array.from(document.querySelectorAll("[data-filter-toggle]"));
-
-  function updateFilterToggleNames() {
-    filterToggles.forEach((button) => {
-      const count =
-        button.dataset.filterToggle === "sources"
-          ? state.selectedSources.size
-          : state.selectedMonitors.size + state.selectedFeedSources.size + (state.search ? 1 : 0) + (state.time !== "60d" ? 1 : 0);
-      button.dataset.filterActive = String(count);
-    });
+    elements.column?.reset?.();
   }
 
   elements.selectAllCheckbox?.addEventListener("change", () => {
