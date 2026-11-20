@@ -38,7 +38,7 @@
 # a monitor that marin-data does not describe.
 #
 # Do not add monitors for projects here. They come from the shared list of projects in marin-data
-# (config/projects.json is a copy, put here by scripts/sync-projects.py): each project with a mentions
+# (config/projects.json is a copy, put here by ../marin-data/scripts/sync_copies.py): each project with a mentions
 # entry gets a monitor in the Projects group, named "project-" plus the project id.
 
 monitors: []
