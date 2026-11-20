@@ -26,6 +26,7 @@ function loadProjectMonitors() {
       id: `project-${project.id}`,
       name: project.name,
       group: "Projects",
+      facet: "project",
       include: project.mentions.include,
       ...(project.mentions.exclude && project.mentions.exclude.length ? { exclude: project.mentions.exclude } : {}),
     }));
@@ -53,24 +54,29 @@ function loadPeople() {
   return new Map(people.map((p) => [p.monitorId, { ...(p.role ? { role: p.role } : {}), ...(p.district ? { district: p.district } : {}) }]));
 }
 
-// What marin-data says about each monitor it describes, by monitor id: the group the sidebar puts it in and the
-// name it is shown by. The group is the plural name of its kind (organizations/place-kinds.json, copied into
-// places.json): a district is in Districts, a city or town in Cities and towns, a community in Communities, a
-// facility in Facilities and an event in Events. A person is in People.
+// What marin-data says about each monitor it describes, by monitor id: the group the sidebar puts it in, the facet
+// (the schema type, such as Place or Organization) the group belongs to, the name it is shown by, and, for a
+// division, the monitor of its department. The group is the plural name of the record's kind and the facet is the
+// kind's facet (marin-data's place-kinds.json, copied into places.json).
 function loadDataFor() {
   const read = (name) => JSON.parse(fs.readFileSync(path.join(CONFIG_DIR, name), "utf8"));
   const { kinds, places, facilities } = read("places.json");
-  const plural = new Map(kinds.map((k) => [k.key, k.plural]));
+  const kindOf = new Map(kinds.map((k) => [k.key, k]));
   const found = new Map();
-  const add = (row, kind) => {
-    if (!plural.has(kind)) throw new Error(`config/places.json: "${row.monitorId}" has the kind "${kind}", which place-kinds.json does not list.`);
-    found.set(row.monitorId, { group: plural.get(kind), name: row.label });
+  const add = (row) => {
+    const kind = kindOf.get(row.kind);
+    if (!kind) throw new Error(`"${row.monitorId}" has the kind "${row.kind}", which place-kinds.json does not list.`);
+    found.set(row.monitorId, { group: kind.plural, facet: kind.facet, name: row.label, ...(row.parentMonitor ? { parent: row.parentMonitor } : {}) });
   };
-  places.forEach((p) => add(p, p.kind));
-  facilities.forEach((f) => add(f, f.kind));
-  read("events.json").events.forEach((e) => add(e, e.kind));
-  read("people.json").people.forEach((p) => found.set(p.monitorId, { group: "People", name: p.label }));
+  [...places, ...facilities, ...read("events.json").events, ...read("people.json").people, ...read("organizations.json").monitors,
+    ...read("services.json").services, ...read("topics.json").topics].forEach(add);
   return found;
+}
+
+// The facets in the order filters show them, each with its groups (the plural names of its kinds) in order.
+function loadFacets() {
+  const { kinds, facets } = JSON.parse(fs.readFileSync(path.join(CONFIG_DIR, "places.json"), "utf8"));
+  return facets.map((facet) => ({ key: facet.key, label: facet.label, groups: kinds.filter((k) => k.facet === facet.key).map((k) => k.plural) }));
 }
 
 // A monitor that marin-data describes gets its group and its name from there. monitors.yaml leaves both out for
@@ -84,7 +90,7 @@ function groupMonitors(rawMonitors, fromData) {
         throw new Error(`Monitor "${monitor.id}" has the ${field} "${monitor[field]}" in monitors.yaml, but marin-data says "${data[field]}". Remove its ${field} line from monitors.yaml.`);
       }
     }
-    return { ...monitor, group: data.group, name: data.name };
+    return { ...monitor, group: data.group, name: data.name, facet: data.facet, ...(data.parent ? { parent: data.parent } : {}) };
   });
 }
 
@@ -102,6 +108,9 @@ function loadDataMonitors() {
     ...facilities,
     ...JSON.parse(read("events.json")).events,
     ...JSON.parse(read("people.json")).people,
+    ...JSON.parse(read("organizations.json")).monitors,
+    ...JSON.parse(read("services.json")).services,
+    ...JSON.parse(read("topics.json")).topics,
   ];
   return monitorsFromRows(rows, yaml.load(read("match-options.yaml")) || {});
 }
@@ -115,6 +124,8 @@ function entryFor(phrase, hints) {
   return terms.length > 1 ? terms : terms[0];
 }
 
+const dedupe = (entries) => entries.filter((entry, i) => entries.findIndex((other) => JSON.stringify(other) === JSON.stringify(entry)) === i);
+
 function monitorsFromRows(rows, options = {}) {
   const ids = new Set(rows.map((row) => row.monitorId));
   for (const id of Object.keys(options)) {
@@ -127,14 +138,18 @@ function monitorsFromRows(rows, options = {}) {
       insideWords: new Set(row.insideWords || []),
     };
     const addNames = (names, hints) => {
-      // A name that contains another name of the same record adds nothing ("Town of Fairfax" holds "Fairfax").
-      const kept = names.filter((name, i) => !names.some((other, j) => j !== i && other.length < name.length && name.toLowerCase().includes(other.toLowerCase())));
-      for (const name of kept) {
-        if (ABBREVIATION.test(name) && !hints.needsContext.has(name)) continue;
+      // A short abbreviation (D3, CDA) is watched only when it needs context, so it is not watched here.
+      const watched = names.filter((name) => !(ABBREVIATION.test(name) && !hints.needsContext.has(name)));
+      // A name that contains another watched name of the same record adds nothing ("Town of Fairfax" holds "Fairfax"),
+      // unless the shorter one needs the word Marin and the longer one does not ("IATSE Local 16" next to "IATSE").
+      const holds = (longer, shorter) => shorter.length < longer.length && longer.toLowerCase().includes(shorter.toLowerCase()) &&
+        (!hints.needsContext.has(shorter) || hints.needsContext.has(longer));
+      for (const name of watched) {
+        if (watched.some((other) => other !== name && holds(name, other))) continue;
         include.push(entryFor(name, hints));
       }
     };
-    addNames([row.name, ...(row.alternateNames || [])], own);
+    addNames([...(row.searchName === false ? [] : [row.name]), ...(row.alternateNames || [])], own);
     for (const phrase of row.searchPhrases || []) include.push(entryFor(phrase, own));
     // The people who hold a district's seat are watched by name.
     for (const person of row.people || []) include.push(person);
@@ -142,7 +157,7 @@ function monitorsFromRows(rows, options = {}) {
       addNames([part.name, ...(part.alternateNames || [])], { needsContext: new Set(part.needsContext || []), insideWords: new Set(part.insideWords || []) });
     }
     for (const tag of row.hashtags || []) include.push(tag);
-    const monitor = { id: row.monitorId, include, ...(options[row.monitorId] || {}) };
+    const monitor = { id: row.monitorId, include: dedupe(include), ...(options[row.monitorId] || {}) };
     if (row.confusableNames && row.confusableNames.length) monitor.exclude = row.confusableNames;
     return monitor;
   });
@@ -177,4 +192,4 @@ function loadExcludedTitles() {
   return raw.excludeTitles || [];
 }
 
-module.exports = { loadSources, loadMonitors, loadProjectMonitors, loadPlaces, loadPeople, loadDataMonitors, monitorsFromRows, loadDataFor, groupMonitors, loadContext, loadExcludedTitles };
+module.exports = { loadSources, loadMonitors, loadProjectMonitors, loadPlaces, loadPeople, loadDataMonitors, monitorsFromRows, loadDataFor, loadFacets, groupMonitors, loadContext, loadExcludedTitles };

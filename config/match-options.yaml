@@ -1,7 +1,29 @@
-# What only Marin Mentions needs to know about a place, facility, event or person that marin-data describes.
-# Names, other names and how to look for them are in marin-data (config/places.json, events.json, people.json),
-# so they are not repeated here. Listed by monitor id.
+# What only Marin Mentions needs to know about a place, facility, event, person or organization that marin-data
+# describes. Names, other names and how to look for them are in marin-data (config/places.json, events.json,
+# people.json, organizations.json), so they are not repeated here. Listed by monitor id.
 #
 # youtubeSearch: also search YouTube for the name, not only the feeds that are already followed.
+# sourceMethods: look for it only in these kinds of source (rss, google-news, youtube, bluesky, reddit).
 civic-center:
   youtubeSearch: true
+marin-elections:
+  youtubeSearch: true
+marin-fire:
+  youtubeSearch: true
+marin-hhs:
+  youtubeSearch: true
+marin-parks:
+  youtubeSearch: true
+marin-public-works:
+  youtubeSearch: true
+marin-sheriff:
+  youtubeSearch: true
+marin-supervisors:
+  youtubeSearch: true
+marin-grand-jury:
+marin-superior-court:
+  youtubeSearch: true
+marin-county:
+  sourceMethods: [rss, google-news, youtube]
+marin-county-social:
+  sourceMethods: [bluesky, reddit]

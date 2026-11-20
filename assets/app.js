@@ -134,27 +134,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const CONTENT_TYPE_GROUP_LABELS = { news: "News", video: "Video", social: "Social" };
   const CONTENT_TYPE_GROUP_ORDER = ["news", "video", "social"];
 
-  // Explicit display order for monitor groups (sidebar chips and the
-  // Monitors page) — config/monitors.yaml's own section-comment order,
-  // not alphabetical. Any group not listed here falls back to alphabetical
-  // and sorts after all of these (see sortedGroupEntries).
-  const MONITOR_GROUP_ORDER = [
-    "Topics",
-    "Services",
-    "Projects",
-    "Events",
-    "Facilities",
-    "Cities and towns",
-    "Communities",
-    "Regions",
-    "Board & Courts",
-    "Districts",
-    "Departments",
-    "Divisions",
-    "Associations",
-    "People",
-  ];
-
   function escapeHtml(value) {
     return String(value ?? "")
       .replace(/&/g, "&amp;")
@@ -416,51 +395,98 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // The filter's own name is the facet names inside it (Place, Organization, Person ...), so its legend is for assistive technology only.
+  const MONITOR_FILTER_LEGEND = '<legend class="visually-hidden">What the mentions are about</legend>';
+
+  /** The facets the filter shows, in order (Place, Organization, Person ...), each with its monitors. A facet is the
+   * schema type a monitor is about; marin-data names them and the build passes them in data.json. A monitor with no
+   * facet goes under "Other". */
+  function monitorFacets() {
+    const monitors = state.data.monitors || [];
+    const facets = (state.data.facets || []).map((facet) => ({ ...facet }));
+    const known = new Set(facets.map((facet) => facet.key));
+    if (monitors.some((m) => !known.has(m.facet))) facets.push({ key: "other", label: "Other", groups: [] });
+    const keyOf = (m) => (known.has(m.facet) ? m.facet : "other");
+    return facets.map((facet) => ({ ...facet, members: monitors.filter((m) => keyOf(m) === facet.key) })).filter((facet) => facet.members.length);
+  }
+
+  /** A facet's groups (Districts, Cities and towns ...) in marin-data's order, each with the monitors listed under
+   * it. A monitor that has a parent (a division) is listed under its parent, so its own group stays empty. */
+  function facetGroups(facet) {
+    const ids = new Set(facet.members.map((m) => m.id));
+    const children = new Map();
+    facet.members.forEach((m) => {
+      if (m.parent && ids.has(m.parent)) {
+        if (!children.has(m.parent)) children.set(m.parent, []);
+        children.get(m.parent).push(m);
+      }
+    });
+    children.forEach((list) => list.sort(byName));
+    const top = facet.members.filter((m) => !(m.parent && ids.has(m.parent)));
+    const byGroup = groupBy(top, (m) => m.group || "General");
+    const names = [...facet.groups.filter((g) => byGroup.has(g)), ...[...byGroup.keys()].filter((g) => !facet.groups.includes(g)).sort()];
+    const withKids = (m) => [m, ...(children.get(m.id) || [])];
+    return {
+      children,
+      groups: names.map((name) => ({ name, monitors: [...byGroup.get(name)].sort(byName), ids: byGroup.get(name).flatMap(withKids).map((m) => m.id) })),
+    };
+  }
+
+  function renderMonitorItem(monitor, children) {
+    const id = `monitor-${monitor.id}`;
+    const checked = state.selectedMonitors.has(monitor.id);
+    const kids = children.get(monitor.id) || [];
+    return (
+      // No for="${id}" here — the input is already nested inside
+      // this label, so an explicit for pointing at the same id
+      // it's a descendant of creates two competing label
+      // associations for one control (WAVE: "multiple form
+      // labels"). The wrapping alone is a complete, unambiguous
+      // association.
+      `<li><label>` +
+      `<input type="checkbox" id="${id}" data-monitor-id="${escapeHtml(monitor.id)}" ${checked ? "checked" : ""}>` +
+      `${escapeHtml(monitor.name)} <span class="search-facet-count" data-monitor-count="${escapeHtml(monitor.id)}"></span>` +
+      `</label>` +
+      (kids.length ? `<ul class="search-facet-list">${kids.map((kid) => renderMonitorItem(kid, children)).join("")}</ul>` : "") +
+      `</li>`
+    );
+  }
+
   function renderMonitorChips() {
     if (!state.data || !elements.monitorChips) return;
     const monitors = state.data.monitors || [];
     elements.monitorChips.dataset.loading = "false";
 
     if (monitors.length === 0) {
-      elements.monitorChips.innerHTML =
-        '<legend>Monitors</legend><p class="app-help-text">No monitors configured. Add one to config/monitors.yaml.</p>';
+      elements.monitorChips.innerHTML = `${MONITOR_FILTER_LEGEND}<p class="app-help-text">Nothing is being watched yet.</p>`;
       return;
     }
 
-    // Two-level filter: a simplified top-level list of groups (collapsed by
-    // default, so the sidebar isn't overwhelmed by 30+ monitors at once),
-    // each expanding to its individual monitor checkboxes.
-    const groups = groupBy(monitors, (m) => m.group || "General");
-    elements.monitorChips.innerHTML =
-      "<legend>Monitors</legend>" +
-      sortedGroupEntries(groups, (key) => key, MONITOR_GROUP_ORDER)
-        .map(
-          ([groupName, , groupMonitors]) => `
+    // One collapsed filter group for each facet (Place, Organization, Person ...), named for the schema type. A facet with
+    // more than one group (Place: Districts, Cities and towns ...) opens onto a collapsed group for each; a division is
+    // listed under its department.
+    elements.monitorChips.innerHTML = MONITOR_FILTER_LEGEND + monitorFacets()
+      .map((facet) => {
+        const { children, groups } = facetGroups(facet);
+        const body =
+          groups.length === 1
+            ? `<ul class="search-facet-list">${groups[0].monitors.map((m) => renderMonitorItem(m, children)).join("")}</ul>`
+            : groups
+                .map(
+                  (group) => `
         <details class="mm-facet-group">
-          <summary>${escapeHtml(groupName)} <span class="app-help-text" data-group-count="${escapeHtml(groupName)}"></span></summary>
-          <ul class="search-facet-list">
-            ${groupMonitors
-              .map((monitor) => {
-                const id = `monitor-${monitor.id}`;
-                const checked = state.selectedMonitors.has(monitor.id);
-                return (
-                  // No for="${id}" here — the input is already nested inside
-                  // this label, so an explicit for pointing at the same id
-                  // it's a descendant of creates two competing label
-                  // associations for one control (WAVE: "multiple form
-                  // labels"). The wrapping alone is a complete, unambiguous
-                  // association.
-                  `<li><label>` +
-                  `<input type="checkbox" id="${id}" data-monitor-id="${escapeHtml(monitor.id)}" ${checked ? "checked" : ""}>` +
-                  `${escapeHtml(monitor.name)} <span class="search-facet-count" data-monitor-count="${escapeHtml(monitor.id)}"></span>` +
-                  `</label></li>`
-                );
-              })
-              .join("")}
-          </ul>
+          <summary>${escapeHtml(group.name)} <span class="app-help-text" data-group-count="${escapeHtml(group.name)}"></span></summary>
+          <ul class="search-facet-list">${group.monitors.map((m) => renderMonitorItem(m, children)).join("")}</ul>
         </details>`
-        )
-        .join("");
+                )
+                .join("");
+        return `
+        <details class="mm-facet-group">
+          <summary>${escapeHtml(facet.label)} <span class="app-help-text" data-group-count="facet:${escapeHtml(facet.key)}"></span></summary>
+          ${body}
+        </details>`;
+      })
+      .join("");
 
     openGroupsWithSelections(elements.monitorChips);
 
@@ -634,18 +660,19 @@ document.addEventListener("DOMContentLoaded", () => {
       if (el) el.textContent = `(${count})`;
     });
 
-    // Group header count = items matching ANY monitor in that group (not
-    // the number of monitors it contains).
-    const monitorGroups = groupBy(state.data.monitors || [], (m) => m.group || "General");
+    // A facet's or group's header count = items matching ANY monitor in it (not the number of monitors it contains).
+    const countFor = (ids) => forMonitors.filter((item) => item.matchedMonitors.some((id) => ids.has(id))).length;
     const groupCountEls = Array.from(elements.monitorChips?.querySelectorAll("[data-group-count]") || []);
-    monitorGroups.forEach((groupMonitors, groupName) => {
-      const groupMonitorIds = new Set(groupMonitors.map((m) => m.id));
-      const count = forMonitors.filter((item) => item.matchedMonitors.some((id) => groupMonitorIds.has(id))).length;
+    const setCount = (key, ids) => {
       // Compared in JS, not as a CSS attribute-selector string — group
       // names can contain "&", which some CSS selector engines mishandle
       // even inside a quoted attribute value.
-      const el = groupCountEls.find((span) => span.dataset.groupCount === groupName);
-      if (el) el.textContent = `(${count})`;
+      const el = groupCountEls.find((span) => span.dataset.groupCount === key);
+      if (el) el.textContent = `(${countFor(ids)})`;
+    };
+    monitorFacets().forEach((facet) => {
+      setCount(`facet:${facet.key}`, new Set(facet.members.map((m) => m.id)));
+      facetGroups(facet).groups.forEach((group) => setCount(group.name, new Set(group.ids)));
     });
 
     const forFeedSources = state.data.items.filter((item) => passesFilters(item, { skipFeedSource: true }));
@@ -799,12 +826,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (state.selectedMonitors.size > 0) {
-      const names = state.data.monitors
-        .filter((m) => state.selectedMonitors.has(m.id))
-        .map((m) => m.name);
-      parts.push(names.join(", "));
+      // Named for the facet each choice belongs to: "Place: District 3, Novato · Organization: Sheriff".
+      monitorFacets().forEach((facet) => {
+        const names = facet.members.filter((m) => state.selectedMonitors.has(m.id)).map((m) => m.name);
+        if (names.length) parts.push(`${facet.label}: ${names.join(", ")}`);
+      });
     } else {
-      parts.push("All monitors");
+      parts.push("All subjects");
     }
 
     if (state.selectedFeedSources.size > 0) {
@@ -1202,9 +1230,13 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderMonitorsList() {
     if (!state.data || !elements.monitorsList) return;
     const monitors = state.data.monitors || [];
-    const groups = groupBy(monitors, (m) => m.group || "General");
+    const entries = monitorFacets().flatMap((facet) => {
+      const byGroup = groupBy(facet.members, (m) => m.group || "General");
+      const names = [...facet.groups.filter((g) => byGroup.has(g)), ...[...byGroup.keys()].filter((g) => !facet.groups.includes(g)).sort()];
+      return names.map((name) => [name, null, [...byGroup.get(name)].sort(byName)]);
+    });
 
-    elements.monitorsList.innerHTML = sortedGroupEntries(groups, (key) => key, MONITOR_GROUP_ORDER)
+    elements.monitorsList.innerHTML = entries
       .map(
         ([groupName, , groupMonitors]) => `
       <section class="mm-monitor-group">
@@ -1585,10 +1617,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function digestMonitorsLine() {
     if (state.selectedMonitors.size === 0) return "";
-    const names = state.data.monitors
-      .filter((m) => state.selectedMonitors.has(m.id))
-      .map((m) => m.name);
-    return `${TAG_EMOJI} Monitors: ${names.join(", ")}`;
+    return monitorFacets()
+      .map((facet) => [facet.label, facet.members.filter((m) => state.selectedMonitors.has(m.id)).map((m) => m.name)])
+      .filter(([, names]) => names.length)
+      .map(([label, names]) => `${TAG_EMOJI} ${label}: ${names.join(", ")}`)
+      .join("\n");
   }
 
   /** One mention's plain-text digest block — "🟢 heading", byline, optional
@@ -1883,7 +1916,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function toCsv(items) {
-    const header = ["Title", "Source", "Published", "Type", "Monitors", "URL"];
+    const header = ["Title", "Source", "Published", "Type", "Subjects", "URL"];
     const rows = items.map((item) => [
       item.title || item.text?.slice(0, 120) || item.source,
       item.source,

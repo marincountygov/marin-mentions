@@ -25,7 +25,7 @@
   const STAT_CHARTS = [
     { id: 'totals', label: 'Totals', column: 'Measure' },
     { id: 'timeline', label: 'Mentions over time', column: 'Date' },
-    { id: 'monitors', label: 'Top monitors', column: 'Topic' },
+    { id: 'monitors', label: 'Top subjects', column: 'Topic' },
     { id: 'sources', label: 'Top news sources', column: 'Source' },
     { id: 'authors', label: 'Top journalists', column: 'Journalist' },
     { id: 'social', label: 'Top social accounts', column: 'Account' },

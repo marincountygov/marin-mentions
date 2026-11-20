@@ -14,7 +14,7 @@ Every ~10–15 minutes, a scheduled build:
 
 1. Fetches every enabled source in `config/sources.yaml` (direct RSS, Google News RSS, YouTube, Bluesky, Reddit — Nextdoor is disabled, no activation path).
 2. Normalizes results into a common shape (see "Common media shape" below).
-3. Matches them against the monitors in `config/monitors.yaml` (include/exclude phrases, case-insensitive).
+3. Matches them against what the County data says to watch for: the names and search hints of the places, organizations, people, facilities, events, services and topics in marin-data (copied into `config/`), plus the shared list of projects. `config/monitors.yaml` holds only an entry for something marin-data does not describe, and is empty now. Matching is case-insensitive. A district is also matched by the places in it, and a department by its divisions, so choosing a district or a department in the filter finds what its places or divisions caught too.
 4. Deduplicates, preferring a direct publisher result over a Google News result for the same story.
 5. Merges the result into the previously published snapshot, keeping items from the last 60 days.
 6. Writes `data.json`, which the static site (`index.html` + `assets/app.js`) reads to render the console, `/sources` health page, and `/monitors` reference page.
@@ -27,7 +27,7 @@ Every ~10–15 minutes, a scheduled build:
 How to make a report (the four steps follow the buttons at the top of Reports):
 
 1. **Details.** Choose **Media coverage report** (modeled on the County media coverage and outreach report) or **Custom report**. Set the title, the reporting period (7, 14 or 30 days, this month, last month, or custom dates), and an optional description and closing note. Days are Pacific time.
-2. **Coverage.** The filters on the left (search, monitors, sources) choose which coverage is listed. The Time filter is turned off here because the report dates are used. County news releases found in the period can be added as releases with one button. Tick the coverage you want; it waits in "Not yet placed". "Add the items I selected in the list" brings in anything you ticked on the main list, along with the release you matched it to. You can also add releases and coverage by hand for anything Marin Mentions did not collect.
+2. **Coverage.** The filters on the left (search, then Place, Organization, Person and the other facets, then sources) choose which coverage is listed. The Time filter is turned off here because the report dates are used. County news releases found in the period can be added as releases with one button. Tick the coverage you want; it waits in "Not yet placed". "Add the items I selected in the list" brings in anything you ticked on the main list, along with the release you matched it to. You can also add releases and coverage by hand for anything Marin Mentions did not collect.
 3. **Organize.** Place coverage in sections, put it in order, rename or hide sections, add sections, and edit headlines, publications and links. Coverage can be attached to a release, and a release older than the period still belongs in "Recent Coverage Resulting From Older News Releases". Everything has Move up and Move down buttons, so nothing needs dragging. You decide every classification; nothing is guessed.
 4. **Report.** The report appears as a plain document. **Copy for Word** copies it; then paste into Word. **Download HTML** saves a standalone page. **Download report file** saves the report as JSON.
 

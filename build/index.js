@@ -4,10 +4,10 @@
 const fs = require("fs");
 const path = require("path");
 
-const { loadSources, loadMonitors, loadPlaces, loadPeople, loadContext, loadExcludedTitles } = require("./config");
+const { loadSources, loadMonitors, loadPlaces, loadPeople, loadFacets, loadContext, loadExcludedTitles } = require("./config");
 const { fetchSource, refreshIntervalFor } = require("./connectors");
 const { normalizeItem, hostnameOf } = require("./normalize");
-const { matchItems, addDistrictsFromPlaces, buildContextRules } = require("./match");
+const { matchItems, addDistrictsFromPlaces, addParentsFromChildren, buildContextRules } = require("./match");
 const { dedupeItems } = require("./dedupe");
 const { dropMismatchedText } = require("./text-check");
 const { filterExcludedTitles } = require("./exclude");
@@ -237,6 +237,8 @@ async function buildOnce({ previousSnapshotPath, outPath, env = process.env }) {
   const matched = matchItems(allItems, monitors, officialSourceIds, buildContextRules(loadContext()));
   // A district is also matched by the places in it, which marin-data says (config/places.json).
   addDistrictsFromPlaces(matched, places, monitors);
+  // A department is also matched by its divisions (the monitor names its parent).
+  addParentsFromChildren(matched, monitors);
   const deduped = dedupeItems(matched);
 
   const cutoff = now - PRUNE_DAYS * 24 * 60 * 60 * 1000;
@@ -252,10 +254,13 @@ async function buildOnce({ previousSnapshotPath, outPath, env = process.env }) {
 
   const output = {
     generatedAt: new Date(now).toISOString(),
+    facets: loadFacets(),
     monitors: monitors.map((m) => ({
       id: m.id,
       name: m.name,
       group: m.group || "General",
+      ...(m.facet ? { facet: m.facet } : {}),
+      ...(m.parent ? { parent: m.parent } : {}),
       ...(places.has(m.id) ? { place: places.get(m.id) } : {}),
       ...(people.has(m.id) ? { person: people.get(m.id) } : {}),
       include: m.include,
