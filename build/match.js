@@ -181,4 +181,23 @@ function addDistrictsFromPlaces(items, places, monitors) {
   return items;
 }
 
-module.exports = { addDistrictsFromPlaces, matchItems, applyMonitors, normalizeForMatch, buildContextRules, hasLocalContext };
+/** A department is matched by its divisions. A monitor may name its parent (a division names its department); an item
+ * that matched the division also matches the department, and its department's department, so choosing a department
+ * in the filter finds what its divisions caught too. Call after matchItems(); it adds to item.matchedMonitors and
+ * never removes. monitors gives the order the matched list keeps. */
+function addParentsFromChildren(items, monitors) {
+  const order = new Map(monitors.map((monitor, index) => [monitor.id, index]));
+  const parentOf = new Map(monitors.filter((monitor) => monitor.parent).map((monitor) => [monitor.id, monitor.parent]));
+  for (const item of items) {
+    const found = new Set(item.matchedMonitors);
+    for (const id of item.matchedMonitors) {
+      for (let parent = parentOf.get(id), guard = 0; parent && guard < 10; parent = parentOf.get(parent), guard++) found.add(parent);
+    }
+    if (found.size !== item.matchedMonitors.length) {
+      item.matchedMonitors = [...found].sort((a, b) => (order.get(a) ?? 0) - (order.get(b) ?? 0));
+    }
+  }
+  return items;
+}
+
+module.exports = { addDistrictsFromPlaces, addParentsFromChildren, matchItems, applyMonitors, normalizeForMatch, buildContextRules, hasLocalContext };

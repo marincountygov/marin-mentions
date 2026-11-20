@@ -27,7 +27,7 @@
       </template>
     </marin-app-header>
 
-    <nav class="mm-page-tabs" id="page-tabs" aria-label="Sections"><a href="#latest" aria-current="page">Latest</a><a href="#monitors">Monitors</a><a href="#sources">Sources</a></nav>
+    <nav class="mm-page-tabs" id="page-tabs" aria-label="Sections"><a href="#latest" aria-current="page">Latest</a><a href="#monitors">Subjects</a><a href="#sources">Sources</a></nav>
     <main id="main" class="container app-main">
       <div id="app-status-message" class="visually-hidden" role="status" aria-live="polite"></div>
 
@@ -63,8 +63,8 @@
             </div>
 
             <fieldset class="search-facet-group" id="monitor-chips" data-loading="true">
-              <legend>Monitors</legend>
-              <ul class="search-facet-list"><li class="app-help-text">Loading Marin Mentions&hellip;</li></ul>
+              <legend class="visually-hidden">What the mentions are about</legend>
+              <p class="app-help-text">Loading Marin Mentions&hellip;</p>
             </fieldset>
 
             <fieldset class="search-facet-group" id="feed-source-filter" data-loading="true">
@@ -158,8 +158,8 @@
                 <button type="button" class="action-button mm-chart-download" data-chart-download="timeline" aria-label="Download timeline chart as PNG" title="Download timeline chart as PNG"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg></button>
               </div>
               <div class="app-card">
-                <h3>Top monitors</h3>
-                <canvas id="stats-monitors-chart" role="img" data-chart-title="Top monitors" aria-label="Top monitors"></canvas>
+                <h3>Top subjects</h3>
+                <canvas id="stats-monitors-chart" role="img" data-chart-title="Top subjects" aria-label="Top subjects"></canvas>
                 <button type="button" class="action-button mm-chart-download" data-chart-download="monitors" aria-label="Download monitors chart as PNG" title="Download monitors chart as PNG"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg></button>
               </div>
               <div class="app-card">
@@ -224,7 +224,7 @@
       </section>
 
       <section id="monitors" class="app-card" data-tab-section="monitors" hidden>
-        <h2>Monitors</h2>
+        <h2>Subjects</h2>
         <div id="monitors-list"><p class="app-help-text" id="monitors-status">Loading Marin Mentions&hellip;</p></div>
       </section>
 

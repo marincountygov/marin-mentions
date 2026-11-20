@@ -29,6 +29,8 @@ python3 "$ROOT_DIR/scripts/sync-orgs.py" --check
 python3 "$ROOT_DIR/scripts/sync-places.py" --check
 python3 "$ROOT_DIR/scripts/sync-events.py" --check
 python3 "$ROOT_DIR/scripts/sync-people.py" --check
+python3 "$ROOT_DIR/scripts/sync-services.py" --check
+python3 "$ROOT_DIR/scripts/sync-topics.py" --check
 python3 "$ROOT_DIR/scripts/sync-projects.py" --check
 if command -v node >/dev/null 2>&1; then
   node --check "$ROOT_DIR/assets/app.js"

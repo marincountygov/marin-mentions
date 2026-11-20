@@ -4,7 +4,7 @@
 // Districts and groups come from marin-data (config/places.json and the other link files).
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { addDistrictsFromPlaces } = require("../build/match");
+const { addDistrictsFromPlaces, addParentsFromChildren } = require("../build/match");
 const { loadMonitors, loadPlaces, groupMonitors, loadDataFor } = require("../build/config");
 
 const monitors = loadMonitors();
@@ -63,8 +63,8 @@ test("monitors that marin-data describes get their group and name from there", (
 });
 
 test("a group or name written in monitors.yaml that disagrees with marin-data stops the build", () => {
-  const fromData = new Map([["sausalito", { group: "Cities and towns", name: "Sausalito" }]]);
-  const ok = { id: "sausalito", group: "Cities and towns", name: "Sausalito" };
+  const fromData = new Map([["sausalito", { group: "Cities and towns", name: "Sausalito", facet: "place" }]]);
+  const ok = { id: "sausalito", group: "Cities and towns", name: "Sausalito", facet: "place" };
   assert.deepEqual(groupMonitors([{ id: "sausalito" }], fromData), [ok]);
   assert.deepEqual(groupMonitors([{ id: "sausalito", group: "Cities and towns" }], fromData), [ok]);
   assert.throws(() => groupMonitors([{ id: "sausalito", group: "Districts" }], fromData), /group "Districts" in monitors.yaml, but marin-data says "Cities and towns"/);
@@ -78,4 +78,24 @@ test("the groups are the plural names in place-kinds.json", () => {
   assert.equal(plural.city, "Cities and towns");
   assert.equal(plural.community, "Communities");
   for (const [, p] of places) assert.ok(["district", "city", "community", "region"].includes(p.kind), p.kind);
+});
+
+test("an item that matches a division also matches its department", () => {
+  const monitors = [{ id: "marin-cda" }, { id: "marin-cda-planning", parent: "marin-cda" }, { id: "marin-parks" }];
+  const [a, b, c] = addParentsFromChildren([guess("marin-cda-planning"), guess("marin-cda"), guess("marin-parks", "marin-cda-planning")], monitors);
+  assert.deepEqual(a.matchedMonitors, ["marin-cda", "marin-cda-planning"]);
+  assert.deepEqual(b.matchedMonitors, ["marin-cda"]);
+  assert.deepEqual(c.matchedMonitors, ["marin-cda", "marin-cda-planning", "marin-parks"]);
+});
+
+test("a department is matched through a division of a division, and the climb stops", () => {
+  const monitors = [{ id: "a" }, { id: "b", parent: "a" }, { id: "c", parent: "b" }, { id: "x", parent: "y" }, { id: "y", parent: "x" }];
+  assert.deepEqual(addParentsFromChildren([guess("c")], monitors)[0].matchedMonitors, ["a", "b", "c"]);
+  assert.equal(addParentsFromChildren([guess("x")], monitors)[0].matchedMonitors.length, 2, "a loop in the data does not hang");
+});
+
+test("every division in the real monitors has a department that is a monitor", () => {
+  const withParent = monitors.filter((m) => m.parent);
+  assert.ok(withParent.length >= 20);
+  for (const m of withParent) assert.ok(byId.has(m.parent), `${m.id} -> ${m.parent}`);
 });
