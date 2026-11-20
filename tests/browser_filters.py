@@ -41,68 +41,68 @@ def run(base, page):
     page.goto(base + "?time=all")
     page.wait_for_selector("#media-feed > li")
     # Icon only, first in the column, white, and open on wide screens.
-    require(page.inner_text("#filter-toggle").strip() == "", "The Filters button shows an icon and no text")
-    require(page.get_attribute("#filter-toggle", "aria-label") == "Filter, 1 active", page.get_attribute("#filter-toggle", "aria-label"))  # the time range is not the default
-    require(page.evaluate("document.querySelector('#filters .search-side').firstElementChild.id") == "filter-toggle", "The button is first in the filter column")
-    require(page.is_visible("#filter-panel") and page.get_attribute("#filter-toggle", "aria-expanded") == "true", "Filters start open on wide screens")
-    require(page.is_visible("#filter-toggle [data-filter-icon=open]") and not page.is_visible("#filter-toggle [data-filter-icon=closed]"), "Open filters show the panel-right-open icon")
-    require(abs(page.evaluate("document.getElementById('filter-toggle').getBoundingClientRect().right - document.getElementById('filter-panel').getBoundingClientRect().right")) < 1,
+    require(page.inner_text("#latest-filter-panel-toggle").strip() == "", "The Filters button shows an icon and no text")
+    require(page.get_attribute("#latest-filter-panel-toggle", "aria-label") == "Filter, 1 active", page.get_attribute("#latest-filter-panel-toggle", "aria-label"))  # the time range is not the default
+    require(page.evaluate("document.querySelector('#filters .search-side').firstElementChild.id") == "latest-filter-panel-toggle", "The button is first in the filter column")
+    require(page.is_visible("#latest-filter-panel") and page.get_attribute("#latest-filter-panel-toggle", "aria-expanded") == "true", "Filters start open on wide screens")
+    require(page.is_visible("#latest-filter-panel-toggle [data-filter-icon=open]") and not page.is_visible("#latest-filter-panel-toggle [data-filter-icon=closed]"), "Open filters show the panel-right-open icon")
+    require(abs(page.evaluate("document.getElementById('latest-filter-panel-toggle').getBoundingClientRect().right - document.getElementById('latest-filter-panel').getBoundingClientRect().right")) < 1,
             "Open, the button sits at the right edge of the filter column")
-    require(page.locator("#filter-toggle").evaluate(LOOK) == page.locator("#media-feed .action-group").first.evaluate(LOOK),
+    require(page.locator("#latest-filter-panel-toggle").evaluate(LOOK) == page.locator("#media-feed .action-group").first.evaluate(LOOK),
             "Same border and radius as the card button group")
 
     # An active filter is counted in the name, and hiding the panel keeps it applied.
     page.fill("#filter-search", "marin")
     page.wait_for_timeout(600)
-    require(page.get_attribute("#filter-toggle", "aria-label") == "Filter, 2 active", page.get_attribute("#filter-toggle", "aria-label"))
+    require(page.get_attribute("#latest-filter-panel-toggle", "aria-label") == "Filter, 2 active", page.get_attribute("#latest-filter-panel-toggle", "aria-label"))
     shown, summary, width_open = mentions(page), page.inner_text("#active-filters"), page.evaluate("document.querySelector('#filters .search-results').offsetWidth")
-    page.focus("#filter-toggle")
+    page.focus("#latest-filter-panel-toggle")
     page.keyboard.press("Enter")
-    require(not page.is_visible("#filter-panel") and page.get_attribute("#filter-toggle", "aria-expanded") == "false", "Enter hides the filters")
-    require(page.is_visible("#filter-toggle") and page.evaluate("document.activeElement.id") == "filter-toggle", "The button stays and keeps focus")
-    require(page.is_visible("#filter-toggle [data-filter-icon=closed]") and not page.is_visible("#filter-toggle [data-filter-icon=open]"), "Hidden filters show the panel-left-open icon")
-    require(page.evaluate("document.getElementById('filter-toggle').getBoundingClientRect().left") < 40, "Hidden, the button sits at the left edge")
+    require(not page.is_visible("#latest-filter-panel") and page.get_attribute("#latest-filter-panel-toggle", "aria-expanded") == "false", "Enter hides the filters")
+    require(page.is_visible("#latest-filter-panel-toggle") and page.evaluate("document.activeElement.id") == "latest-filter-panel-toggle", "The button stays and keeps focus")
+    require(page.is_visible("#latest-filter-panel-toggle [data-filter-icon=closed]") and not page.is_visible("#latest-filter-panel-toggle [data-filter-icon=open]"), "Hidden filters show the panel-left-open icon")
+    require(page.evaluate("document.getElementById('latest-filter-panel-toggle').getBoundingClientRect().left") < 40, "Hidden, the button sits at the left edge")
     require(mentions(page) == shown and page.inner_text("#active-filters") == summary, "Hiding the filters does not change what is shown")
     require(page.evaluate("document.querySelector('#filters .search-results').offsetWidth") > width_open, "The results use the freed width")
     page.reload()
     page.wait_for_selector("#media-feed > li")
-    require(not page.is_visible("#filter-panel"), "The collapsed choice is remembered")
-    page.click("#filter-toggle")
-    require(page.is_visible("#filter-panel"), "The button opens the panel again")
+    require(not page.is_visible("#latest-filter-panel"), "The collapsed choice is remembered")
+    page.click("#latest-filter-panel-toggle")
+    require(page.is_visible("#latest-filter-panel"), "The button opens the panel again")
 
     # Stats still draws and resizes with the panel.
     page.click("#stats-toggle")
     page.wait_for_selector("#stats-grid canvas")
-    page.click("#filter-toggle")
+    page.click("#latest-filter-panel-toggle")
     page.wait_for_timeout(300)
     require(page.locator("#stats-grid canvas").first.evaluate("c => c.getBoundingClientRect().width") > 100, "Charts keep their size when the panel is hidden")
-    page.click("#filter-toggle")
+    page.click("#latest-filter-panel-toggle")
     page.click("#stats-toggle")
 
     # Sources has its own panel and its own remembered choice.
     page.goto(base + "#sources")
-    page.wait_for_selector("#source-filter-toggle")
-    require(page.is_visible("#source-filter-panel"), "The Sources filter starts open")
-    page.click("#source-filter-toggle")
-    require(not page.is_visible("#source-filter-panel") and page.is_visible("#source-filter-toggle"), "The Sources filter hides")
+    page.wait_for_selector("#sources-filter-panel-toggle")
+    require(page.is_visible("#sources-filter-panel"), "The Sources filter starts open")
+    page.click("#sources-filter-panel-toggle")
+    require(not page.is_visible("#sources-filter-panel") and page.is_visible("#sources-filter-panel-toggle"), "The Sources filter hides")
     page.goto(base)
     page.wait_for_selector("#media-feed > li")
-    require(page.is_visible("#filter-panel"), "Hiding the Sources filter does not hide the Latest filter")
+    require(page.is_visible("#latest-filter-panel"), "Hiding the Sources filter does not hide the Latest filter")
 
     # Narrow screens: the button stays, the panel starts closed, and nothing overflows.
     page.evaluate("localStorage.clear()")
     page.set_viewport_size({"width": 360, "height": 740})
     page.goto(base)
     page.wait_for_selector("#media-feed > li")
-    require(page.is_visible("#filter-toggle") and not page.is_visible("#filter-panel"), "Narrow screens start with the filters closed")
-    require(page.evaluate("document.getElementById('filter-toggle').getBoundingClientRect().left") < 40, "Narrow, the button is at the left")
-    page.click("#filter-toggle")
-    require(page.is_visible("#filter-panel") and page.evaluate("document.getElementById('filter-toggle').getBoundingClientRect().bottom <= document.getElementById('filter-panel').getBoundingClientRect().top"),
+    require(page.is_visible("#latest-filter-panel-toggle") and not page.is_visible("#latest-filter-panel"), "Narrow screens start with the filters closed")
+    require(page.evaluate("document.getElementById('latest-filter-panel-toggle').getBoundingClientRect().left") < 40, "Narrow, the button is at the left")
+    page.click("#latest-filter-panel-toggle")
+    require(page.is_visible("#latest-filter-panel") and page.evaluate("document.getElementById('latest-filter-panel-toggle').getBoundingClientRect().bottom <= document.getElementById('latest-filter-panel').getBoundingClientRect().top"),
             "The narrow button opens the filters below itself")
     require(not page.evaluate("document.documentElement.scrollWidth > document.documentElement.clientWidth"), "No horizontal scroll at 360 px")
     page.set_viewport_size({"width": 1280, "height": 1000})
     page.wait_for_timeout(200)
-    require(page.is_visible("#filter-panel"), "Wide screens go back to the remembered choice")
+    require(page.is_visible("#latest-filter-panel"), "Wide screens go back to the remembered choice")
     page.evaluate("localStorage.clear()")
 
     # Copy and Download use the shell's helpers: the copied digest is clean HTML (no page styles), and the CSV starts with a
