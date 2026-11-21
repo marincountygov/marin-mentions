@@ -36,7 +36,7 @@ jobs:
       - name: Stage static site
         run: |
           mkdir -p dist
-          cp -r index.html assets vendor security.json marin.yml .well-known dist/
+          cp -r index.html filters.json filters-sources.json assets vendor security.json marin.yml .well-known dist/
 
       - name: Build data.json (merging with the currently live snapshot)
         env:

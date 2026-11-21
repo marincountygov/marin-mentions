@@ -28,3 +28,15 @@ test("only the title counts, not the text", () => {
 test("the config lists Sports in Marin", () => {
   assert.ok(loadExcludedTitles().includes("Sports in Marin"));
 });
+
+test("the config drops sports labels and keeps other stories", () => {
+  const items = [
+    { id: "a", title: "Sports Briefs: Tam tennis wins" },
+    { id: "b", title: "Girls tennis: Tam wins MCALs" },
+    { id: "c", title: "Prep football: Redwood rolls" },
+    { id: "d", title: "Boys water polo: Redwood falls" },
+    { id: "e", title: "Board approves new stadium lighting rules" },
+  ];
+  const kept = filterExcludedTitles(items, loadExcludedTitles());
+  assert.deepEqual(kept.map((i) => i.id), ["e"]);
+});

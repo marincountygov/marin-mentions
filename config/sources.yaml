@@ -225,9 +225,12 @@ sources:
     name: Marin Independent Journal
     type: google-news
     region: marin
-    query: site:marinij.com when:60d
+    query: 'site:marinij.com -"Sports Briefs" -"Prep football" -"Preps of the week" -"Prep playoffs" -"Girls volleyball" -"Boys volleyball" -"Girls water polo" -"Boys water polo" -"Girls tennis" -"Boys tennis" -"Girls golf" -"Boys golf" -"Girls soccer" -"Boys soccer" -"Girls basketball" -"Boys basketball" when:60d'
     enabled: true
-    note: Direct feed returns HTTP 403 (bot-protected); using Google News fallback.
+    note: >-
+      Direct feed returns HTTP 403 (bot-protected); using Google News fallback.
+      The query leaves out the common sports headline labels; config/exclude.yaml
+      drops any that still come through.
 
   - id: pacific-sun
     name: Pacific Sun
