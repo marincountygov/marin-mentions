@@ -27,6 +27,10 @@ python3 "$ROOT_DIR/vendor/marinos/audit-buttons.py" "$ROOT_DIR" --fail
 python3 "$ROOT_DIR/vendor/marinos/audit-shared-helpers.py" "$ROOT_DIR" --fail
 # The filter columns must come from filters.json and the shell, with no hand-written markup.
 python3 "$ROOT_DIR/vendor/marinos/audit-filter-column.py" "$ROOT_DIR" --fail
+# Every filter file the page names must be staged by the deploy, or the live site cannot load its filters.
+for filter_file in $(grep -o 'data-filter-column="[^"]*"' "$ROOT_DIR/index.html" | cut -d'"' -f2); do
+  grep -q "$filter_file" "$ROOT_DIR/.github/workflows/build-and-deploy.yml" || { printf 'FAIL: %s is not staged in build-and-deploy.yml\n' "$filter_file" >&2; exit 1; }
+done
 # Every file marin-data gives this app is a copy. Skipped when marin-data is not next to this repo.
 if [[ -f "$ROOT_DIR/../marin-data/scripts/sync_copies.py" ]]; then
   python3 "$ROOT_DIR/../marin-data/scripts/sync_copies.py" "$ROOT_DIR" --check
