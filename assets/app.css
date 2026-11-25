@@ -590,7 +590,7 @@
 }
 
 .mm-rp-doc h1 {
-  font-size: 1.75rem;
+  font-size: var(--app-h1-page);
 }
 
 .mm-rp-doc h2 {
