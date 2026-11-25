@@ -29,6 +29,8 @@ python3 "$ROOT_DIR/vendor/marinos/audit-shared-helpers.py" "$ROOT_DIR" --fail
 python3 "$ROOT_DIR/vendor/marinos/audit-filter-column.py" "$ROOT_DIR" --fail
 # An h1 has one of two sizes (Marin UI 1.41.0); this lists app CSS that sets its own size and must list nothing.
 python3 "$ROOT_DIR/vendor/marinos/audit-h1.py" "$ROOT_DIR" --fail
+# Card styles come from Marin UI (1.42.0); this lists copies and redrawn card surfaces and must list nothing.
+python3 "$ROOT_DIR/vendor/marinos/audit-cards.py" "$ROOT_DIR" --fail
 # Every filter file the page names must be staged by the deploy, or the live site cannot load its filters.
 for filter_file in $(grep -o 'data-filter-column="[^"]*"' "$ROOT_DIR/index.html" | cut -d'"' -f2); do
   grep -q "$filter_file" "$ROOT_DIR/.github/workflows/build-and-deploy.yml" || { printf 'FAIL: %s is not staged in build-and-deploy.yml\n' "$filter_file" >&2; exit 1; }
