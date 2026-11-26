@@ -2,6 +2,7 @@
 
 const { fetchText } = require("../http");
 const { parseFeed } = require("./rss");
+const { stripPublisherName } = require("../attribution");
 
 const BASE_URL = "https://news.google.com/rss/search";
 
@@ -38,6 +39,8 @@ async function fetchGoogleNewsSource(source) {
       .filter((item) => !EXCLUDED_SOURCE_NAMES.has(String(item.sourceName || "").trim().toLowerCase()))
       .map((item) => ({
         ...item,
+        // The publisher's name Google News adds to the end of the text is not part of the story (build/attribution.js).
+        description: stripPublisherName(item.description, item.sourceName || source.name),
         sourceId: source.id,
         sourceName: item.sourceName || source.name,
         sourceMethod: "google-news",

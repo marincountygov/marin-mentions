@@ -10,7 +10,8 @@ const { normalizeItem, hostnameOf } = require("./normalize");
 const { matchItems, addDistrictsFromPlaces, addParentsFromChildren, buildContextRules } = require("./match");
 const { dedupeItems } = require("./dedupe");
 const { dropMismatchedText } = require("./text-check");
-const { filterExcludedTitles } = require("./exclude");
+const { filterExcludedTitles, filterExcludedTitlesBySource } = require("./exclude");
+const { stripPublisherName } = require("./attribution");
 const { buildFeeds } = require("./feeds");
 const { buildMonitorData } = require("./monitor-data");
 
@@ -211,11 +212,19 @@ async function buildOnce({ previousSnapshotPath, outPath, env = process.env }) {
   reattributeBySourceDomain(allItems, buildDomainIndex(sources));
 
   // Title exclusions (config/exclude.yaml), applied to new and retained items.
-  const keptItems = filterExcludedTitles(allItems, loadExcludedTitles());
+  // Then each source's own list (`excludeTitles` in config/sources.yaml), for phrases that are wrong to leave out everywhere.
+  const keptItems = filterExcludedTitlesBySource(filterExcludedTitles(allItems, loadExcludedTitles()), sources);
   if (keptItems.length !== allItems.length) {
     console.log(`Left out ${allItems.length - keptItems.length} items by title`);
     allItems.length = 0;
     allItems.push(...keptItems);
+  }
+
+  // The publisher's name Google News adds to the end of a story's text is not part of the story. Taken off every Google News
+  // item, retained ones too, so stories kept under the old rule that matched only that name are matched again from their own
+  // words (build/attribution.js).
+  for (const item of allItems) {
+    if (item.sourceMethod === "google-news" && item.text) item.text = stripPublisherName(item.text, item.source);
   }
 
   // Per-source text rules (config/sources.yaml). Applied to every retained item
