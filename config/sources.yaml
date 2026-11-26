@@ -227,10 +227,33 @@ sources:
     region: marin
     query: 'site:marinij.com -"Sports Briefs" -"Prep football" -"Preps of the week" -"Prep playoffs" -"Girls volleyball" -"Boys volleyball" -"Girls water polo" -"Boys water polo" -"Girls tennis" -"Boys tennis" -"Girls golf" -"Boys golf" -"Girls soccer" -"Boys soccer" -"Girls basketball" -"Boys basketball" when:60d'
     enabled: true
+    # The Journal's sports pages (pro teams, leagues and its sports columnists) are left out of this source only: its feed says
+    # nothing about which section a story is in, so the title is all there is to go on. Local high school sports are left out by
+    # the headline labels in config/exclude.yaml. "Giants" is not listed: it is Redwood High's name and a word in local columns.
+    excludeTitles:
+      - 49ers
+      - Niners
+      - Warriors
+      - Raiders
+      - Golden State
+      - Draymond
+      - Steph Curry
+      - NFL
+      - NBA
+      - MLB
+      - NHL
+      - Super Bowl
+      - World Series
+      - Pac-12
+      - Barry Tompkins
+      - Kurtenbach
     note: >-
       Direct feed returns HTTP 403 (bot-protected); using Google News fallback.
       The query leaves out the common sports headline labels; config/exclude.yaml
-      drops any that still come through.
+      drops any that still come through, and excludeTitles above drops pro sports.
+      Google News adds the publisher's name to the end of each story's text; the
+      build takes it off (build/attribution.js), so a story matches a monitor only on
+      its own words and not on "Marin" in "Marin Independent Journal".
 
   - id: pacific-sun
     name: Pacific Sun
